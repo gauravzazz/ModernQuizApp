@@ -13,7 +13,7 @@ import { NotificationScreen } from '../screens/NotificationScreen';
 
 export type RootStackParamList = {
   Home: undefined;
-  SubjectDetail: { subjectId: string };
+  SubjectDetail: { subjectId: string; title: string };
   Quiz: {
     questionCount: number;
     mode: 'Practice' | 'Test';
@@ -27,9 +27,25 @@ export type RootStackParamList = {
       correctOptionId: string;
       timeSpent: number;
       isSkipped: boolean;
+      question?: string;
+      options?: Array<{
+        id: string;
+        text: string;
+      }>;
     }>;
     totalTime: number;
     mode: 'Practice' | 'Test';
+    subjectId?: string;
+    topicId?: string;
+    questionsData?: Array<{
+      id: string;
+      text: string;
+      options: Array<{
+        id: string;
+        text: string;
+      }>;
+      correctOptionId: string;
+    }>;
   };
   Bookmarks: undefined;
   QuizHistory: undefined;
@@ -51,7 +67,7 @@ export const Navigation = () => {
         }}
       >
         <Stack.Screen name="Home" component={HomeScreen} />
-        {/* <Stack.Screen name="SubjectDetail" component={SubjectDetailScreen} /> */}
+        <Stack.Screen name="SubjectDetail" component={SubjectDetailScreen} />
         <Stack.Screen name="Quiz" component={QuizScreen} />
         <Stack.Screen name="QuizResult" component={QuizResultScreen} />
         <Stack.Screen name="Bookmarks" component={BookmarksScreen} />

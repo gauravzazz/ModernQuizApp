@@ -13,6 +13,7 @@ interface SubjectCardProps {
   onPress?: () => void;
   width?: number;
   id?: string;
+  backgroundImage?: string;
 }
 
 import { addRecentSubject } from '../utils/recentSubjectsStorage';

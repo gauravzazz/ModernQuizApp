@@ -136,12 +136,20 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
     const quizId = `quiz_${Date.now()}`;
     
     // Navigate to the Quiz screen with the configuration data
+    // Ensure we're explicitly passing the topicId and subjectId
     navigation.navigate('Quiz', {
       questionCount,
       mode: quizMode,
+      topicId: topicId,
+      subjectId: subjectId,
+    });
+    
+    // Log the navigation parameters for debugging
+    console.log('[QuizConfigModal] Navigating to Quiz with params:', {
+      questionCount,
+      mode: quizMode,
       topicId,
-      subjectId,
-     
+      subjectId
     });
     
     onClose();

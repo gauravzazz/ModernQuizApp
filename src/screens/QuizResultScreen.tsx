@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
@@ -8,6 +8,7 @@ import { Typography } from '../atoms/Typography';
 import { Button } from '../atoms/Button';
 import { ProgressBar } from '../atoms/ProgressBar';
 import { RootStackParamList } from '../navigation';
+import { saveQuizResults } from '../utils/quizResultsStorage';
 
 type QuizResultScreenRouteProp = RouteProp<RootStackParamList, 'QuizResult'>;
 type QuizResultScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -16,7 +17,7 @@ export const QuizResultScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
   const route = useRoute<QuizResultScreenRouteProp>();
   const navigation = useNavigation<QuizResultScreenNavigationProp>();
-  const { attempts, totalTime, mode } = route.params;
+  const { attempts, totalTime, mode, subjectId, topicId, questionsData } = route.params;
 
   const styles = StyleSheet.create({
     container: {
@@ -67,6 +68,42 @@ export const QuizResultScreen: React.FC = () => {
   const score = Math.round((correctAnswers / attempts.length) * 100);
   const minutes = Math.floor(totalTime / 60000);
   const seconds = Math.floor((totalTime % 60000) / 1000);
+  
+  // Create a map of time spent per question
+  const timePerQuestion = attempts.reduce((acc, attempt) => {
+    acc[attempt.questionId] = attempt.timeSpent;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  // Save quiz results to AsyncStorage
+  useEffect(() => {
+    // Log all data being passed to QuizResultScreen
+    console.log('===== QUIZ RESULT SCREEN DATA =====');
+    console.log('attempts:', JSON.stringify(attempts, null, 2));
+    console.log('totalTime:', totalTime);
+    console.log('mode:', mode);
+    console.log('subjectId:', subjectId);
+    console.log('topicId:', topicId);
+    console.log('questionsData:', JSON.stringify(questionsData, null, 2));
+    console.log('timePerQuestion:', JSON.stringify(timePerQuestion, null, 2));
+    console.log('correctAnswers:', correctAnswers);
+    console.log('score:', score);
+    console.log('================================');
+    
+    const saveResults = async () => {
+      await saveQuizResults({
+        subjectId,
+        topicId,
+        mode,
+        correctAnswers,
+        totalQuestions: attempts.length,
+        timePerQuestion
+      });
+    };
+    
+    saveResults();
+  }, [subjectId, topicId, mode, correctAnswers, attempts.length, timePerQuestion]);
+  
 
   return (
     <View style={styles.container}>

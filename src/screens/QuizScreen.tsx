@@ -285,13 +285,24 @@ export const QuizScreen: React.FC = () => {
     });
 
     // Navigate to results screen
+    // Explicitly log the IDs before navigation to verify they're being passed
+    console.log('[QuizScreen] Submitting quiz with IDs:', { subjectId, topicId });
+    
     navigation.replace('QuizResult', {
-      attempts: finalAttempts.map(attempt => ({
-        ...attempt,
-        correctOptionId: quizQuestions.find(q => q.id === attempt.questionId)?.correctOptionId || ''
-      })),
+      attempts: finalAttempts.map(attempt => {
+        const question = quizQuestions.find(q => q.id === attempt.questionId);
+        return {
+          ...attempt,
+          correctOptionId: question?.correctOptionId || '',
+          question: question?.text,
+          options: question?.options
+        };
+      }),
       totalTime,
-      mode
+      mode,
+      subjectId: subjectId, // Explicitly assign to ensure it's passed
+      topicId: topicId,     // Explicitly assign to ensure it's passed
+      questionsData: quizQuestions
     });
   }, [navigation, questionAttempts, quizStartTime, mode, quizQuestions]);
 

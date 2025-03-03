@@ -1,18 +1,18 @@
-import React from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { StyleSheet, View, ScrollView, Animated, Dimensions } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation';
 import { AppTheme } from '../theme';
 import { SubjectHeader } from '../molecules/SubjectHeader';
-import { SubjectDescription } from '../molecules/SubjectDescription';
+import { SubjectDescription, SubjectSearchBar } from '../molecules/SubjectDescription';
 import { RecentTopics } from '../molecules/RecentTopics';
 import { TopicsGrid } from '../molecules/TopicsGrid';
 import { QuizConfigModal } from '../atoms/QuizConfigModal';
 import { Typography } from '../atoms/Typography';
 
-import { Topic, mockMathTopics } from '../data/mockData';
+import { Topic, mockMathTopics, mockSubjects } from '../data/mockData';
 import { addRecentTopic, fetchRecentTopics } from '../utils/recentTopicsStorage';
 
 interface GridTopic extends Pick<Topic, 'id' | 'title' | 'icon' | 'questionCount'> {}
@@ -39,14 +39,37 @@ export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route 
     scrollContainer: {
       flexGrow: 1,
     },
+    stickySearchContainer: {
+      position: 'absolute',
+      top: 60, // Position below the header
+      left: 16,
+      right: 16,
+      zIndex: 10,
+    },
   });
 
-  const [modalVisible, setModalVisible] = React.useState(false);
-  const [selectedTopicId, setSelectedTopicId] = React.useState<string>('');
-  const [recentTopics, setRecentTopics] = React.useState<Topic[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedTopicId, setSelectedTopicId] = useState<string>('');
+  const [recentTopics, setRecentTopics] = useState<Topic[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showStickySearch, setShowStickySearch] = useState(false);
+  
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const screenHeight = Dimensions.get('window').height;
+  const subjectCardHeight = screenHeight * 0.45; // Match the height in SubjectDescription
 
   React.useEffect(() => {
     loadRecentTopics();
+    
+    // Set up listener for scroll position
+    const scrollListener = scrollY.addListener(({ value }) => {
+      // When scroll position exceeds 70% of the card height, show sticky search
+      setShowStickySearch(value > subjectCardHeight * 0.7);
+    });
+    
+    return () => {
+      scrollY.removeListener(scrollListener);
+    };
   }, []);
 
   const loadRecentTopics = async () => {
@@ -87,11 +110,55 @@ export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route 
     navigation.goBack();
   };
 
+  // Create a subject object for the SubjectDescription component
+  const subjectData = {
+    icon: mockAllTopics.find(t => t.id === route.params.subjectId)?.icon || 'book',
+    iconType: 'emoji' as 'emoji', // Explicitly type as 'emoji' literal type
+    title: route.params.title,
+    description: 'Explore various topics and test your knowledge with quizzes.',
+    topicsCount: mockAllTopics.length,
+    questionsCount: mockAllTopics.reduce((total, topic) => total + (topic.questionCount || 0), 0),
+    progress: 0, // This could be calculated based on completed quizzes
+    accuracy: 85, // This could be calculated based on quiz results
+    backgroundImage: mockSubjects.find(s => s.id === route.params.subjectId)?.image, // Pass the background image from the subject
+  };
+
+  // Function to handle search in the subject description
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    console.log('Search query:', query);
+    // Implement search functionality here
+  };
+
   return (
     <View style={styles.container}>
       <SubjectHeader title={route.params.title} onBack={handleBackPress} />
       
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      {/* Show sticky search bar when scrolled */}
+      {showStickySearch && (
+        <View style={styles.stickySearchContainer}>
+          <SubjectSearchBar 
+            searchQuery={searchQuery} 
+            onSearchChange={handleSearchChange} 
+          />
+        </View>
+      )}
+      
+      <Animated.ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}> 
+        <SubjectDescription 
+          subject={subjectData}
+          onSearchChange={handleSearchChange}
+          showSearchBar={!showStickySearch}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+          height={subjectCardHeight}
+        />
         {recentTopics.length > 0 ? (
           <RecentTopics 
             topics={recentTopics} 
@@ -109,7 +176,7 @@ export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route 
           topics={mockAllTopics} 
           onTopicPress={handleTopicPress} 
         />
-      </ScrollView>
+      </Animated.ScrollView>
 
       <QuizConfigModal
         visible={modalVisible}
@@ -119,6 +186,8 @@ export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route 
         initialMode="Practice"
         title={mockAllTopics.find(t => t.id === selectedTopicId)?.title || ''}
         questionCount={mockAllTopics.find(t => t.id === selectedTopicId)?.questionCount || 0}
+        topicId={selectedTopicId}
+        subjectId={route.params.subjectId}
       />
     </View>
   );

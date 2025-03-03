@@ -14,6 +14,7 @@ export interface SubjectCardProps {
   onPress?: () => void;
   style?: any;
   width?: number;
+  id?: string;
 }
 
 export const SubjectCard: React.FC<SubjectCardProps> = ({
@@ -25,6 +26,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   onPress,
   style,
   width,
+  id,
 }) => {
   const theme = useTheme<AppTheme>();
 
@@ -43,6 +45,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       elevation: 8,
       borderWidth: 1.5,
       borderColor: theme.colors.neuLight,
+      transform: [{ scale: 1 }],
     },
     progressContainer: {
       flexDirection: 'row',
@@ -63,6 +66,8 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       shadowOpacity: 0.4,
       shadowRadius: 4,
       elevation: 4,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.1)',
     },
     header: {
       flexDirection: 'row',
@@ -149,7 +154,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     <TouchableOpacity
       style={[styles.container, style]}
       onPress={onPress}
-      activeOpacity={0.8}
+      activeOpacity={0.7}
     >
       {backgroundImage ? (
         <ImageBackground

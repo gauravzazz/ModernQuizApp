@@ -79,12 +79,24 @@ export const HomeScreen: React.FC = () => {
 
         <SubjectGrid
           subjects={mockSubjects}
-          onSubjectPress={(id) => navigation.navigate('SubjectDetail', { subjectId: id })}
+          onSubjectPress={(id) => {
+            const subject = mockSubjects.find(s => s.id === id);
+            navigation.navigate('SubjectDetail', { 
+              subjectId: id,
+              title: subject?.title || 'Subject'
+            });
+          }}
         />
 
         <PopularTopics
           topics={mockTopics}
-          onTopicPress={(id) => navigation.navigate('SubjectDetail', { subjectId: id })}
+          onTopicPress={(id) => {
+            const topic = mockTopics.find(t => t.id === id);
+            navigation.navigate('SubjectDetail', { 
+              subjectId: id,
+              title: topic?.title || 'Topic'
+            });
+          }}
         />
       </ScrollView>
       {/* <BottomNavigation

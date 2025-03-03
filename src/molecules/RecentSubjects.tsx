@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { useTheme } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
 import { SubjectCard } from './SubjectCard';
 import { mockSubjects } from '../data/mockData';
 import { fetchRecentSubjects } from '../utils/recentSubjectsStorage';
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 export const RecentSubjects: React.FC = () => {
   const theme = useTheme<AppTheme>();
+  const navigation = useNavigation<NavigationProp>();
   const [recentSubjects, setRecentSubjects] = useState(mockSubjects);
 
   useEffect(() => {
@@ -66,8 +72,12 @@ export const RecentSubjects: React.FC = () => {
                 description={subject.description}
                 progress={subject.progress}
                 icon={subject.icon}
-                onPress={() => {}}
+                onPress={() => navigation.navigate('SubjectDetail', { 
+                  subjectId: subject.id,
+                  title: subject.title 
+                })}
                 backgroundImage={subject.image}
+                id={subject.id}
               />
             </View>
           ))
