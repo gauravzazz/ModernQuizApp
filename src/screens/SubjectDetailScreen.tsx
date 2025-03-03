@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { StyleSheet, View, ScrollView, Animated, Dimensions } from 'react-native';
 import { useTheme } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation';
 import { AppTheme } from '../theme';
@@ -58,7 +58,17 @@ export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route 
   const screenHeight = Dimensions.get('window').height;
   const subjectCardHeight = screenHeight * 0.45; // Match the height in SubjectDescription
 
+  // Load recent topics when the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('[SubjectDetailScreen] Screen focused, loading recent topics');
+      loadRecentTopics();
+      return () => {};
+    }, [route.params.subjectId])
+  );
+
   React.useEffect(() => {
+    // Initial load of recent topics
     loadRecentTopics();
     
     // Set up listener for scroll position
@@ -73,7 +83,9 @@ export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route 
   }, []);
 
   const loadRecentTopics = async () => {
+    console.log('[loadRecentTopics] Loading topics for subject:', route.params.subjectId);
     const topics = await fetchRecentTopics(route.params.subjectId);
+    console.log('[loadRecentTopics] Loaded topics:', topics);
     setRecentTopics(topics);
   };
 
@@ -81,23 +93,31 @@ export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route 
     console.log('[handleTopicPress] Selected topic ID:', topicId);
     console.log('[handleTopicPress] Current subject ID:', route.params.subjectId);
     
+    // Set the selected topic ID first
     setSelectedTopicId(topicId);
+    
     try {
       console.log('[handleTopicPress] Attempting to add topic to recent topics...');
-      await addRecentTopic(route.params.subjectId, topicId);
+      // Use Promise.resolve to ensure the async operation completes
+      await Promise.resolve(addRecentTopic(route.params.subjectId, topicId));
       console.log('[handleTopicPress] Successfully added topic to recent topics');
       
-      await loadRecentTopics();
+      // Reload recent topics after adding
+      await Promise.resolve(loadRecentTopics());
       console.log('[handleTopicPress] Successfully reloaded recent topics');
       
-      // Move this inside the try block to ensure it only happens after successful operations
-      setModalVisible(true);
-      console.log('[handleTopicPress] Modal opened after adding to recent topics');
+      // Only show modal after all async operations are complete
+      setTimeout(() => {
+        setModalVisible(true);
+        console.log('[handleTopicPress] Modal opened after adding to recent topics');
+      }, 100); // Small delay to ensure state updates have completed
     } catch (error) {
       console.error('[handleTopicPress] Error:', error);
       // Still show the modal even if there was an error with the recent topics
-      setModalVisible(true);
-      console.log('[handleTopicPress] Modal opened despite error with recent topics');
+      setTimeout(() => {
+        setModalVisible(true);
+        console.log('[handleTopicPress] Modal opened despite error with recent topics');
+      }, 100);
     }
   };
 

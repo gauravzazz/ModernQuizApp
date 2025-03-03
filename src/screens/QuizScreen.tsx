@@ -367,14 +367,20 @@ export const QuizScreen: React.FC = () => {
           questionNumber={currentQuestionIndex + 1}
           totalQuestions={quizQuestions.length}
         />
-        <OptionsGrid
-          options={currentQuestion.options}
-          selectedOptionId={selectedOptionId}
-          correctOptionId={showCorrectAnswer ? currentQuestion.correctOptionId : undefined}
-          showCorrectAnswer={showCorrectAnswer}
-          onOptionPress={handleOptionSelect}
-          disabled={showCorrectAnswer}
-        />
+        {currentQuestion ? (
+          <OptionsGrid
+            options={currentQuestion.options}
+            selectedOptionId={selectedOptionId}
+            correctOptionId={showCorrectAnswer ? currentQuestion.correctOptionId : undefined}
+            showCorrectAnswer={showCorrectAnswer}
+            onOptionPress={handleOptionSelect}
+            disabled={showCorrectAnswer}
+          />
+        ) : (
+          <View style={{padding: 20, alignItems: 'center'}}>
+            <Typography variant="body1">No more questions available.</Typography>
+          </View>
+        )}
       </ScrollView>
 
       <View>
