@@ -32,7 +32,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
       left: 0,
       right: 0,
       backgroundColor: theme.colors.background,
-      zIndex: 1000,
+      zIndex: 999, // Reduced z-index to be lower than sidebar
       paddingTop: 16,
       paddingHorizontal: 16,
     },

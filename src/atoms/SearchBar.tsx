@@ -3,6 +3,7 @@ import { StyleSheet, View, ViewStyle, TextInput, Text } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { Typography } from './Typography';
+import { moderateScale, scaledSpacing, scaledFontSize, scaledRadius } from '../utils/scaling';
 
 export interface SearchBarProps {
   placeholder?: string;
@@ -35,28 +36,28 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const styles = StyleSheet.create({
     container: {
       backgroundColor: theme.colors.neuPrimary,
-      borderRadius: theme.roundness * 1.5,
-      borderWidth: 1.5,
+      borderRadius: scaledRadius(theme.roundness * 1.5),
+      borderWidth: moderateScale(1.5),
       borderColor: isFocused ? theme.colors.primary : theme.colors.neuLight,
-      padding: 16,
+      padding: scaledSpacing(16),
       flexDirection: 'row',
       alignItems: 'center',
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 5, height: 5 },
+      shadowOffset: { width: moderateScale(5), height: moderateScale(5) },
       shadowOpacity: 1,
-      shadowRadius: 10,
-      elevation: 8,
+      shadowRadius: moderateScale(10),
+      elevation: moderateScale(8),
     },
     input: {
       flex: 1,
       color: theme.colors.onSurface,
-      fontSize: 16,
+      fontSize: scaledFontSize(16),
       padding: 0,
-      marginLeft: 12,
+      marginLeft: scaledSpacing(12),
       fontWeight: '500',
     },
     searchIcon: {
-      fontSize: 18,
+      fontSize: scaledFontSize(18),
       color: theme.colors.onSurfaceVariant,
     },
   });

@@ -4,16 +4,19 @@ import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { PopularTopicCard } from '../atoms/PopularTopicCard';
 import { Typography } from '../atoms/Typography';
+import { moderateScale, scaledSpacing } from '../utils/scaling';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const GRID_SPACING = 16;
-const CARD_WIDTH = (SCREEN_WIDTH - (3 * GRID_SPACING)) / 2;
+const GRID_SPACING = scaledSpacing(12);
+const HORIZONTAL_PADDING = scaledSpacing(8);
+const CARD_WIDTH = (SCREEN_WIDTH - (2 * HORIZONTAL_PADDING) - GRID_SPACING) / 2;
 
 interface Topic {
   id: string;
   title: string;
   questionCount: number;
   icon: string;
+  image?: string;
 }
 
 interface PopularTopicsProps {
@@ -33,46 +36,48 @@ export const PopularTopics: React.FC<PopularTopicsProps> = ({
 
   const styles = StyleSheet.create({
     container: {
-      padding: GRID_SPACING,
-      flex: 1,
+      marginTop: scaledSpacing(16),
+      paddingHorizontal: HORIZONTAL_PADDING,
     },
     header: {
-      marginBottom: 24,
-      paddingHorizontal: 4,
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: scaledSpacing(20),
+      gap: scaledSpacing(8),
     },
     grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'space-between',
-      marginHorizontal: -GRID_SPACING/2,
       width: '100%',
       alignItems: 'flex-start',
     },
     cardWrapper: {
       width: '50%',
       paddingHorizontal: GRID_SPACING/2,
-      marginBottom: GRID_SPACING * 1.5,
+      marginBottom: scaledSpacing(16),
+      alignItems: 'center',
     },
     showMoreButton: {
       width: 'auto',
-      minWidth: 160,
+      minWidth: moderateScale(160),
       alignItems: 'center',
       backgroundColor: theme.colors.background,
-      padding: 16,
+      padding: scaledSpacing(16),
       borderRadius: theme.roundness,
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 2, height: 2 },
+      shadowOffset: { width: moderateScale(2), height: moderateScale(2) },
       shadowOpacity: 0.2,
-      shadowRadius: 4,
-      elevation: 4,
+      shadowRadius: moderateScale(4),
+      elevation: moderateScale(4),
       borderWidth: 1,
       borderColor: theme.colors.neuLight,
     },
     showMoreContainer: {
       width: '100%',
       alignItems: 'center',
-      marginTop: 8,
-      paddingHorizontal: 4,
+      marginTop: scaledSpacing(16),
+      marginBottom: scaledSpacing(8),
     },
   });
 
@@ -91,7 +96,9 @@ export const PopularTopics: React.FC<PopularTopicsProps> = ({
               questionCount={topic.questionCount}
               icon={topic.icon}
               onPress={() => onTopicPress?.(topic.id)}
-              width={CARD_WIDTH}
+              width={CARD_WIDTH * 0.95}
+              topicId={topic.id}
+              backgroundImage={topic.image}
             />
           </View>
         ))}

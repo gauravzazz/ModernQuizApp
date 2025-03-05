@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
-import { lightTheme, darkTheme } from './src/theme';
 import { Navigation } from './src/navigation';
 import { NotificationProvider } from './src/context/NotificationContext';
+import { ThemeProvider, useThemeContext } from './src/context/ThemeContext';
 
-export default function App() {
-  const [isDarkTheme, setIsDarkTheme] = useState(false);
-  const theme = isDarkTheme ? darkTheme : lightTheme;
-
+const AppContent = () => {
+  const { theme } = useThemeContext();
+  
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -18,11 +17,19 @@ export default function App() {
 
   return (
     <PaperProvider theme={theme}>
-      <NotificationProvider>
-        <SafeAreaView style={styles.container}>
-          <Navigation />
-        </SafeAreaView>
-      </NotificationProvider>
+      <SafeAreaView style={styles.container}>
+        <Navigation />
+      </SafeAreaView>
     </PaperProvider>
+  );
+};
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <NotificationProvider>
+        <AppContent />
+      </NotificationProvider>
+    </ThemeProvider>
   );
 }

@@ -1,10 +1,9 @@
 import React from 'react';
-import { StyleSheet, View, Animated, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, Animated, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation';
-
 import { AppTheme } from '../theme';
 import { Typography } from './Typography';
 import { Avatar } from './Avatar';
@@ -57,11 +56,16 @@ export const SideBar: React.FC<SideBarProps> = ({ visible, onClose }) => {
   const styles = StyleSheet.create({
     container: {
       ...StyleSheet.absoluteFillObject,
-      zIndex: 1000,
+      zIndex: 10000, // Increased z-index to be higher than header
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      elevation: 1000,
     },
     overlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0, 0, 0, 0)',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      zIndex: 9998,
     },
     sidebar: {
       position: 'absolute',
@@ -70,16 +74,22 @@ export const SideBar: React.FC<SideBarProps> = ({ visible, onClose }) => {
       width: SIDEBAR_WIDTH,
       height: '100%',
       backgroundColor: theme.colors.background,
-      paddingTop: 48,
-      paddingHorizontal: 24,
       shadowColor: theme.colors.neuDark,
       shadowOffset: { width: 6, height: 0 },
       shadowOpacity: 0.8,
       shadowRadius: 12,
-      elevation: 12,
+      elevation: 1000,
       borderRightWidth: 1.5,
       borderColor: theme.colors.neuLight,
+      zIndex: 10000, // Increased z-index to be higher than header
     },
+    sidebarContent: {
+      paddingTop: 50, // Increased top padding to account for header height
+      paddingHorizontal: 24,
+      paddingBottom: 100, // Add significant padding at the bottom for better spacing
+      flexGrow: 1, // Allow content to grow but enable scrolling
+    },
+  
     profileSection: {
       alignItems: 'center',
       marginBottom: 40,
@@ -152,79 +162,101 @@ export const SideBar: React.FC<SideBarProps> = ({ visible, onClose }) => {
           { transform: [{ translateX }] },
         ]}
       >
-        <View style={styles.profileSection}>
-          <Avatar size="large" />
-          <Typography
-            variant="h6"
-            weight="bold"
-            style={styles.userName}
+        <ScrollView 
+          contentContainerStyle={styles.sidebarContent} 
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          overScrollMode="always"
+        >
+          <View style={styles.profileSection}>
+            <Avatar size="large" />
+            <Typography
+              variant="h6"
+              weight="bold"
+              style={styles.userName}
+            >
+              John Doe
+            </Typography>
+            <Typography variant="body2" color="onSurfaceVariant">
+              john.doe@example.com
+            </Typography>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.menuItem} 
+            onPress={() => {
+              onClose();
+              navigation.navigate('SubjectDetail', { subjectId: 'default' });
+            }}
           >
-            John Doe
-          </Typography>
-          <Typography variant="body2" color="onSurfaceVariant">
-            john.doe@example.com
-          </Typography>
-        </View>
+            <View style={styles.menuIcon}>
+              <Typography>📚</Typography>
+            </View>
+            <Typography variant="body1" weight="medium">
+              My Subjects
+            </Typography>
+          </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.menuItem} 
-          onPress={() => {
-            onClose();
-            navigation.navigate('SubjectDetail', { subjectId: 'default' });
-          }}
-        >
-          <View style={styles.menuIcon}>
-            <Typography>📚</Typography>
-          </View>
-          <Typography variant="body1" weight="medium">
-            My Subjects
-          </Typography>
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => {
+              onClose();
+              navigation.navigate('Bookmarks');
+            }}
+          >
+            <View style={styles.menuIcon}>
+              <Typography>🔖</Typography>
+            </View>
+            <Typography variant="body1" weight="medium">
+              Bookmarks
+            </Typography>
+          </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.menuItem}
-          onPress={() => {
-            onClose();
-            navigation.navigate('Progress');
-          }}
-        >
-          <View style={styles.menuIcon}>
-            <Typography>📊</Typography>
-          </View>
-          <Typography variant="body1" weight="medium">
-            Progress
-          </Typography>
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => {
+              onClose();
+              navigation.navigate('Progress');
+            }}
+          >
+            <View style={styles.menuIcon}>
+              <Typography>📊</Typography>
+            </View>
+            <Typography variant="body1" weight="medium">
+              Progress
+            </Typography>
+          </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.menuItem}
-          onPress={() => {
-            onClose();
-            navigation.navigate('QuizHistory');
-          }}
-        >
-          <View style={styles.menuIcon}>
-            <Typography>🏆</Typography>
-          </View>
-          <Typography variant="body1" weight="medium">
-            Achievements
-          </Typography>
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => {
+              onClose();
+              navigation.navigate('QuizHistory');
+            }}
+          >
+            <View style={styles.menuIcon}>
+              <Typography>🏆</Typography>
+            </View>
+            <Typography variant="body1" weight="medium">
+              Achievements
+            </Typography>
+          </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.menuItem}
-          onPress={() => {
-            onClose();
-            navigation.navigate('Settings');
-          }}
-        >
-          <View style={styles.menuIcon}>
-            <Typography>⚙️</Typography>
-          </View>
-          <Typography variant="body1" weight="medium">
-            Settings
-          </Typography>
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => {
+              onClose();
+              navigation.navigate('Settings');
+            }}
+          >
+            <View style={styles.menuIcon}>
+              <Typography>⚙️</Typography>
+            </View>
+            <Typography variant="body1" weight="medium">
+              Settings
+            </Typography>
+          </TouchableOpacity>
+        </ScrollView>
       </Animated.View>
     </View>
   );

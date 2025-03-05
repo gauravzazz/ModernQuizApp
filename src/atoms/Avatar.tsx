@@ -3,6 +3,7 @@ import { StyleSheet, View, Image, ViewStyle, ImageSourcePropType } from 'react-n
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { Typography } from './Typography';
+import { moderateScale, scaledFontSize } from '../utils/scaling';
 
 export interface AvatarProps {
   size?: 'small' | 'medium' | 'large';
@@ -22,22 +23,22 @@ export const Avatar: React.FC<AvatarProps> = ({
   const getSize = () => {
     switch (size) {
       case 'small':
-        return 32;
+        return moderateScale(32);
       case 'large':
-        return 64;
+        return moderateScale(64);
       default:
-        return 48;
+        return moderateScale(48);
     }
   };
 
   const getFontSize = () => {
     switch (size) {
       case 'small':
-        return 14;
+        return scaledFontSize(14);
       case 'large':
-        return 24;
+        return scaledFontSize(24);
       default:
-        return 18;
+        return scaledFontSize(18);
     }
   };
 
@@ -50,14 +51,11 @@ export const Avatar: React.FC<AvatarProps> = ({
       overflow: 'hidden',
       alignItems: 'center',
       justifyContent: 'center',
-      elevation: 8,
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 5, height: 5 },
-      shadowOpacity: 1,
-      shadowRadius: 10,
-      borderWidth: 1.5,
-      borderColor: theme.colors.neuLight,
-      position: 'relative',
+      shadowOffset: { width: moderateScale(5), height: moderateScale(5) },
+      shadowOpacity: 0.5,
+      shadowRadius: moderateScale(10),
+      elevation: moderateScale(10),
     },
     image: {
       width: '100%',
@@ -68,8 +66,8 @@ export const Avatar: React.FC<AvatarProps> = ({
       color: theme.colors.onSurfaceVariant,
       fontWeight: '600',
       textShadowColor: theme.colors.neuDark,
-      textShadowOffset: { width: 1, height: 1 },
-      textShadowRadius: 1,
+      textShadowOffset: { width: moderateScale(1), height: moderateScale(1) },
+      textShadowRadius: moderateScale(1),
     },
   });
 
@@ -78,10 +76,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       {source ? (
         <Image source={source} style={styles.image} resizeMode="cover" />
       ) : (
-        <Typography
-          style={styles.initialsText}
-          weight="medium"
-        >
+        <Typography style={styles.initialsText} weight="medium">
           {initials?.toUpperCase() ?? '?'}
         </Typography>
       )}

@@ -1,41 +1,54 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
 import { SearchBar } from '../atoms/SearchBar';
 import { Button } from '../atoms/Button';
-
-interface BookmarkedQuestion {
-  id: string;
-  question: string;
-  subject: string;
-  quiz: string;
-  answer: string;
-  dateBookmarked: string;
-}
-
-const mockBookmarks: BookmarkedQuestion[] = [
-  {
-    id: '1',
-    question: 'What is the square root of 144?',
-    subject: 'Mathematics',
-    quiz: 'Basic Algebra',
-    answer: '12',
-    dateBookmarked: '2023-12-01',
-  },
-  {
-    id: '2',
-    question: 'What is the chemical symbol for gold?',
-    subject: 'Science',
-    quiz: 'Chemistry Basics',
-    answer: 'Au',
-    dateBookmarked: '2023-12-02',
-  },
-];
+import { Question } from '../types/quiz';
+import { getBookmarkedQuestions, removeBookmark } from '../services/bookmarkService';
+import { LoadingIndicator } from '../atoms/LoadingIndicator';
 
 export const BookmarksScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
+  const [bookmarkedQuestions, setBookmarkedQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    loadBookmarkedQuestions();
+  }, []);
+
+  const loadBookmarkedQuestions = async () => {
+    try {
+      setIsLoading(true);
+      const questions = await getBookmarkedQuestions();
+      setBookmarkedQuestions(questions);
+    } catch (error) {
+      console.error('Error loading bookmarked questions:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRemoveBookmark = async (questionId: string) => {
+    try {
+      await removeBookmark(questionId);
+      // Refresh the list after removing
+      await loadBookmarkedQuestions();
+    } catch (error) {
+      console.error('Error removing bookmark:', error);
+    }
+  };
+
+  const handlePractice = (question: Question) => {
+    // TODO: Implement practice functionality
+    console.log('Practice question:', question);
+  };
+
+  const filteredQuestions = bookmarkedQuestions.filter(question =>
+    question.text.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const styles = StyleSheet.create({
     container: {
@@ -65,17 +78,15 @@ export const BookmarksScreen: React.FC = () => {
     questionText: {
       marginBottom: 12,
     },
-    metadata: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    answerContainer: {
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.roundness,
-      padding: 12,
+    optionsContainer: {
       marginTop: 8,
+    },
+    optionText: {
+      marginBottom: 4,
+      paddingLeft: 8,
+    },
+    correctOption: {
+      color: theme.colors.success,
     },
     actions: {
       flexDirection: 'row',
@@ -83,7 +94,17 @@ export const BookmarksScreen: React.FC = () => {
       marginTop: 12,
       gap: 8,
     },
+    emptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 40,
+    },
   });
+
+  if (isLoading) {
+    return <LoadingIndicator message="Loading bookmarks..." />;
+  }
 
   return (
     <View style={styles.container}>
@@ -93,46 +114,69 @@ export const BookmarksScreen: React.FC = () => {
         </Typography>
       </View>
       <View style={styles.searchContainer}>
-        <SearchBar placeholder="Search bookmarks..." />
+        <SearchBar
+          placeholder="Search bookmarks..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
       </View>
       <ScrollView>
-        {mockBookmarks.map((bookmark) => (
-          <View key={bookmark.id} style={styles.bookmarkCard}>
-            <Typography
-              variant="h6"
-              weight="bold"
-              style={styles.questionText}
-            >
-              {bookmark.question}
+        {filteredQuestions.length > 0 ? (
+          filteredQuestions.map((question) => (
+            <View key={question.id} style={styles.bookmarkCard}>
+              <Typography
+                variant="h6"
+                weight="bold"
+                style={styles.questionText}
+              >
+                {question.text}
+              </Typography>
+              <View style={styles.optionsContainer}>
+                {question.options.map((option) => (
+                  <Typography
+                    key={option.id}
+                    variant="body2"
+                    style={[
+                      styles.optionText,
+                      option.id === question.correctOptionId && styles.correctOption,
+                    ]}
+                  >
+                    {option.id}. {option.text}
+                    {option.id === question.correctOptionId && ' ✓'}
+                  </Typography>
+                ))}
+              </View>
+              {question.explanation && (
+                <Typography
+                  variant="body2"
+                  color="onSurfaceVariant"
+                  style={{ marginTop: 8 }}
+                >
+                  Explanation: {question.explanation}
+                </Typography>
+              )}
+              <View style={styles.actions}>
+                <Button
+                  label="Remove"
+                  variant="outline"
+                  size="small"
+                  onPress={() => handleRemoveBookmark(question.id)}
+                />
+                <Button
+                  label="Practice"
+                  size="small"
+                  onPress={() => handlePractice(question)}
+                />
+              </View>
+            </View>
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Typography variant="body1" color="onSurfaceVariant">
+              No bookmarked questions found
             </Typography>
-            <View style={styles.metadata}>
-              <Typography variant="caption" color="onSurfaceVariant">
-                {bookmark.subject} • {bookmark.quiz}
-              </Typography>
-              <Typography variant="caption" color="onSurfaceVariant">
-                {bookmark.dateBookmarked}
-              </Typography>
-            </View>
-            <View style={styles.answerContainer}>
-              <Typography variant="body2" color="onSurfaceVariant">
-                Answer: {bookmark.answer}
-              </Typography>
-            </View>
-            <View style={styles.actions}>
-              <Button
-                label="Remove"
-                variant="outline"
-                size="small"
-                onPress={() => {}}
-              />
-              <Button
-                label="Practice"
-                size="small"
-                onPress={() => {}}
-              />
-            </View>
           </View>
-        ))}
+        )}
       </ScrollView>
     </View>
   );

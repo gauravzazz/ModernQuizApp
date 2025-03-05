@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { useTheme } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
 import { Toggle } from '../atoms/Toggle';
 import { Button } from '../atoms/Button';
+import { NavigationButton } from '../atoms/NavigationButton';
+import { useThemeContext } from '../context/ThemeContext';
 
 interface SettingsSection {
   title: string;
@@ -80,6 +83,11 @@ const mockSettings: SettingsSection[] = [
 
 export const SettingsScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
+  const { isDarkMode, toggleTheme } = useThemeContext();
+  const navigation = useNavigation();
+  
+  // Create a local copy of settings that we can modify
+  const [settings, setSettings] = useState(mockSettings);
 
   const styles = StyleSheet.create({
     container: {
@@ -89,6 +97,9 @@ export const SettingsScreen: React.FC = () => {
     },
     header: {
       marginBottom: 24,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 16,
     },
     section: {
       marginBottom: 32,
@@ -122,6 +133,21 @@ export const SettingsScreen: React.FC = () => {
 
   const handleToggle = (settingId: string, value: boolean) => {
     console.log(`Toggle ${settingId}:`, value);
+    
+    // If the dark mode setting is toggled, use the theme context
+    if (settingId === 'darkMode') {
+      toggleTheme();
+    }
+    
+    // Update the local settings state
+    setSettings(prevSettings => {
+      return prevSettings.map(section => ({
+        ...section,
+        settings: section.settings.map(setting => 
+          setting.id === settingId ? { ...setting, value } : setting
+        )
+      }));
+    });
   };
 
   const handleButtonPress = (settingId: string) => {
@@ -131,13 +157,17 @@ export const SettingsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <NavigationButton 
+          variant="left" 
+          onPress={() => navigation.goBack()} 
+        />
         <Typography variant="h4" weight="bold">
           Settings
         </Typography>
       </View>
 
       <ScrollView>
-        {mockSettings.map((section) => (
+        {settings.map((section) => (
           <View key={section.title} style={styles.section}>
             <Typography
               variant="h6"
@@ -166,7 +196,7 @@ export const SettingsScreen: React.FC = () => {
 
                   {setting.type === 'toggle' ? (
                     <Toggle
-                      value={setting.value || false}
+                      value={setting.id === 'darkMode' ? isDarkMode : setting.value || false}
                       onValueChange={(value) => handleToggle(setting.id, value)}
                     />
                   ) : (

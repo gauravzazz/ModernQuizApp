@@ -12,6 +12,7 @@ const mockQuestions: Question[] = [
       { id: 'd', text: '16' },
     ],
     correctOptionId: 'b',
+    explanation: 'The square root of 144 is 12 because 12 × 12 = 144. To find a square root, we look for a number that, when multiplied by itself, gives us the original number. In this case, 12 is that number.',
   },
   {
     id: '2',
@@ -23,6 +24,7 @@ const mockQuestions: Question[] = [
       { id: 'd', text: '30' },
     ],
     correctOptionId: 'b',
+    explanation: 'To find 25% of 80, we can either multiply 80 by 0.25 or divide 80 by 4 (since 25% is one-fourth). Using either method: 80 × 0.25 = 20 or 80 ÷ 4 = 20.',
   },
   {
     id: '3',
@@ -34,6 +36,7 @@ const mockQuestions: Question[] = [
       { id: 'd', text: '8' },
     ],
     correctOptionId: 'c',
+    explanation: 'To solve for x, we subtract 5 from both sides of the equation to isolate x. So, x + 5 = 12 becomes x = 12 - 5 = 7. We can verify this by plugging 7 back into the original equation: 7 + 5 = 12 ✓',
   },
 ];
 

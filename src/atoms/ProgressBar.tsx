@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { moderateScale, scaledRadius } from '../utils/scaling';
 
 export interface ProgressBarProps {
   progress: number;
@@ -18,34 +20,31 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const styles = StyleSheet.create({
     container: {
       width: '100%',
-      height: 10,
-      backgroundColor: theme.colors.neuPrimary,
-      borderRadius: 5,
+      height: moderateScale(10),
+      borderRadius: scaledRadius(5),
       overflow: 'hidden',
-      shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 3, height: 3 },
-      shadowOpacity: 1,
-      shadowRadius: 6,
-      elevation: 6,
-      borderWidth: 1,
-      borderColor: theme.colors.neuLight,
-      position: 'relative',
+      flexDirection: 'row',
     },
     progress: {
       height: '100%',
       width: `${clampedProgress * 100}%`,
       backgroundColor: theme.colors.primary,
-      borderRadius: 5,
-      shadowColor: 'rgba(0, 0, 0, 0.2)',
-      shadowOffset: { width: 1, height: 1 },
-      shadowOpacity: 0.8,
-      shadowRadius: 2,
+    },
+    remaining: {
+      height: '100%',
+      width: `${(1 - clampedProgress) * 100}%`,
     },
   });
 
   return (
     <View style={[styles.container, style]}>
       <View style={styles.progress} />
+      <LinearGradient
+        colors={[theme.colors.neuLight, theme.colors.neuDark]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.remaining}
+      />
     </View>
   );
 };

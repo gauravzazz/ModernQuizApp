@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, TextProps } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
+import { scaledFontSize } from '../utils/scaling';
 
 export interface TypographyProps extends TextProps {
   variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'body1' | 'body2' | 'caption' | 'button';
@@ -25,27 +26,27 @@ export const Typography: React.FC<TypographyProps> = ({
   const getFontSize = () => {
     switch (variant) {
       case 'h1':
-        return 32;
+        return scaledFontSize(32);
       case 'h2':
-        return 28;
+        return scaledFontSize(28);
       case 'h3':
-        return 24;
+        return scaledFontSize(24);
       case 'h4':
-        return 20;
+        return scaledFontSize(20);
       case 'h5':
-        return 18;
+        return scaledFontSize(18);
       case 'h6':
-        return 16;
+        return scaledFontSize(16);
       case 'body1':
-        return 16;
+        return scaledFontSize(16);
       case 'body2':
-        return 14;
+        return scaledFontSize(14);
       case 'caption':
-        return 12;
+        return scaledFontSize(12);
       case 'button':
-        return 14;
+        return scaledFontSize(14);
       default:
-        return 16;
+        return scaledFontSize(16);
     }
   };
 

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Dimensions, TouchableOpacity } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
-import {SubjectCard } from '../atoms/SubjectCard';
+import { SubjectCard } from '../atoms/SubjectCard';
 import { Typography } from '../atoms/Typography';
+import { moderateScale, scaledSpacing } from '../utils/scaling';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const GRID_SPACING = 16;
-const CARD_WIDTH = (SCREEN_WIDTH - (3 * GRID_SPACING)) / 2;
+const GRID_SPACING = scaledSpacing(16);
+const HORIZONTAL_PADDING = scaledSpacing(8);
+const CARD_WIDTH = (SCREEN_WIDTH - (2 * HORIZONTAL_PADDING) - GRID_SPACING) / 2;
 
 interface Subject {
   id: string;
@@ -15,6 +17,7 @@ interface Subject {
   description: string;
   icon: string;
   progress: number;
+  image?: string;
 }
 
 interface SubjectGridProps {
@@ -34,46 +37,46 @@ export const SubjectGrid: React.FC<SubjectGridProps> = ({
 
   const styles = StyleSheet.create({
     container: {
-      marginTop: 32,
-      paddingHorizontal: GRID_SPACING,
+      marginTop: scaledSpacing(24),
+      paddingHorizontal: HORIZONTAL_PADDING,
     },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 24,
-      gap: 8,
+      marginBottom: scaledSpacing(16),
+      gap: scaledSpacing(8),
     },
     grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'space-between',
-      marginHorizontal: -GRID_SPACING/2,
       width: '100%',
       alignItems: 'flex-start',
     },
     cardWrapper: {
       width: '50%',
       paddingHorizontal: GRID_SPACING/2,
-      marginBottom: GRID_SPACING * 1.5,
+      marginBottom: GRID_SPACING,
+      alignItems: 'center',
     },
     showMoreContainer: {
       width: '100%',
       alignItems: 'center',
-      marginTop: 8,
-      paddingHorizontal: 4,
+      marginTop: scaledSpacing(16),
+      marginBottom: scaledSpacing(8),
     },
     showMoreButton: {
       width: 'auto',
-      minWidth: 160,
+      minWidth: moderateScale(160),
       alignItems: 'center',
       backgroundColor: theme.colors.background,
-      padding: 16,
+      padding: scaledSpacing(16),
       borderRadius: theme.roundness,
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 2, height: 2 },
+      shadowOffset: { width: moderateScale(2), height: moderateScale(2) },
       shadowOpacity: 0.2,
-      shadowRadius: 4,
-      elevation: 4,
+      shadowRadius: moderateScale(4),
+      elevation: moderateScale(4),
       borderWidth: 1,
       borderColor: theme.colors.neuLight,
     },
@@ -94,8 +97,10 @@ export const SubjectGrid: React.FC<SubjectGridProps> = ({
               description={subject.description}
               icon={subject.icon}
               progress={subject.progress}
+              backgroundImage={subject.image}
               onPress={() => onSubjectPress?.(subject.id)}
               id={subject.id}
+              width={CARD_WIDTH}
             />
           </View>
         ))}

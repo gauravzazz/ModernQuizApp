@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { StyleSheet, View, ScrollView, Animated, Dimensions } from 'react-native';
 import { useTheme } from 'react-native-paper';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation';
 import { AppTheme } from '../theme';
@@ -21,14 +21,14 @@ const mockRecentTopics = mockMathTopics.slice(0, 3);
 const mockAllTopics: GridTopic[] = mockMathTopics;
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type SubjectDetailRouteProp = RouteProp<RootStackParamList, 'SubjectDetail'>;
 
-type SubjectDetailScreenProps = {
-  route: { params: { subjectId: string; title: string } };
-};
-
-export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route }) => {
+// Remove the explicit props interface since we'll use hooks to get the route
+export const SubjectDetailScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<SubjectDetailRouteProp>();
+  const { subjectId, title } = route.params;
 
   const styles = StyleSheet.create({
     container: {
@@ -64,7 +64,7 @@ export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route 
       console.log('[SubjectDetailScreen] Screen focused, loading recent topics');
       loadRecentTopics();
       return () => {};
-    }, [route.params.subjectId])
+    }, [subjectId])
   );
 
   React.useEffect(() => {
@@ -83,15 +83,15 @@ export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route 
   }, []);
 
   const loadRecentTopics = async () => {
-    console.log('[loadRecentTopics] Loading topics for subject:', route.params.subjectId);
-    const topics = await fetchRecentTopics(route.params.subjectId);
+    console.log('[loadRecentTopics] Loading topics for subject:', subjectId);
+    const topics = await fetchRecentTopics(subjectId);
     console.log('[loadRecentTopics] Loaded topics:', topics);
     setRecentTopics(topics);
   };
 
   const handleTopicPress = async (topicId: string) => {
     console.log('[handleTopicPress] Selected topic ID:', topicId);
-    console.log('[handleTopicPress] Current subject ID:', route.params.subjectId);
+    console.log('[handleTopicPress] Current subject ID:', subjectId);
     
     // Set the selected topic ID first
     setSelectedTopicId(topicId);
@@ -99,7 +99,7 @@ export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route 
     try {
       console.log('[handleTopicPress] Attempting to add topic to recent topics...');
       // Use Promise.resolve to ensure the async operation completes
-      await Promise.resolve(addRecentTopic(route.params.subjectId, topicId));
+      await Promise.resolve(addRecentTopic(subjectId, topicId));
       console.log('[handleTopicPress] Successfully added topic to recent topics');
       
       // Reload recent topics after adding
@@ -132,15 +132,15 @@ export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route 
 
   // Create a subject object for the SubjectDescription component
   const subjectData = {
-    icon: mockAllTopics.find(t => t.id === route.params.subjectId)?.icon || 'book',
+    icon: mockAllTopics.find(t => t.id === subjectId)?.icon || 'book',
     iconType: 'emoji' as 'emoji', // Explicitly type as 'emoji' literal type
-    title: route.params.title,
+    title: title,
     description: 'Explore various topics and test your knowledge with quizzes.',
     topicsCount: mockAllTopics.length,
     questionsCount: mockAllTopics.reduce((total, topic) => total + (topic.questionCount || 0), 0),
     progress: 0, // This could be calculated based on completed quizzes
     accuracy: 85, // This could be calculated based on quiz results
-    backgroundImage: mockSubjects.find(s => s.id === route.params.subjectId)?.image, // Pass the background image from the subject
+    backgroundImage: mockSubjects.find(s => s.id === subjectId)?.image, // Pass the background image from the subject
   };
 
   // Function to handle search in the subject description
@@ -152,7 +152,7 @@ export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route 
 
   return (
     <View style={styles.container}>
-      <SubjectHeader title={route.params.title} onBack={handleBackPress} />
+      <SubjectHeader title={title} onBack={handleBackPress} />
       
       {/* Show sticky search bar when scrolled */}
       {showStickySearch && (
@@ -207,7 +207,7 @@ export const SubjectDetailScreen: React.FC<SubjectDetailScreenProps> = ({ route 
         title={mockAllTopics.find(t => t.id === selectedTopicId)?.title || ''}
         questionCount={mockAllTopics.find(t => t.id === selectedTopicId)?.questionCount || 0}
         topicId={selectedTopicId}
-        subjectId={route.params.subjectId}
+        subjectId={subjectId}
       />
     </View>
   );

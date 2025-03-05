@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, Modal, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Modal, TouchableOpacity, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { Typography } from './Typography';
@@ -27,20 +28,35 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
   initialQuestionCount = 5,
   initialMode = 'Practice',
   title = 'Configure Quiz',
+  questionCount,
   topicId,
   subjectId,
 }) => {
   const theme = useTheme<AppTheme>();
-  const [questionCount, setQuestionCount] = React.useState(initialQuestionCount);
+  const [selectedQuestionCount, setSelectedQuestionCount] = React.useState(initialQuestionCount);
   const [quizMode, setQuizMode] = React.useState<'Practice' | 'Test'>(initialMode);
 
   const styles = StyleSheet.create({
     modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
       justifyContent: 'center',
       alignItems: 'center',
       padding: 20,
+    },
+    blurOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+    },
+    fallbackOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContent: {
       width: '100%',
@@ -130,7 +146,7 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
 
   const handleStart = () => {
     // Call the onStart callback if provided
-    onStart?.({ questionCount, mode: quizMode });
+    onStart?.({ questionCount: selectedQuestionCount, mode: quizMode });
     
     // Create a unique quiz ID using timestamp
     const quizId = `quiz_${Date.now()}`;
@@ -138,7 +154,7 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
     // Navigate to the Quiz screen with the configuration data
     // Ensure we're explicitly passing the topicId and subjectId
     navigation.navigate('Quiz', {
-      questionCount,
+      questionCount: selectedQuestionCount,
       mode: quizMode,
       topicId: topicId,
       subjectId: subjectId,
@@ -146,7 +162,7 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
     
     // Log the navigation parameters for debugging
     console.log('[QuizConfigModal] Navigating to Quiz with params:', {
-      questionCount,
+      questionCount: selectedQuestionCount,
       mode: quizMode,
       topicId,
       subjectId
@@ -163,6 +179,15 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
+        {Platform.OS === 'ios' ? (
+          <BlurView
+            tint="dark"
+            intensity={50}
+            style={styles.blurOverlay}
+          />
+        ) : (
+          <View style={styles.fallbackOverlay} />
+        )}
         <View style={styles.modalContent}>
           <View style={styles.modalTitle}>
             <Typography variant="h5" weight="bold">
@@ -178,14 +203,14 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
 
           <View style={styles.questionCount}>
             <Typography variant="h6" weight="medium">
-              Number of Questions: {questionCount}
+              Number of Questions: {selectedQuestionCount}
             </Typography>
             <View style={styles.sliderContainer}>
               <Slider
-                value={questionCount}
-                onValueChange={setQuestionCount}
+                value={selectedQuestionCount}
+                onValueChange={setSelectedQuestionCount}
                 min={1}
-                max={50}
+                max={questionCount}
                 step={1}
                 style={styles.slider}
               />

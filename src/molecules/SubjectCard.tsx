@@ -1,9 +1,11 @@
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity, ImageBackground } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, ImageBackground, Dimensions } from 'react-native';
 import { useTheme } from 'react-native-paper';
-import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
 import { ProgressBar } from '../atoms/ProgressBar';
+import { moderateScale, scaledSpacing, scaledRadius, scaledFontSize } from '../utils/scaling';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export interface SubjectCardProps {
   title: string;
@@ -13,8 +15,7 @@ export interface SubjectCardProps {
   backgroundImage?: string;
   onPress?: () => void;
   style?: any;
-  width?: number;
-  id?: string;
+  width?: number; // Width prop from parent (e.g., SubjectGrid)
 }
 
 export const SubjectCard: React.FC<SubjectCardProps> = ({
@@ -26,77 +27,82 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   onPress,
   style,
   width,
-  id,
 }) => {
-  const theme = useTheme<AppTheme>();
+  const theme = useTheme();
+  const isSmallScreen = SCREEN_WIDTH < 360;
+  const isMediumScreen = SCREEN_WIDTH >= 360 && SCREEN_WIDTH < 600;
+  const isLargeScreen = SCREEN_WIDTH >= 600;
+
+  const [isCardPressed, setIsCardPressed] = React.useState(false);
+  const [isButtonPressed, setIsButtonPressed] = React.useState(false);
+
+  // Default width if not provided by parent
+  const defaultWidth = isSmallScreen ? SCREEN_WIDTH - scaledSpacing(20) : // Full width minus padding on small screens
+    isMediumScreen ? moderateScale(280) :
+    moderateScale(320);
+
+  const cardWidth = width !== undefined ? width : defaultWidth;
 
   const styles = StyleSheet.create({
     container: {
       overflow: 'hidden',
-      width: width || 280,
-      height: 180,
+      width: cardWidth,
+      height: moderateScale(isSmallScreen ? 200 : isMediumScreen ? 220 : 240),
       backgroundColor: theme.colors.neuPrimary,
-      borderRadius: theme.roundness * 2,
-      marginBottom: 16,
-      shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 4, height: 4 },
-      shadowOpacity: 0.6,
-      shadowRadius: 8,
-      elevation: 8,
-      borderWidth: 1.5,
-      borderColor: theme.colors.neuLight,
-      transform: [{ scale: 1 }],
+      borderRadius: scaledRadius(theme.roundness * 2),
+      marginBottom: scaledSpacing(16),
     },
-    progressContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
+    cardContentContainer: {
+      padding: scaledSpacing(isSmallScreen ? 10 : isMediumScreen ? 16 : 20),
+      width: '100%',
+      height: '100%',
       justifyContent: 'space-between',
-      marginTop: 12,
-    },
-    progressText: {
-      marginLeft: 8,
-    },
-    continueButton: {
-      backgroundColor: theme.colors.primary,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      borderRadius: theme.roundness,
-      shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 2, height: 2 },
-      shadowOpacity: 0.4,
-      shadowRadius: 4,
-      elevation: 4,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.1)',
     },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 12,
-      gap: 12,
+      marginBottom: scaledSpacing(isSmallScreen ? 8 : 12),
+      gap: scaledSpacing(isSmallScreen ? 8 : 12),
     },
     icon: {
-      width: 40,
-      height: 40,
+      width: moderateScale(isSmallScreen ? 32 : isMediumScreen ? 40 : 48),
+      height: moderateScale(isSmallScreen ? 32 : isMediumScreen ? 40 : 48),
       backgroundColor: theme.colors.background,
-      borderRadius: theme.roundness,
+      borderRadius: scaledRadius(theme.roundness),
       justifyContent: 'center',
       alignItems: 'center',
-      shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 2, height: 2 },
-      shadowOpacity: 0.4,
-      shadowRadius: 4,
-      elevation: 4,
-      borderWidth: 1,
-      borderColor: theme.colors.neuLight,
     },
     content: {
       flex: 1,
+      overflow: 'hidden',
     },
     description: {
-      marginTop: 4,
-      marginBottom: 12,
+      marginTop: scaledSpacing(isSmallScreen ? 2 : 4),
+      marginBottom: scaledSpacing(isSmallScreen ? 8 : 12),
       opacity: 0.7,
+      fontSize: scaledFontSize(isSmallScreen ? 12 : isMediumScreen ? 14 : 16),
+    },
+    progressContainer: {
+      flexDirection: isSmallScreen ? 'column' : 'row',
+      alignItems: isSmallScreen ? 'flex-start' : 'center',
+      justifyContent: 'space-between',
+      marginTop: scaledSpacing(isSmallScreen ? 6 : 10),
+    },
+    progressWrapper: {
+      flex: 1,
+      marginBottom: isSmallScreen ? scaledSpacing(8) : 0,
+      width: isSmallScreen ? '100%' : 'auto',
+    },
+    progressText: {
+      marginLeft: scaledSpacing(8),
+      fontSize: scaledFontSize(12),
+    },
+    continueButton: {
+      backgroundColor: theme.colors.neuPrimary,
+      paddingHorizontal: scaledSpacing(isSmallScreen ? 12 : 16),
+      paddingVertical: scaledSpacing(isSmallScreen ? 6 : 8),
+      borderRadius: scaledRadius(theme.roundness),
+      width: isSmallScreen ? '100%' : 'auto',
     },
     backgroundImage: {
       flex: 1,
@@ -105,29 +111,64 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     },
   });
 
+  const containerShadow = {
+    shadowColor: theme.colors.neuDark,
+    shadowOffset: isCardPressed ? { width: moderateScale(-2), height: moderateScale(-2) } : { width: moderateScale(4), height: moderateScale(4) },
+    shadowOpacity: isCardPressed ? 0.2 : 0.3,
+    shadowRadius: moderateScale(12),
+    elevation: isCardPressed ? moderateScale(2) : moderateScale(8),
+  };
+
+  const buttonShadow = {
+    shadowColor: theme.colors.neuDark,
+    shadowOffset: isButtonPressed ? { width: moderateScale(-1), height: moderateScale(-1) } : { width: moderateScale(2), height: moderateScale(2) },
+    shadowOpacity: isButtonPressed ? 0.2 : 0.4,
+    shadowRadius: moderateScale(4),
+    elevation: isButtonPressed ? moderateScale(1) : moderateScale(4),
+  };
+
+  const buttonStyle = [
+    styles.continueButton,
+    buttonShadow,
+    { transform: [{ scale: isButtonPressed ? 0.98 : 1 }] },
+  ];
+
   const CardContent = () => (
     <>
       <View style={styles.header}>
         {icon && (
           <View style={styles.icon}>
-            <Typography color="onPrimary">{icon}</Typography>
+            <Typography
+              color="onPrimary"
+              style={{ fontSize: scaledFontSize(isSmallScreen ? 20 : isMediumScreen ? 24 : 28) }}
+            >
+              {icon}
+            </Typography>
           </View>
         )}
         <View style={styles.content}>
-          <Typography variant="h6" weight="bold">
+          <Typography
+            variant="h6"
+            weight="bold"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={{ fontSize: scaledFontSize(isSmallScreen ? 16 : isMediumScreen ? 18 : 20) }}
+          >
             {title}
           </Typography>
           <Typography
             variant="body2"
             color="onSurfaceVariant"
             style={styles.description}
+            numberOfLines={isSmallScreen ? 2 : 3}
+            ellipsizeMode="tail"
           >
             {description}
           </Typography>
         </View>
       </View>
       <View style={styles.progressContainer}>
-        <View style={{ flex: 1 }}>
+        <View style={styles.progressWrapper}>
           <ProgressBar progress={progress} />
           <Typography
             variant="caption"
@@ -138,11 +179,17 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
           </Typography>
         </View>
         <TouchableOpacity
-          style={styles.continueButton}
+          style={buttonStyle}
           onPress={onPress}
-          activeOpacity={0.8}
+          onPressIn={() => setIsButtonPressed(true)}
+          onPressOut={() => setIsButtonPressed(false)}
+          activeOpacity={1}
         >
-          <Typography variant="button" color="onPrimary">
+          <Typography
+            variant="button"
+            color="onSurface"
+            style={{ fontSize: scaledFontSize(14) }}
+          >
             Continue
           </Typography>
         </TouchableOpacity>
@@ -152,9 +199,11 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
 
   return (
     <TouchableOpacity
-      style={[styles.container, style]}
+      style={[styles.container, containerShadow, style]}
       onPress={onPress}
-      activeOpacity={0.7}
+      onPressIn={() => setIsCardPressed(true)}
+      onPressOut={() => setIsCardPressed(false)}
+      activeOpacity={1}
     >
       {backgroundImage ? (
         <ImageBackground
@@ -163,16 +212,14 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
           imageStyle={{
             borderRadius: theme.roundness * 2,
             opacity: 0.15,
-            width: '100%',
-            height: '100%'
           }}
         >
-          <View style={{padding: 20}}>
+          <View style={styles.cardContentContainer}>
             <CardContent />
           </View>
         </ImageBackground>
       ) : (
-        <View style={{padding: 20}}>
+        <View style={styles.cardContentContainer}>
           <CardContent />
         </View>
       )}

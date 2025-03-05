@@ -4,9 +4,10 @@ import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '../atoms/Typography';
+import { moderateScale, scaledSpacing, scaledRadius, scaledFontSize } from '../utils/scaling';
 
 interface Subject {
-  icon: string;
+  icon?: string;
   iconType?: 'ionicons' | 'emoji';
   title: string;
   description: string;
@@ -50,20 +51,23 @@ export const SubjectDescription: React.FC<SubjectDescriptionProps> = ({
     onSearchChange(text);
   };
 
+  const isSmallScreen = Dimensions.get('window').width < 360;
+  const isMediumScreen = Dimensions.get('window').width >= 360 && Dimensions.get('window').width < 600;
+
   const styles = StyleSheet.create({
     card: {
       backgroundColor: theme.colors.neuPrimary,
-      borderRadius: theme.roundness * 2,
-      marginBottom: 16,
+      borderRadius: scaledRadius(theme.roundness * 2),
+      marginBottom: scaledSpacing(16),
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 4, height: 4 },
+      shadowOffset: { width: moderateScale(4), height: moderateScale(4) },
       shadowOpacity: 0.6,
-      shadowRadius: 8,
-      elevation: 8,
-      borderWidth: 1.5,
+      shadowRadius: moderateScale(8),
+      elevation: moderateScale(8),
+      borderWidth: moderateScale(1.5),
       borderColor: theme.colors.neuLight,
       overflow: 'hidden',
-      height: height || screenHeight * 0.40, // Reduced height to make search bar visible
+      height: height || screenHeight * (isSmallScreen ? 0.35 : isMediumScreen ? 0.40 : 0.45),
     },
     backgroundImage: {
       width: '100%',
@@ -71,81 +75,76 @@ export const SubjectDescription: React.FC<SubjectDescriptionProps> = ({
     },
     overlay: {
       backgroundColor: 'rgba(0, 0, 0, 0.4)',
-      padding: 16, // Reduced padding to save space
+      padding: scaledSpacing(isSmallScreen ? 12 : 16),
+      justifyContent: 'space-between',
+      height: '100%',
     },
-    iconContainer: {
-      alignItems: 'center',
-      marginBottom: 10, // Reduced margin
-    },
-    iconBackground: {
-      width: 70,
-      height: 70,
-      borderRadius: 35, // Reduced icon size
-      backgroundColor: theme.colors.neuPrimary,
+    contentContainer: {
+      flex: 1,
       justifyContent: 'center',
-      alignItems: 'center',
-      shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 3, height: 3 },
-      shadowOpacity: 0.5,
-      shadowRadius: 5,
-      elevation: 6,
-      borderWidth: 1.5,
-      borderColor: theme.colors.neuLight,
-    },
-    titleContainer: {
-      alignItems: 'center',
-      marginBottom: 10, // Reduced margin
-    },
-    title: {
-      textAlign: 'center',
-      marginTop: 16,
-      color: '#FFFFFF',
     },
     description: {
       textAlign: 'center',
-      marginBottom: 12, // Reduced margin
+      marginBottom: scaledSpacing(16),
       color: '#FFFFFF',
       opacity: 0.9,
+      fontSize: scaledFontSize(isSmallScreen ? 13 : 16),
+      lineHeight: scaledFontSize(isSmallScreen ? 19 : 24),
     },
     stats: {
       flexDirection: 'row',
       justifyContent: 'space-around',
-      marginBottom: 12, // Reduced margin
+      marginBottom: scaledSpacing(isSmallScreen ? 8 : 12),
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      borderRadius: theme.roundness,
-      padding: 10, // Reduced padding
+      borderRadius: scaledRadius(theme.roundness),
+      padding: scaledSpacing(isSmallScreen ? 6 : isMediumScreen ? 8 : 10),
+      flexWrap: isSmallScreen ? 'wrap' : 'nowrap',
     },
     statItem: {
       alignItems: 'center',
+      padding: scaledSpacing(isSmallScreen ? 2 : 4),
+      width: isSmallScreen && subject.accuracy !== undefined ? '50%' : 'auto',
+      marginBottom: isSmallScreen && subject.accuracy !== undefined ? scaledSpacing(4) : 0,
+    },
+    statValue: {
+      fontSize: scaledFontSize(isSmallScreen ? 14 : isMediumScreen ? 15 : 24),
+      fontWeight: 'bold',
+      color: theme.colors.primary,
+      textAlign: 'center',
+    },
+    statLabel: {
+      fontSize: scaledFontSize(isSmallScreen ? 9 : isMediumScreen ? 10 : 14),
+      color: '#FFFFFF',
+      textAlign: 'center',
     },
     searchContainer: {
-      marginTop: 8, // Reduced margin
+      marginTop: scaledSpacing(isSmallScreen ? 6 : 8),
       backgroundColor: 'rgba(255, 255, 255, 0.15)',
-      borderRadius: theme.roundness,
-      padding: 6, // Reduced padding
+      borderRadius: scaledRadius(theme.roundness),
+      padding: scaledSpacing(isSmallScreen ? 4 : 6),
     },
     searchBar: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 8, // Reduced padding
-      borderRadius: 20,
+      paddingHorizontal: scaledSpacing(12),
+      paddingVertical: scaledSpacing(isSmallScreen ? 6 : 8),
+      borderRadius: scaledRadius(20),
       backgroundColor: theme.colors.background,
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 2, height: 2 },
+      shadowOffset: { width: moderateScale(2), height: moderateScale(2) },
       shadowOpacity: 0.3,
-      shadowRadius: 6,
-      elevation: 6,
-      borderWidth: 1.5,
+      shadowRadius: moderateScale(6),
+      elevation: moderateScale(6),
+      borderWidth: moderateScale(1.5),
       borderColor: theme.colors.neuLight,
     },
     searchIcon: {
-      marginRight: 12,
+      marginRight: scaledSpacing(12),
     },
     searchInput: {
       flex: 1,
-      fontSize: 16,
-      padding: 4,
+      fontSize: scaledFontSize(isSmallScreen ? 12 : 16),
+      padding: scaledSpacing(4),
       color: theme.colors.onSurface,
     },
   });
@@ -154,7 +153,7 @@ export const SubjectDescription: React.FC<SubjectDescriptionProps> = ({
   const renderSearchBar = () => (
     <View style={styles.searchContainer}>
       <View style={styles.searchBar}>
-        <Ionicons name="search" size={20} color={theme.colors.onSurfaceVariant} style={styles.searchIcon} />
+        <Ionicons name="search" size={moderateScale(20)} color={theme.colors.onSurfaceVariant} style={styles.searchIcon} />
         <TextInput
           style={[styles.searchInput, { color: theme.colors.onSurface }]}
           placeholder="Search topics..."
@@ -174,64 +173,54 @@ export const SubjectDescription: React.FC<SubjectDescriptionProps> = ({
         resizeMode="cover"
       >
         <View style={styles.overlay}>
-          <View style={styles.iconContainer}>
-            <View style={styles.iconBackground}>
-              {subject.iconType === 'ionicons' ? (
-                <Ionicons name={subject.icon as keyof typeof Ionicons.glyphMap} size={48} color={theme.colors.primary} />
-              ) : (
-                <Typography variant="h1" color="primary">{subject.icon}</Typography>
-              )}
-            </View>
-          </View>
-          
-          <View style={styles.titleContainer}>
-            <Typography variant="h4" weight="bold" style={styles.title}>
-              {subject.title || 'Classic and modern literary works'}
+          <View style={styles.contentContainer}>
+            <Typography 
+              variant="body1" 
+              style={styles.description}
+              numberOfLines={isSmallScreen ? 2 : 3}
+            >
+              {subject.description}
             </Typography>
-          </View>
-          
-          <Typography variant="body1" style={styles.description}>
-            {subject.description}
-          </Typography>
-          
-          <View style={styles.stats}>
-            <View style={styles.statItem}>
-              <Typography variant="h2" weight="bold" color="primary">
-                {subject.topicsCount}
-              </Typography>
-              <Typography variant="body1">
-                Topics
-              </Typography>
-            </View>
             
-            <View style={styles.statItem}>
-              <Typography variant="h2" weight="bold" color="primary">
-                {subject.questionsCount}
-              </Typography>
-              <Typography variant="body1" >
-                Questions
-              </Typography>
-            </View>
-            
-            <View style={styles.statItem}>
-              <Typography variant="h2" weight="bold" color="primary">
-                {subject.progress}%
-              </Typography>
-              <Typography variant="body1" >
-                Progress
-              </Typography>
-            </View>
-
-            {subject.accuracy !== undefined && (
+            <View style={styles.stats}>
               <View style={styles.statItem}>
-                <Typography variant="h2" weight="bold" color="primary">
-                  {subject.accuracy}%
+                <Typography style={styles.statValue}>
+                  {subject.topicsCount}
                 </Typography>
-                <Typography variant="body1" >
-                  Accuracy
+                <Typography style={styles.statLabel}>
+                  Topics
                 </Typography>
               </View>
-            )}
+              
+              <View style={styles.statItem}>
+                <Typography style={styles.statValue}>
+                  {subject.questionsCount}
+                </Typography>
+                <Typography style={styles.statLabel}>
+                  Questions
+                </Typography>
+              </View>
+              
+              <View style={styles.statItem}>
+                <Typography style={styles.statValue}>
+                  {subject.progress}%
+                </Typography>
+                <Typography style={styles.statLabel}>
+                  Progress
+                </Typography>
+              </View>
+
+              {subject.accuracy !== undefined && (
+                <View style={styles.statItem}>
+                  <Typography style={styles.statValue}>
+                    {subject.accuracy}%
+                  </Typography>
+                  <Typography style={styles.statLabel}>
+                    Accuracy
+                  </Typography>
+                </View>
+              )}
+            </View>
           </View>
           
           {/* Only show search bar in the card if showSearchBar is true */}
@@ -249,37 +238,38 @@ export const SubjectSearchBar: React.FC<{
   style?: any;
 }> = ({ searchQuery, onSearchChange, style }) => {
   const theme = useTheme<AppTheme>();
+  const isSmallScreen = Dimensions.get('window').width < 360;
   
   const styles = StyleSheet.create({
     searchContainer: {
-      marginTop: 10,
+      marginTop: scaledSpacing(10),
       width: '100%',
       backgroundColor: 'rgba(255, 255, 255, 0.15)',
-      borderRadius: theme.roundness,
-      padding: 8,
+      borderRadius: scaledRadius(theme.roundness),
+      padding: scaledSpacing(8),
     },
     searchBar: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 8, // Reduced padding
-      borderRadius: 20,
+      paddingHorizontal: scaledSpacing(12),
+      paddingVertical: scaledSpacing(isSmallScreen ? 6 : 8),
+      borderRadius: scaledRadius(20),
       backgroundColor: theme.colors.background,
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 2, height: 2 },
+      shadowOffset: { width: moderateScale(2), height: moderateScale(2) },
       shadowOpacity: 0.3,
-      shadowRadius: 6,
-      elevation: 6,
-      borderWidth: 1.5,
+      shadowRadius: moderateScale(6),
+      elevation: moderateScale(6),
+      borderWidth: moderateScale(1.5),
       borderColor: theme.colors.neuLight,
     },
     searchIcon: {
-      marginRight: 12,
+      marginRight: scaledSpacing(12),
     },
     searchInput: {
       flex: 1,
-      fontSize: 16,
-      padding: 4,
+      fontSize: scaledFontSize(isSmallScreen ? 12 : 16),
+      padding: scaledSpacing(4),
       color: theme.colors.onSurface,
     },
   });
@@ -287,7 +277,7 @@ export const SubjectSearchBar: React.FC<{
   return (
     <View style={[styles.searchContainer, style]}>
       <View style={styles.searchBar}>
-        <Ionicons name="search" size={20} color={theme.colors.onSurfaceVariant} style={styles.searchIcon} />
+        <Ionicons name="search" size={moderateScale(20)} color={theme.colors.onSurfaceVariant} style={styles.searchIcon} />
         <TextInput
           style={[styles.searchInput, { color: theme.colors.onSurface }]}
           placeholder="Search topics..."

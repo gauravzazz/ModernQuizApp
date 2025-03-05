@@ -5,6 +5,7 @@ import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
 import Markdown from 'react-native-markdown-display';
 import HTML from 'react-native-render-html';
+import { moderateScale, scaledSpacing, scaledRadius, scaledFontSize } from '../utils/scaling';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -25,25 +26,25 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     container: {
       backgroundColor: theme.colors.neuPrimary,
       borderRadius: theme.roundness * 2,
-      padding: 24,
-      marginHorizontal: 16,
-      marginBottom: 24,
+      padding: scaledSpacing(24),
+      marginHorizontal: scaledSpacing(16),
+      marginBottom: scaledSpacing(24),
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 5, height: 5 },
-      shadowOpacity: 0.6,
-      shadowRadius: 10,
-      elevation: 8,
+      shadowOffset: { width: moderateScale(5), height: moderateScale(5) },
+      shadowOpacity: theme.dark ? 0.6 : 0.3,
+      shadowRadius: moderateScale(theme.dark ? 10 : 8),
+      elevation: moderateScale(8),
       borderWidth: 1,
       borderColor: theme.colors.neuLight,
-      marginTop: 16,
-      minHeight: 150,
-      maxHeight: 400,
+      marginTop: scaledSpacing(16),
+      minHeight: moderateScale(150),
+      maxHeight: moderateScale(400),
     },
     questionText: {
-      marginBottom: 24,
+      marginBottom: scaledSpacing(24),
     },
     questionNumber: {
-      marginBottom: 8,
+      marginBottom: scaledSpacing(8),
       color: theme.colors.onSurfaceVariant,
     },
     selectedOption: {
@@ -60,14 +61,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     },
     optionText: {
       flex: 1,
-      fontSize: 16,
+      fontSize: scaledFontSize(16),
       color: theme.colors.onSurface,
-      marginLeft: 12,
+      marginLeft: scaledSpacing(12),
     },
     optionIndicator: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      width: moderateScale(32),
+      height: moderateScale(32),
+      borderRadius: moderateScale(16),
       backgroundColor: theme.colors.background,
       justifyContent: 'center',
       alignItems: 'center',
@@ -83,28 +84,28 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       fontWeight: '600',
     },
     explanationContainer: {
-      marginTop: 16,
-      padding: 16,
+      marginTop: scaledSpacing(16),
+      padding: scaledSpacing(16),
       backgroundColor: `${theme.colors.primary}10`,
       borderRadius: theme.roundness,
     },
     explanationTitle: {
-      fontSize: 16,
+      fontSize: scaledFontSize(16),
       fontWeight: '600',
       color: theme.colors.primary,
-      marginBottom: 8,
+      marginBottom: scaledSpacing(8),
     },
     explanationText: {
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: scaledFontSize(14),
+      lineHeight: scaledFontSize(20),
       color: theme.colors.onSurface,
     },
     showMoreButton: {
-      marginTop: 8,
+      marginTop: scaledSpacing(8),
       alignSelf: 'flex-start',
     },
     showMoreText: {
-      fontSize: 14,
+      fontSize: scaledFontSize(14),
       fontWeight: '600',
       color: theme.colors.primary,
     },
@@ -117,12 +118,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         {text.includes('<') && text.includes('>') ? (
           <HTML 
             source={{ html: `Q${questionNumber}. ${text}` }}
-            contentWidth={SCREEN_WIDTH - 80}
+            contentWidth={SCREEN_WIDTH - moderateScale(80)}
             baseStyle={{
               color: theme.colors.onSurface,
-              fontSize: text.length > 200 ? 18 : 20,
+              fontSize: scaledFontSize(text.length > 200 ? 18 : 20),
               fontWeight: 'bold',
-              lineHeight: 28
+              lineHeight: scaledFontSize(28)
             }}
           />
         ) : (
@@ -130,9 +131,9 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             style={{
               body: {
                 color: theme.colors.onSurface,
-                fontSize: text.length > 200 ? 18 : 20,
+                fontSize: scaledFontSize(text.length > 200 ? 18 : 20),
                 fontWeight: 'bold',
-                lineHeight: 28
+                lineHeight: scaledFontSize(28)
               }
             }}
           >
