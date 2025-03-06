@@ -14,12 +14,16 @@ export interface HeaderSectionProps {
   onAvatarPress?: () => void;
   onNotificationPress?: () => void;
   notificationCount?: number;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
 }
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const HeaderSection: React.FC<HeaderSectionProps> = ({
   onAvatarPress,
+  searchQuery,
+  onSearchChange,
 }) => {
   const theme = useTheme<AppTheme>();
   const navigation = useNavigation<NavigationProp>();
@@ -105,7 +109,11 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
         </TouchableOpacity>
       </View>
       <View style={styles.searchContainer}>
-        <SearchBar placeholder="Search subjects..." />
+        <SearchBar 
+          placeholder="Search subjects..." 
+          value={searchQuery}
+          onChangeText={onSearchChange}
+        />
       </View>
     </View>
   );

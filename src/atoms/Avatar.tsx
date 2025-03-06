@@ -20,6 +20,8 @@ export const Avatar: React.FC<AvatarProps> = ({
 }) => {
   const theme = useTheme<AppTheme>();
 
+  const defaultImageUrl = 'https://ui-avatars.com/api/?background=random&name=' + (initials || '?');
+
   const getSize = () => {
     switch (size) {
       case 'small':
@@ -76,9 +78,11 @@ export const Avatar: React.FC<AvatarProps> = ({
       {source ? (
         <Image source={source} style={styles.image} resizeMode="cover" />
       ) : (
-        <Typography style={styles.initialsText} weight="medium">
-          {initials?.toUpperCase() ?? '?'}
-        </Typography>
+        <Image 
+          source={{ uri: defaultImageUrl }} 
+          style={styles.image} 
+          resizeMode="cover"
+        />
       )}
     </View>
   );

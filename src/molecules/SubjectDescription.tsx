@@ -119,9 +119,9 @@ export const SubjectDescription: React.FC<SubjectDescriptionProps> = ({
     },
     searchContainer: {
       marginTop: scaledSpacing(isSmallScreen ? 6 : 8),
-      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-      borderRadius: scaledRadius(theme.roundness),
-      padding: scaledSpacing(isSmallScreen ? 4 : 6),
+      //backgroundColor: 'rgba(255, 255, 255, 0.15)',
+      //borderRadius: scaledRadius(theme.roundness),
+      //padding: scaledSpacing(isSmallScreen ? 4 : 6),
     },
     searchBar: {
       flexDirection: 'row',

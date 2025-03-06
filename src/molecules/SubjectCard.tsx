@@ -16,6 +16,7 @@ export interface SubjectCardProps {
   onPress?: () => void;
   style?: any;
   width?: number; // Width prop from parent (e.g., SubjectGrid)
+  id: string; // Added id property
 }
 
 export const SubjectCard: React.FC<SubjectCardProps> = ({

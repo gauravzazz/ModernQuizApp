@@ -46,7 +46,7 @@ export const PopularTopicCard: React.FC<PopularTopicCardProps> = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: theme.dark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.4)',
+      backgroundColor: theme.dark ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.25)',
       borderRadius: scaledRadius(theme.roundness * 2),
     },
     contentContainer: {
@@ -151,7 +151,7 @@ export const PopularTopicCard: React.FC<PopularTopicCardProps> = ({
             style={styles.backgroundImage}
             imageStyle={{
               borderRadius: scaledRadius(theme.roundness * 2),
-              opacity: 0.75,
+              opacity: 0.95,
             }}
             resizeMode="cover"
           >

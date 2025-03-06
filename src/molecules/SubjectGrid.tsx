@@ -54,7 +54,7 @@ export const SubjectGrid: React.FC<SubjectGridProps> = ({
       alignItems: 'flex-start',
     },
     cardWrapper: {
-      width: '50%',
+      width: '48%',
       paddingHorizontal: GRID_SPACING/2,
       marginBottom: GRID_SPACING,
       alignItems: 'center',

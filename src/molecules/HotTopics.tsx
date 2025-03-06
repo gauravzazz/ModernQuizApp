@@ -7,12 +7,21 @@ import { TopicCard } from './TopicCard';
 import { mockTopics } from '../data/mockData';
 import { QuizConfigModal } from '../atoms/QuizConfigModal';
 
-export const HotTopics: React.FC = () => {
+export const HotTopics: React.FC<{ searchQuery?: string }> = ({ searchQuery = '' }) => {
   const theme = useTheme<AppTheme>();
   const [modalVisible, setModalVisible] = React.useState(false);
   const [selectedTopic, setSelectedTopic] = React.useState<any>(null);
   const [questionCount, setQuestionCount] = React.useState(5);
   const [quizMode, setQuizMode] = React.useState<'Practice' | 'Test'>('Practice');
+
+  const filteredTopics = React.useMemo(() => {
+    if (!searchQuery) return mockTopics;
+    const query = searchQuery.toLowerCase();
+    return mockTopics.filter(topic =>
+      topic.title.toLowerCase().includes(query) ||
+      (topic.description?.toLowerCase().includes(query))
+    );
+  }, [searchQuery]);
 
   const styles = StyleSheet.create({
     container: {
@@ -48,7 +57,7 @@ export const HotTopics: React.FC = () => {
         showsHorizontalScrollIndicator={false}
         style={styles.scrollView}
       >
-        {mockTopics.map((topic) => (
+        {filteredTopics.map((topic) => (
           <TopicCard
             key={topic.id}
             title={topic.title}

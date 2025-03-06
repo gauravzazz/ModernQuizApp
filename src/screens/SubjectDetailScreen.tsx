@@ -144,10 +144,23 @@ export const SubjectDetailScreen: React.FC = () => {
   };
 
   // Function to handle search in the subject description
+  const [filteredRecentTopics, setFilteredRecentTopics] = useState<Topic[]>([]);
+  const [filteredAllTopics, setFilteredAllTopics] = useState<GridTopic[]>(mockAllTopics);
+  
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
-    console.log('Search query:', query);
-    // Implement search functionality here
+    
+    // Filter recent topics
+    const filteredRecent = recentTopics.filter(topic =>
+      topic.title.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredRecentTopics(filteredRecent);
+    
+    // Filter all topics
+    const filteredAll = mockAllTopics.filter(topic =>
+      topic.title.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredAllTopics(filteredAll);
   };
 
   return (
@@ -181,19 +194,21 @@ export const SubjectDetailScreen: React.FC = () => {
         />
         {recentTopics.length > 0 ? (
           <RecentTopics 
-            topics={recentTopics} 
+            topics={searchQuery ? filteredRecentTopics : recentTopics} 
             onTopicPress={handleTopicPress} 
           />
         ) : (
           <View style={[styles.container, { alignItems: 'center', justifyContent: 'center', padding: 24 }]}>
             <Typography variant="body1" color="onSurfaceVariant">
-              This subject is new to you. Start exploring topics below!
+              {searchQuery && filteredAllTopics.length === 0
+                ? "No topics match your search"
+                : "This subject is new to you. Start exploring topics below!"}
             </Typography>
           </View>
         )}
         
         <TopicsGrid 
-          topics={mockAllTopics} 
+          topics={searchQuery ? filteredAllTopics : mockAllTopics} 
           onTopicPress={handleTopicPress} 
         />
       </Animated.ScrollView>

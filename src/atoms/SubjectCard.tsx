@@ -69,14 +69,14 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       borderColor: 'rgba(255,255,255,0.15)',
     },
     header: {
-      flexDirection: 'row',
+      flexDirection: 'column',
       alignItems: 'center',
       marginBottom: scaledSpacing(isSmallScreen ? 10 : isMediumScreen ? 14 : 18),
-      gap: scaledSpacing(isSmallScreen ? 10 : isMediumScreen ? 14 : 18),
+      gap: scaledSpacing(isSmallScreen ? 8 : isMediumScreen ? 10 : 12),
     },
     iconContainer: {
-      width: moderateScale(isSmallScreen ? 42 : isMediumScreen ? 50 : 58),
-      height: moderateScale(isSmallScreen ? 42 : isMediumScreen ? 50 : 58),
+      width: moderateScale(isSmallScreen ? 50 : isMediumScreen ? 40 : 70),
+      height: moderateScale(isSmallScreen ? 50 : isMediumScreen ? 40 : 70),
       backgroundColor: backgroundImage ? 'rgba(255,255,255,0.9)' : theme.colors.background,
       borderRadius: scaledRadius(theme.roundness * 1.5),
       justifyContent: 'center',
@@ -88,18 +88,19 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       elevation: moderateScale(4),
       borderWidth: 0.5,
       borderColor: backgroundImage ? 'rgba(255,255,255,0.5)' : theme.colors.neuLight,
+      marginBottom: scaledSpacing(isSmallScreen ? 6 : isMediumScreen ? 8 : 10),
     },
     icon: {
-      fontSize: scaledIconSize(isSmallScreen ? 22 : isMediumScreen ? 26 : 30),
+      fontSize: scaledIconSize(isSmallScreen ? 18 : isMediumScreen ? 26 : 30),
       color: backgroundImage ? theme.colors.primary : undefined,
     },
     content: {
-      flex: 1,
+      width: '100%',
       overflow: 'hidden',
-      justifyContent: 'center',
+      alignItems: 'center',
     },
     title: {
-      fontSize: scaledFontSize(isSmallScreen ? 16 : isMediumScreen ? 18 : 20),
+      fontSize: scaledFontSize(isSmallScreen ? 16 : isMediumScreen ? 12 : 20),
       marginBottom: scaledSpacing(isSmallScreen ? 3 : isMediumScreen ? 4 : 5),
       color: backgroundImage ? '#FFFFFF' : undefined,
       textShadowColor: backgroundImage ? 'rgba(0,0,0,0.5)' : 'transparent',
@@ -107,25 +108,28 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       textShadowRadius: backgroundImage ? 3 : 0,
       letterSpacing: 0.4,
       fontWeight: '700',
+      textAlign: 'center',
     },
     description: {
-      fontSize: scaledFontSize(isSmallScreen ? 12 : isMediumScreen ? 14 : 15),
+      fontSize: scaledFontSize(isSmallScreen ? 12 : isMediumScreen ? 10 : 15),
       opacity: backgroundImage ? 0.95 : 0.8,
-      marginBottom: scaledSpacing(isSmallScreen ? 1 : isMediumScreen ? 2 : 3),
+      marginBottom: scaledSpacing(isSmallScreen ? 10 : isMediumScreen ? 12 : 14),
       color: backgroundImage ? '#FFFFFF' : undefined,
       textShadowColor: backgroundImage ? 'rgba(0,0,0,0.3)' : 'transparent',
       textShadowOffset: backgroundImage ? { width: 0.5, height: 0.5 } : { width: 0, height: 0 },
       textShadowRadius: backgroundImage ? 2 : 0,
-      lineHeight: scaledFontSize(isSmallScreen ? 16 : isMediumScreen ? 20 : 22),
+      lineHeight: scaledFontSize(isSmallScreen ? 14 : isMediumScreen ? 10 : 18), // Reduced line height to remove gaps
+      textAlign: 'center',
+      paddingHorizontal: scaledSpacing(isSmallScreen ? 4 : isMediumScreen ? 6 : 8),
     },
     progressContainer: {
-      marginTop: scaledSpacing(isSmallScreen ? 12 : isMediumScreen ? 16 : 20),
       backgroundColor: backgroundImage ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.03)',
-      padding: backgroundImage ? scaledSpacing(12) : scaledSpacing(10),
+      //paddingHorizontal: scaledSpacing(isSmallScreen ? 8 : isMediumScreen ? 10 : 12),
       paddingBottom: backgroundImage ? scaledSpacing(10) : scaledSpacing(8),
       borderRadius: scaledRadius(theme.roundness * 1.5),
       borderWidth: backgroundImage ? 0 : 0.5,
       borderColor: 'rgba(255,255,255,0.15)',
+      width: '100%',
     },
     progressWrapper: {
       flex: 1,
@@ -156,7 +160,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: theme.dark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.3)',
+      backgroundColor: theme.dark ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.2)',
       borderRadius: scaledRadius(theme.roundness * 2),
     },
     shimmer: {
@@ -196,7 +200,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
             variant="body2"
             color="onSurfaceVariant"
             style={styles.description}
-            numberOfLines={2}
+            numberOfLines={3}
           >
             {description}
           </Typography>
@@ -268,7 +272,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
             style={styles.backgroundImage}
             imageStyle={{
               borderRadius: scaledRadius(theme.roundness * 2),
-              opacity: 0.75, // Increased opacity for better image visibility
+              opacity: 0.95, // Increased opacity for better image visibility
             }}
             resizeMode="cover"
           >

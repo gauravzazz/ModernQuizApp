@@ -4,6 +4,7 @@ import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { Typography } from './Typography';
 import { moderateScale, scaledSpacing, scaledFontSize, scaledRadius } from '../utils/scaling';
+import Ionicons from '@expo/vector-icons/build/Ionicons';
 
 export interface SearchBarProps {
   placeholder?: string;
@@ -36,7 +37,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const styles = StyleSheet.create({
     container: {
       backgroundColor: theme.colors.neuPrimary,
-      borderRadius: scaledRadius(theme.roundness * 1.5),
+      borderRadius: scaledRadius(theme.roundness * 3),
       borderWidth: moderateScale(1.5),
       borderColor: isFocused ? theme.colors.primary : theme.colors.neuLight,
       padding: scaledSpacing(16),
@@ -64,7 +65,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      <Text style={styles.searchIcon}>🔍</Text>
+      <Text style={styles.searchIcon}><Ionicons name="search" size={moderateScale(20)} color={theme.colors.onSurfaceVariant} style={styles.searchIcon} /></Text>
       <TextInput
         style={styles.input}
         placeholder={placeholder}

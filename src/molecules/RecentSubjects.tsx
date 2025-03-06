@@ -12,7 +12,11 @@ import { fetchRecentSubjects } from '../utils/recentSubjectsStorage';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-export const RecentSubjects: React.FC = () => {
+interface RecentSubjectsProps {
+  searchQuery?: string;
+}
+
+export const RecentSubjects: React.FC<RecentSubjectsProps> = ({ searchQuery = '' }) => {
   const theme = useTheme<AppTheme>();
   const navigation = useNavigation<NavigationProp>();
   const [recentSubjects, setRecentSubjects] = useState(mockSubjects);
@@ -33,7 +37,7 @@ export const RecentSubjects: React.FC = () => {
   const styles = StyleSheet.create({
     container: {
       marginBottom: 32,
-      marginTop: 16,
+      marginTop: 32,
     },
     sectionTitle: {
       marginBottom: 16,
@@ -52,6 +56,15 @@ export const RecentSubjects: React.FC = () => {
     },
   });
 
+  const filteredSubjects = React.useMemo(() => {
+    if (!searchQuery) return recentSubjects;
+    const query = searchQuery.toLowerCase();
+    return recentSubjects.filter(subject =>
+      subject.title.toLowerCase().includes(query) ||
+      subject.description.toLowerCase().includes(query)
+    );
+  }, [searchQuery, recentSubjects]);
+
   return (
     <View style={styles.container}>
       <View style={styles.sectionTitle}>
@@ -64,8 +77,8 @@ export const RecentSubjects: React.FC = () => {
         showsHorizontalScrollIndicator={false}
         style={styles.scrollView}
       >
-        {recentSubjects.length > 0 ? (
-          recentSubjects.map((subject) => (
+        {filteredSubjects.length > 0 ? (
+          filteredSubjects.map((subject) => (
             <View key={subject.id} style={styles.cardContainer}>
               <SubjectCard
                 title={subject.title}
