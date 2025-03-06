@@ -64,6 +64,7 @@ export const HotTopics: React.FC<{ searchQuery?: string }> = ({ searchQuery = ''
             userCount={topic.userCount ? topic.userCount : 0}
             icon={topic.icon}
             onPress={() => handleTopicPress(topic)}
+            backgroundImage={topic.image}
           />
         ))}
       </ScrollView>

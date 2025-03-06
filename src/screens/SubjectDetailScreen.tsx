@@ -98,26 +98,22 @@ export const SubjectDetailScreen: React.FC = () => {
     
     try {
       console.log('[handleTopicPress] Attempting to add topic to recent topics...');
-      // Use Promise.resolve to ensure the async operation completes
-      await Promise.resolve(addRecentTopic(subjectId, topicId));
+      // Directly await the addRecentTopic operation
+      await addRecentTopic(subjectId, topicId);
       console.log('[handleTopicPress] Successfully added topic to recent topics');
       
       // Reload recent topics after adding
-      await Promise.resolve(loadRecentTopics());
+      await loadRecentTopics();
       console.log('[handleTopicPress] Successfully reloaded recent topics');
       
-      // Only show modal after all async operations are complete
-      setTimeout(() => {
-        setModalVisible(true);
-        console.log('[handleTopicPress] Modal opened after adding to recent topics');
-      }, 100); // Small delay to ensure state updates have completed
+      // Show modal immediately after operations complete
+      setModalVisible(true);
+      console.log('[handleTopicPress] Modal opened after adding to recent topics');
     } catch (error) {
-      console.error('[handleTopicPress] Error:', error);
-      // Still show the modal even if there was an error with the recent topics
-      setTimeout(() => {
-        setModalVisible(true);
-        console.log('[handleTopicPress] Modal opened despite error with recent topics');
-      }, 100);
+      console.error('[handleTopicPress] Error handling topic:', error);
+      // Show modal even if there was an error
+      setModalVisible(true);
+      console.log('[handleTopicPress] Modal opened despite error with recent topics');
     }
   };
 
