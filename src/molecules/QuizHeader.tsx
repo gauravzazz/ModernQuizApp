@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Dimensions } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
@@ -7,6 +7,7 @@ import { ProgressBar } from '../atoms/ProgressBar';
 import { NavigationButton } from '../atoms/NavigationButton';
 import { Button } from '../atoms/Button';
 import { QuizSummary } from './QuizSummary';
+import { scale, verticalScale, moderateScale } from '../utils/scaling';
 
 interface QuizHeaderProps {
   currentQuestionIndex: number;
@@ -37,6 +38,7 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
 }) => {
   const theme = useTheme<AppTheme>();
   const [showSummary, setShowSummary] = React.useState(false);
+  const { width: screenWidth } = Dimensions.get('window');
 
   const styles = StyleSheet.create({
     container: {
@@ -46,55 +48,81 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
       right: 0,
       backgroundColor: theme.colors.background,
       zIndex: 1000,
-      paddingTop: 8,
-      paddingBottom: 10,
+      paddingTop: verticalScale(12),
+      paddingBottom: verticalScale(14),
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.neuLight,
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 4,
+      shadowOffset: { width: 0, height: moderateScale(2) },
+      shadowOpacity: 0.15,
+      shadowRadius: moderateScale(6),
+      elevation: 6,
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 12,
-      height: 40,
-      marginHorizontal: 16,
+      marginBottom: verticalScale(12),
+      height: verticalScale(48),
+      marginHorizontal: scale(16),
     },
     timer: {
-      paddingVertical: 4,
-      paddingHorizontal: 12,
-      minWidth: 90,
-      height: 40,
+      paddingVertical: verticalScale(4),
+      paddingHorizontal: scale(16),
+      minWidth: scale(100),
+      height: verticalScale(48),
       alignItems: 'center',
       justifyContent: 'center',
+      //backgroundColor: theme.colors.neuPrimary,
+      //borderRadius: theme.roundness,
+      shadowColor: theme.colors.neuDark,
+      shadowOffset: { width: moderateScale(2), height: moderateScale(2) },
+      shadowOpacity: 0.2,
+      shadowRadius: moderateScale(4),
+      elevation: 4,
+      //borderWidth: 1,
+      borderColor: theme.colors.neuLight,
     },
     timerText: {
       fontFamily: 'monospace',
-      fontSize: 24,
+      fontSize: moderateScale(screenWidth < 375 ? 10 : 18),
       fontWeight: 'bold',
       color: theme.colors.primary,
     },
     progressContainer: {
-      marginTop: 4,
-      paddingHorizontal: 16
+      marginTop: verticalScale(4),
+      paddingHorizontal: scale(16),
     },
     submitButton: {
-      height: 40,
-      minWidth: 100,
-      paddingHorizontal: 20,
-      backgroundColor: theme.colors.primary,
-      borderRadius: theme.roundness,
+      height: verticalScale(45),
+      minWidth: scale(40),
+      paddingHorizontal: scale(10),
+      backgroundColor: theme.colors.success,
+      borderRadius: theme.roundness * 2,
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 4, height: 4 },
-      shadowOpacity: 0.6,
-      shadowRadius: 8,
+      shadowOffset: { width: moderateScale(3), height: moderateScale(3) },
+      shadowOpacity: 0.4,
+      shadowRadius: moderateScale(6),
+      elevation: 6,
+      borderWidth: 1.5,
+      borderColor: theme.colors.success,
+    },
+    navigationButton: {
+      backgroundColor: theme.colors.neuPrimary,
+      aspectRatio: 1,
+      width: verticalScale(44),
+      height: verticalScale(44),
+      borderRadius: verticalScale(22),
+      shadowColor: theme.colors.neuDark,
+      shadowOffset: { width: moderateScale(4), height: moderateScale(4) },
+      shadowOpacity: 0.4,
+      shadowRadius: moderateScale(8),
       elevation: 8,
       borderWidth: 1.5,
       borderColor: theme.colors.neuLight,
+      marginHorizontal: scale(4),
+      justifyContent: 'center',
+      alignItems: 'center'
     }
   });
 
@@ -111,35 +139,15 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
           <NavigationButton
             variant="close"
             onPress={onClose}
-            size={40}
-            style={{
-              backgroundColor: theme.colors.neuPrimary,
-              borderRadius: theme.roundness,
-              shadowColor: theme.colors.neuDark,
-              shadowOffset: { width: 2, height: 2 },
-              shadowOpacity: 0.4,
-              shadowRadius: 4,
-              elevation: 4,
-              borderWidth: 1.5,
-              borderColor: theme.colors.neuLight
-            }}
+            size={verticalScale(44)}
+            style={styles.navigationButton}
           />
         ) : (
           <NavigationButton
             variant="menu"
             onPress={() => setShowSummary(true)}
-            size={40}
-            style={{
-              backgroundColor: theme.colors.neuPrimary,
-              borderRadius: theme.roundness,
-              shadowColor: theme.colors.neuDark,
-              shadowOffset: { width: 2, height: 2 },
-              shadowOpacity: 0.4,
-              shadowRadius: 4,
-              elevation: 4,
-              borderWidth: 1.5,
-              borderColor: theme.colors.neuLight
-            }}
+            size={verticalScale(44)}
+            style={styles.navigationButton}
           />
         )}
         <View style={styles.timer}>

@@ -3,6 +3,7 @@ import { StyleSheet, View, ScrollView, Animated, Dimensions } from 'react-native
 import { useTheme } from 'react-native-paper';
 import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../navigation';
 import { AppTheme } from '../theme';
 import { SubjectHeader } from '../molecules/SubjectHeader';
@@ -83,15 +84,36 @@ export const SubjectDetailScreen: React.FC = () => {
   }, []);
 
   const loadRecentTopics = async () => {
-    console.log('[loadRecentTopics] Loading topics for subject:', subjectId);
-    const topics = await fetchRecentTopics(subjectId);
-    console.log('[loadRecentTopics] Loaded topics:', topics);
-    setRecentTopics(topics);
+    if (!subjectId) {
+      console.error('[loadRecentTopics] No subject ID provided');
+      return;
+    }
+
+    try {
+      console.log('[loadRecentTopics] Loading topics for subject:', subjectId);
+      const topics = await fetchRecentTopics(subjectId);
+      
+      if (Array.isArray(topics)) {
+        console.log('[loadRecentTopics] Successfully loaded topics:', topics);
+        setRecentTopics(topics);
+      } else {
+        console.error('[loadRecentTopics] Invalid topics data received:', topics);
+        setRecentTopics([]);
+      }
+    } catch (error) {
+      console.error('[loadRecentTopics] Error loading recent topics:', error);
+      setRecentTopics([]);
+    }
   };
 
   const handleTopicPress = async (topicId: string) => {
     console.log('[handleTopicPress] Selected topic ID:', topicId);
     console.log('[handleTopicPress] Current subject ID:', subjectId);
+    
+    if (!subjectId || !topicId) {
+      console.error('[handleTopicPress] Missing required IDs:', { subjectId, topicId });
+      return;
+    }
     
     // Set the selected topic ID first
     setSelectedTopicId(topicId);
@@ -103,23 +125,49 @@ export const SubjectDetailScreen: React.FC = () => {
       console.log('[handleTopicPress] Successfully added topic to recent topics');
       
       // Reload recent topics after adding
-      await loadRecentTopics();
-      console.log('[handleTopicPress] Successfully reloaded recent topics');
+      const updatedTopics = await fetchRecentTopics(subjectId);
+      console.log('[handleTopicPress] Fetched updated topics:', updatedTopics);
+      
+      if (Array.isArray(updatedTopics)) {
+        setRecentTopics(updatedTopics);
+        console.log('[handleTopicPress] Successfully updated recent topics state');
+      } else {
+        console.error('[handleTopicPress] Invalid topics data received:', updatedTopics);
+      }
       
       // Show modal immediately after operations complete
       setModalVisible(true);
       console.log('[handleTopicPress] Modal opened after adding to recent topics');
     } catch (error) {
       console.error('[handleTopicPress] Error handling topic:', error);
-      // Show modal even if there was an error
+      // Show modal even if there was an error with recent topics
       setModalVisible(true);
       console.log('[handleTopicPress] Modal opened despite error with recent topics');
     }
   };
 
   const handleQuizStart = (config: { questionCount: number; mode: 'Practice' | 'Test' }) => {
-    console.log(`Starting quiz for topic ${selectedTopicId}:`, config);
-    // Navigation logic would go here
+    if (!selectedTopicId || !subjectId) {
+      console.error('[handleQuizStart] Missing required IDs:', { selectedTopicId, subjectId });
+      return;
+    }
+
+    console.log('[handleQuizStart] Starting quiz with config:', {
+      ...config,
+      topicId: selectedTopicId,
+      subjectId
+    });
+
+    // Close the modal
+    setModalVisible(false);
+
+    // Navigate to the Quiz screen
+    navigation.navigate('Quiz', {
+      questionCount: config.questionCount,
+      mode: config.mode,
+      topicId: selectedTopicId,
+      subjectId: subjectId
+    });
   };
 
   const handleBackPress = () => {

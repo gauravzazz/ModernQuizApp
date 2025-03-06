@@ -1,10 +1,11 @@
-import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, Animated } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { Button } from '../atoms/Button';
 import RenderHtml from 'react-native-render-html';
 import { useWindowDimensions } from 'react-native';
+import { moderateScale, scaledSpacing, scaledRadius } from '../utils/scaling';
 
 interface Option {
   id: string;
@@ -30,83 +31,112 @@ export const OptionsGrid: React.FC<OptionsGridProps> = ({
   disabled = false,
 }) => {
   const theme = useTheme<AppTheme>();
-
   const { width } = useWindowDimensions();
-  
+  const [pressedOptionId, setPressedOptionId] = useState<string | null>(null);
+
   const styles = StyleSheet.create({
     container: {
-      marginTop: 16,
-      paddingHorizontal: 12,
+      marginTop: scaledSpacing(16),
+      paddingHorizontal: scaledSpacing(12),
     },
     optionContainer: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      marginBottom: 16,
+      marginBottom: scaledSpacing(7),
       width: '100%',
-    },
-    optionLabel: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      backgroundColor: theme.colors.neuPrimary,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 16,
-      shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 3, height: 3 },
-      shadowOpacity: 0.8,
-      shadowRadius: 6,
-      elevation: 6,
-      borderWidth: 1,
-      borderColor: theme.colors.neuLight,
-    },
-    optionLabelText: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: theme.colors.onSurface,
     },
     optionButton: {
       flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 4, height: 4 },
-      shadowOpacity: 1,
-      shadowRadius: 8,
-      elevation: 8,
-      minHeight: 50,
-      borderWidth: 1.5,
+      shadowOffset: { width: moderateScale(3), height: moderateScale(3) },
+      shadowOpacity: 0.6,
+      shadowRadius: moderateScale(6),
+      elevation: moderateScale(6),
+      minHeight: moderateScale(56),
+      borderWidth: moderateScale(1.5),
       borderColor: theme.colors.primary,
+      borderRadius: scaledRadius(theme.roundness * 3),
+      backgroundColor: theme.colors.neuPrimary,
+      transform: [{ scale: 1 }],
+      paddingHorizontal: scaledSpacing(12),
+      paddingVertical: scaledSpacing(8),
+    },
+    optionLabel: {
+      width: moderateScale(32),
+      height: moderateScale(32),
+      borderRadius: moderateScale(16),
+      backgroundColor: theme.colors.neuPrimary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: scaledSpacing(12),
+      borderWidth: 1,
+      borderColor: theme.colors.neuLight,
+      shadowColor: theme.colors.neuDark,
+      shadowOffset: { width: moderateScale(1), height: moderateScale(1) },
+      shadowOpacity: 0.3,
+      shadowRadius: moderateScale(2),
+      elevation: moderateScale(2),
+    },
+    optionLabelText: {
+      fontSize: moderateScale(14),
+      fontWeight: 'bold',
+      color: theme.colors.onSurface,
     },
     optionContent: {
       flex: 1,
-      paddingVertical: 0,
+      paddingVertical: scaledSpacing(4),
+      paddingRight: scaledSpacing(8),
     },
     optionText: {
       color: theme.colors.primary,
-      fontWeight: '500',
-      padding: 8,
+      fontWeight: '600',
+      padding: scaledSpacing(4),
       textAlign: 'left',
+      fontSize: moderateScale(14),
+      lineHeight: moderateScale(20),
     },
     selectedOptionText: {
       color: theme.colors.onPrimary,
-      fontWeight: '500',
-      padding: 8,
+      fontWeight: '600',
+      padding: scaledSpacing(4),
       textAlign: 'left',
+      fontSize: moderateScale(14),
+      lineHeight: moderateScale(20),
     },
     correctOption: {
       backgroundColor: theme.colors.success,
       borderColor: theme.colors.success,
+      shadowColor: theme.colors.success,
+      transform: [{ scale: 1.02 }],
+      shadowOpacity: 0.8,
+      shadowRadius: moderateScale(8),
     },
     incorrectOption: {
       backgroundColor: theme.colors.error,
       borderColor: theme.colors.error,
+      shadowColor: theme.colors.error,
+      transform: [{ scale: 0.98 }],
+      shadowOpacity: 0.8,
+      shadowRadius: moderateScale(8),
     },
     correctLabel: {
       backgroundColor: theme.colors.success,
       borderColor: theme.colors.success,
+      transform: [{ scale: 1.1 }],
+      shadowOpacity: 0.9,
     },
     incorrectLabel: {
       backgroundColor: theme.colors.error,
       borderColor: theme.colors.error,
+      transform: [{ scale: 0.9 }],
+      shadowOpacity: 0.9,
+    },
+    pressedOption: {
+      transform: [{ scale: 0.98 }],
+      shadowOffset: { width: moderateScale(1), height: moderateScale(1) },
+      shadowOpacity: 0.3,
+      shadowRadius: moderateScale(3),
+      elevation: moderateScale(3),
     },
   });
 
@@ -120,37 +150,50 @@ export const OptionsGrid: React.FC<OptionsGridProps> = ({
         const isSelected = selectedOptionId === option.id;
         const isCorrect = showCorrectAnswer && option.id === correctOptionId;
         const isIncorrect = showCorrectAnswer && isSelected && option.id !== correctOptionId;
+        const isPressed = pressedOptionId === option.id;
 
         return (
           <View key={option.id} style={styles.optionContainer}>
-            <View
+            <Button
+              variant="neumorphic"
               style={[
-                styles.optionLabel,
-                isCorrect && styles.correctLabel,
-                isIncorrect && styles.incorrectLabel,
+                styles.optionButton,
+                isPressed && styles.pressedOption,
+                isCorrect && styles.correctOption,
+                isIncorrect && styles.incorrectOption,
+                isSelected && {
+                  backgroundColor: theme.colors.primary,
+                  borderColor: theme.colors.primary,
+                  shadowColor: theme.colors.primary,
+                  shadowOpacity: 0.8,
+                  shadowRadius: moderateScale(8),
+                  transform: [{ scale: 1.02 }]
+                }
               ]}
+              onPress={() => onOptionPress(option.id)}
+              onPressIn={() => setPressedOptionId(option.id)}
+              onPressOut={() => setPressedOptionId(null)}
+              disabled={disabled || showCorrectAnswer}
             >
-              <Text style={styles.optionLabelText}>{getOptionLabel(index)}</Text>
-            </View>
-            <View style={styles.optionContent}>
-              <Button
-                variant={isSelected ? 'primary' : 'outline'}
+              <View
                 style={[
-                  styles.optionButton,
-                  isCorrect && styles.correctOption,
-                  isIncorrect && styles.incorrectOption
+                  styles.optionLabel,
+                  isCorrect && styles.correctLabel,
+                  isIncorrect && styles.incorrectLabel,
                 ]}
-                onPress={() => onOptionPress(option.id)}
-                disabled={disabled || showCorrectAnswer}
               >
+                <Text style={styles.optionLabelText}>{getOptionLabel(index)}</Text>
+              </View>
+              <View style={styles.optionContent}>
                 {option.isHtml ? (
                   <RenderHtml
-                    contentWidth={width - 120}
+                    contentWidth={width - moderateScale(120)}
                     source={{ html: option.text || '' }}
                     baseStyle={{ 
                       color: isSelected ? theme.colors.onPrimary : theme.colors.primary,
-                      fontWeight: '500',
-                      padding: 8
+                      fontWeight: '600',
+                      padding: scaledSpacing(12),
+                      fontSize: moderateScale(16)
                     }}
                   />
                 ) : (
@@ -158,8 +201,8 @@ export const OptionsGrid: React.FC<OptionsGridProps> = ({
                     {option.text || ''}
                   </Text>
                 )}
-              </Button>
-            </View>
+              </View>
+            </Button>
           </View>
         );
       })}

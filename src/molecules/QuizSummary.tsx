@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Modal, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Modal, ScrollView, TouchableOpacity, Dimensions, Platform, Animated } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { scale, verticalScale, moderateScale } from '../utils/scaling';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
 import { Button } from '../atoms/Button';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface QuestionSummary {
   questionNumber: number;
@@ -25,66 +28,90 @@ export const QuizSummary: React.FC<QuizSummaryProps> = ({
   questions,
 }) => {
   const theme = useTheme<AppTheme>();
+  const [activeFilter, setActiveFilter] = useState<'all' | 'not-attempted' | 'attempted' | 'skipped'>('all');
   const [showSkippedOnly, setShowSkippedOnly] = useState(false);
-  const [showAllQuestions, setShowAllQuestions] = useState(true);
+
+  const { width: screenWidth } = Dimensions.get('window');
+  const isSmallScreen = screenWidth < 360;
+  const isMediumScreen = screenWidth >= 360 && screenWidth < 600;
 
   const styles = StyleSheet.create({
     modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
       justifyContent: 'center',
       alignItems: 'center',
-      padding: 20,
+      padding: scale(20),
+    },
+    blurOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+    },
+    fallbackOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContent: {
       width: '100%',
       backgroundColor: theme.colors.background,
-      borderRadius: theme.roundness * 2,
-      padding: 24,
+      borderRadius: moderateScale(theme.roundness * 2),
+      padding: moderateScale(24),
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 8, height: 8 },
-      shadowOpacity: 0.6,
-      shadowRadius: 12,
-      elevation: 12,
-      borderWidth: 1.5,
+      shadowOffset: { width: moderateScale(8), height: moderateScale(8) },
+      shadowOpacity: Platform.OS === 'ios' ? 0.4 : 0.6,
+      shadowRadius: moderateScale(12),
+      elevation: moderateScale(12),
+      borderWidth: moderateScale(1.5),
       borderColor: theme.colors.neuLight,
-      maxHeight: '80%',
+      maxHeight: '85%',
+      transform: [{ scale: isSmallScreen ? 0.95 : 1 }],
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 24,
+      marginBottom: verticalScale(24),
+      paddingBottom: verticalScale(12),
+      borderBottomWidth: moderateScale(1),
+      borderBottomColor: theme.colors.neuLight,
     },
     closeButton: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      width: moderateScale(36),
+      height: moderateScale(36),
+      borderRadius: moderateScale(18),
       backgroundColor: theme.colors.neuPrimary,
       justifyContent: 'center',
       alignItems: 'center',
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 2, height: 2 },
-      shadowOpacity: 0.6,
-      shadowRadius: 4,
-      elevation: 4,
-      borderWidth: 1,
+      shadowOffset: { width: moderateScale(2), height: moderateScale(2) },
+      shadowOpacity: Platform.OS === 'ios' ? 0.3 : 0.6,
+      shadowRadius: moderateScale(4),
+      elevation: moderateScale(4),
+      borderWidth: moderateScale(1.5),
       borderColor: theme.colors.neuLight,
+      transform: [{ scale: 0.95 }],
     },
     filterButton: {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: showSkippedOnly ? theme.colors.primary : theme.colors.neuPrimary,
-      borderRadius: theme.roundness,
-      padding: 8,
-      marginBottom: 16,
+      borderRadius: moderateScale(theme.roundness),
+      padding: moderateScale(10),
+      marginBottom: verticalScale(16),
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 2, height: 2 },
-      shadowOpacity: 0.4,
-      shadowRadius: 4,
-      elevation: 4,
-      borderWidth: 1.5,
-      borderColor: theme.colors.neuLight,
+      shadowOffset: { width: moderateScale(3), height: moderateScale(3) },
+      shadowOpacity: Platform.OS === 'ios' ? 0.25 : 0.4,
+      shadowRadius: moderateScale(6),
+      elevation: moderateScale(6),
+      borderWidth: moderateScale(1.5),
+      borderColor: showSkippedOnly ? theme.colors.primary : theme.colors.neuLight,
+      transform: [{ scale: showSkippedOnly ? 1.02 : 1 }],
     },
     filterContainer: {
       flexDirection: 'row',
@@ -94,54 +121,90 @@ export const QuizSummary: React.FC<QuizSummaryProps> = ({
     questionsGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 12,
-      paddingBottom: 16,
+      gap: moderateScale(isSmallScreen ? 8 : isMediumScreen ? 10 : 12),
+      paddingBottom: verticalScale(16),
+      justifyContent: 'center',
     },
     questionButton: {
-      width: 48,
-      height: 48,
-      borderRadius: theme.roundness,
+      width: moderateScale(isSmallScreen ? 40 : isMediumScreen ? 44 : 48),
+      height: moderateScale(isSmallScreen ? 40 : isMediumScreen ? 44 : 48),
+      borderRadius: moderateScale(theme.roundness),
       justifyContent: 'center',
       alignItems: 'center',
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 2, height: 2 },
-      shadowOpacity: 0.4,
-      shadowRadius: 4,
-      elevation: 4,
-      borderWidth: 1.5,
+      shadowOffset: { width: moderateScale(2), height: moderateScale(2) },
+      shadowOpacity: Platform.OS === 'ios' ? 0.25 : 0.4,
+      shadowRadius: moderateScale(4),
+      elevation: moderateScale(4),
+      borderWidth: moderateScale(1.5),
       borderColor: theme.colors.neuLight,
     },
     legend: {
-      flexDirection: 'row',
+      flexDirection: isSmallScreen ? 'column' : 'row',
       justifyContent: 'space-around',
-      marginBottom: 16,
-      padding: 8,
+      marginBottom: verticalScale(16),
+      padding: moderateScale(12),
       backgroundColor: theme.colors.neuPrimary,
-      borderRadius: theme.roundness,
+      borderRadius: moderateScale(theme.roundness),
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 2, height: 2 },
-      shadowOpacity: 0.3,
-      shadowRadius: 3,
-      elevation: 3,
-      borderWidth: 1,
+      shadowOffset: { width: moderateScale(2), height: moderateScale(2) },
+      shadowOpacity: Platform.OS === 'ios' ? 0.2 : 0.3,
+      shadowRadius: moderateScale(4),
+      elevation: moderateScale(4),
+      borderWidth: moderateScale(1),
       borderColor: theme.colors.neuLight,
     },
     legendItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      gap: moderateScale(8),
+      padding: moderateScale(4),
+      marginVertical: isSmallScreen ? verticalScale(4) : 0,
     },
     legendIndicator: {
-      width: 16,
-      height: 16,
-      borderRadius: 8,
-      borderWidth: 1,
+      width: moderateScale(isSmallScreen ? 14 : 16),
+      height: moderateScale(isSmallScreen ? 14 : 16),
+      borderRadius: moderateScale(isSmallScreen ? 7 : 8),
+      borderWidth: moderateScale(1.5),
     },
   });
 
-  const filteredQuestions = showSkippedOnly
-    ? questions.filter(q => q.isSkipped)
-    : questions;
+  const filteredQuestions = React.useMemo(() => {
+    switch (activeFilter) {
+      case 'not-attempted':
+        return questions.filter(q => !q.isAttempted && !q.isSkipped);
+      case 'attempted':
+        return questions.filter(q => q.isAttempted);
+      case 'skipped':
+        return questions.filter(q => q.isSkipped);
+      default:
+        return questions;
+    }
+  }, [questions, activeFilter]);
+
+  const getFilterButtonStyle = (status: string) => ({
+    backgroundColor:
+      activeFilter === (status === 'Not Attempted' ? 'not-attempted' :
+        status === 'Attempted' ? 'attempted' :
+        status === 'Skipped' ? 'skipped' : 'all')
+        ? theme.colors.primary
+        : theme.colors.neuPrimary,
+    borderColor:
+      status === 'Attempted'
+        ? theme.colors.success
+        : status === 'Skipped'
+        ? theme.colors.error
+        : theme.colors.neuLight,
+    flex: 1,
+    marginHorizontal: moderateScale(4),
+    transform: [{
+      scale: activeFilter === (status === 'Not Attempted' ? 'not-attempted' :
+        status === 'Attempted' ? 'attempted' :
+        status === 'Skipped' ? 'skipped' : 'all')
+        ? 1.02
+        : 1
+    }]
+  });
 
   return (
     <Modal
@@ -149,8 +212,18 @@ export const QuizSummary: React.FC<QuizSummaryProps> = ({
       transparent
       animationType="fade"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
       <View style={styles.modalOverlay}>
+        {Platform.OS === 'ios' ? (
+          <BlurView
+            tint="dark"
+            intensity={20}
+            style={styles.blurOverlay}
+          />
+        ) : (
+          <View style={styles.fallbackOverlay} />
+        )}
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <Typography variant="h5" weight="bold">
@@ -165,34 +238,48 @@ export const QuizSummary: React.FC<QuizSummaryProps> = ({
           </View>
 
           <View style={styles.filterContainer}>
-            <TouchableOpacity
-              style={styles.filterButton}
-              onPress={() => setShowSkippedOnly(!showSkippedOnly)}
-            >
-              <Typography
-                variant="button"
-                color={showSkippedOnly ? 'onPrimary' : 'onSurface'}
+            {['Not Attempted', 'Attempted', 'Skipped'].map((status, index) => (
+              <TouchableOpacity
+                key={status}
+                style={[
+                  styles.filterButton,
+                  getFilterButtonStyle(status)
+                ]}
+                onPress={() => {
+                  const filterType = status === 'Not Attempted' ? 'not-attempted' :
+                    status === 'Attempted' ? 'attempted' :
+                    status === 'Skipped' ? 'skipped' : 'all';
+                  setActiveFilter(filterType);
+                }}
               >
-                {showSkippedOnly ? 'Showing Skipped' : 'Show Skipped Only'}
-              </Typography>
-            </TouchableOpacity>
+                <View style={styles.legendItem}>
+                  <MaterialCommunityIcons
+                    name={status === 'Attempted' ? 'check-circle' : status === 'Skipped' ? 'skip-next-circle' : 'circle-outline'}
+                    size={moderateScale(24)}
+                    color={status === 'Attempted'
+                      ? theme.colors.success
+                      : status === 'Skipped'
+                      ? theme.colors.error
+                      : theme.colors.neuLight
+                    }
+                    style={{ marginRight: moderateScale(8) }}
+                  />
+                  <Typography
+                    variant="caption"
+                    color={showSkippedOnly && status === 'Skipped' ? 'onPrimary' : 'onSurface'}
+                  >
+                    {status === 'Not Attempted' 
+                      ? questions.filter(q => !q.isAttempted && !q.isSkipped).length
+                      : status === 'Attempted'
+                      ? questions.filter(q => q.isAttempted).length
+                      : questions.filter(q => q.isSkipped).length
+                    }
+                  </Typography>
+                </View>
+              </TouchableOpacity>
+            ))}
           </View>
           
-          <View style={styles.legend}>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendIndicator, { backgroundColor: theme.colors.neuPrimary, borderColor: theme.colors.neuLight }]} />
-              <Typography variant="caption">Not Attempted</Typography>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendIndicator, { backgroundColor: theme.colors.success, borderColor: theme.colors.success }]} />
-              <Typography variant="caption">Attempted</Typography>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendIndicator, { backgroundColor: theme.colors.error, borderColor: theme.colors.error }]} />
-              <Typography variant="caption">Skipped</Typography>
-            </View>
-          </View>
-
           <ScrollView>
             <View style={styles.questionsGrid}>
               {filteredQuestions.map((question, index) => (
@@ -220,17 +307,29 @@ export const QuizSummary: React.FC<QuizSummaryProps> = ({
                     onClose();
                   }}
                 >
-                  <Typography
-                    variant="button"
-                    color={question.isSkipped || question.isAttempted ? 'onPrimary' : 'onSurface'}
-                    weight={question.isAttempted ? "bold" : "normal"}
-                    style={{ 
-                      fontWeight: question.isAttempted ? 'bold' : 'normal',
-                      fontSize: question.isAttempted ? 16 : 14
-                    }}
-                  >
-                    {question.questionNumber}
-                  </Typography>
+                  <View>
+                    <Typography
+                      variant="button"
+                      color={question.isSkipped || question.isAttempted ? 'onPrimary' : 'onSurface'}
+                      weight={question.isAttempted ? "bold" : "normal"}
+                      style={{ 
+                        fontWeight: question.isAttempted ? 'bold' : 'normal',
+                        fontSize: question.isAttempted 
+                          ? (isSmallScreen ? 8 : 16)
+                          : (isSmallScreen ? 8 : 14)
+                      }}
+                    >
+                      {question.questionNumber}
+                    </Typography>
+                    {(question.isAttempted || question.isSkipped) && (
+                      <MaterialCommunityIcons
+                        name={question.isAttempted ? 'check' : 'skip-next'}
+                        size={moderateScale(isSmallScreen ? 12 : 16)}
+                        color={theme.colors.onPrimary}
+                        style={{ position: 'absolute', right: -moderateScale(4), top: -moderateScale(4) }}
+                      />
+                    )}
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>

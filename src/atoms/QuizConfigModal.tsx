@@ -148,16 +148,13 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
     // Call the onStart callback if provided
     onStart?.({ questionCount: selectedQuestionCount, mode: quizMode });
     
-    // Create a unique quiz ID using timestamp
-    const quizId = `quiz_${Date.now()}`;
-    
     // Navigate to the Quiz screen with the configuration data
     // Ensure we're explicitly passing the topicId and subjectId
     navigation.navigate('Quiz', {
       questionCount: selectedQuestionCount,
       mode: quizMode,
-      topicId: topicId,
-      subjectId: subjectId,
+      topicId,
+      subjectId
     });
     
     // Log the navigation parameters for debugging

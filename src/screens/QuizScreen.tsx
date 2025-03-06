@@ -361,7 +361,7 @@ export const QuizScreen: React.FC = () => {
         />
       </View>
 
-      <ScrollView>
+      <ScrollView style={{  }}>
         <QuestionCard
           text={currentQuestion?.text || 'Loading question...'}
           questionNumber={currentQuestionIndex + 1}

@@ -22,26 +22,35 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 }) => {
   const theme = useTheme<AppTheme>();
 
-  const styles = StyleSheet.create({
+  const isSmallScreen = SCREEN_WIDTH < 360;
+const isMediumScreen = SCREEN_WIDTH >= 360 && SCREEN_WIDTH < 600;
+
+const styles = StyleSheet.create({
     container: {
       backgroundColor: theme.colors.neuPrimary,
-      borderRadius: theme.roundness * 2,
-      padding: scaledSpacing(24),
-      marginHorizontal: scaledSpacing(16),
-      marginBottom: scaledSpacing(24),
+      borderRadius: scaledRadius(theme.roundness * 2.5),
+      padding: scaledSpacing(isSmallScreen ? 18 : isMediumScreen ? 24 : 28),
+      marginHorizontal: scaledSpacing(isSmallScreen ? 14 : 18),
+      marginBottom: scaledSpacing(isSmallScreen ? 10 : 14),
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: moderateScale(5), height: moderateScale(5) },
+      shadowOffset: { 
+        width: moderateScale(isSmallScreen ? 4 : 6), 
+        height: moderateScale(isSmallScreen ? 4 : 6) 
+      },
       shadowOpacity: theme.dark ? 0.6 : 0.3,
       shadowRadius: moderateScale(theme.dark ? 10 : 8),
       elevation: moderateScale(8),
-      borderWidth: 1,
+      borderWidth: moderateScale(1.5),
       borderColor: theme.colors.neuLight,
-      marginTop: scaledSpacing(16),
-      minHeight: moderateScale(150),
-      maxHeight: moderateScale(400),
+      marginTop: scaledSpacing(24),
+      minHeight: moderateScale(isSmallScreen ? 140 : 170),
+      maxHeight: moderateScale(isSmallScreen ? 320 : 420),
+      transform: [{ scale: 1 }], // Added for animation base state
     },
     questionText: {
-      marginBottom: scaledSpacing(24),
+      marginBottom: scaledSpacing(isSmallScreen ? 1 : 1),
+      paddingHorizontal: scaledSpacing(isSmallScreen ? 1 : 1),
+      opacity: 1, // Added for fade animation
     },
     questionNumber: {
       marginBottom: scaledSpacing(8),
@@ -121,9 +130,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             contentWidth={SCREEN_WIDTH - moderateScale(80)}
             baseStyle={{
               color: theme.colors.onSurface,
-              fontSize: scaledFontSize(text.length > 200 ? 18 : 20),
-              fontWeight: 'bold',
-              lineHeight: scaledFontSize(28)
+              fontSize: scaledFontSize(isSmallScreen ? (text.length > 200 ? 14 : 16) : (text.length > 200 ? 18 : 20)),
+              fontWeight: '600',
+              lineHeight: scaledFontSize(isSmallScreen ? 22 : 28),
+              letterSpacing: 0.3
             }}
           />
         ) : (
@@ -131,9 +141,10 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             style={{
               body: {
                 color: theme.colors.onSurface,
-                fontSize: scaledFontSize(text.length > 200 ? 18 : 20),
-                fontWeight: 'bold',
-                lineHeight: scaledFontSize(28)
+                fontSize: scaledFontSize(isSmallScreen ? (text.length > 200 ? 14 : 16) : (text.length > 200 ? 18 : 20)),
+                fontWeight: '600',
+                lineHeight: scaledFontSize(isSmallScreen ? 22 : 28),
+                letterSpacing: 0.3
               }
             }}
           >

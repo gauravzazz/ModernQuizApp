@@ -184,7 +184,6 @@ export const TopicCard: React.FC<TopicCardProps> = ({
       borderRadius: scaledRadius(theme.roundness),
       justifyContent: 'center',
       alignItems: 'center',
-      backdropFilter: 'blur(10px)',
       paddingHorizontal: scaledSpacing(16),
       width: '100%',
       maxWidth: moderateScale(isSmallScreen ? 240 : 280),
