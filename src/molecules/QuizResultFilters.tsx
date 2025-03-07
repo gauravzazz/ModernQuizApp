@@ -2,7 +2,6 @@ import React from 'react';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
-import { Typography } from '../atoms/Typography';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type FilterType = 'all' | 'correct' | 'incorrect' | 'skipped';
@@ -36,18 +35,14 @@ export const QuizResultFilters: React.FC<QuizResultFiltersProps> = ({
     },
     filterButton: {
       flex: 1,
-      paddingVertical: 8,
+      paddingVertical: 12,
       paddingHorizontal: 4,
       alignItems: 'center',
       borderRadius: theme.roundness - 4,
-      flexDirection: 'row',
       justifyContent: 'center',
     },
     activeFilterButton: {
       backgroundColor: theme.colors.primary,
-    },
-    filterIcon: {
-      marginRight: 4,
     },
   });
 
@@ -62,16 +57,9 @@ export const QuizResultFilters: React.FC<QuizResultFiltersProps> = ({
       >
         <MaterialCommunityIcons 
           name="filter-variant" 
-          size={16} 
+          size={24} 
           color={activeFilter === 'all' ? theme.colors.onPrimary : theme.colors.onSurface} 
-          style={styles.filterIcon}
         />
-        <Typography
-          variant="button"
-          color={activeFilter === 'all' ? 'onPrimary' : 'onSurface'}
-        >
-          All
-        </Typography>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -83,16 +71,9 @@ export const QuizResultFilters: React.FC<QuizResultFiltersProps> = ({
       >
         <MaterialCommunityIcons 
           name="check-circle" 
-          size={16} 
+          size={24} 
           color={activeFilter === 'correct' ? theme.colors.onPrimary : theme.colors.success} 
-          style={styles.filterIcon}
         />
-        <Typography
-          variant="button"
-          color={activeFilter === 'correct' ? 'onPrimary' : 'onSurface'}
-        >
-          Correct
-        </Typography>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -104,16 +85,9 @@ export const QuizResultFilters: React.FC<QuizResultFiltersProps> = ({
       >
         <MaterialCommunityIcons 
           name="close-circle" 
-          size={16} 
+          size={24} 
           color={activeFilter === 'incorrect' ? theme.colors.onPrimary : theme.colors.error} 
-          style={styles.filterIcon}
         />
-        <Typography
-          variant="button"
-          color={activeFilter === 'incorrect' ? 'onPrimary' : 'onSurface'}
-        >
-          Incorrect
-        </Typography>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -125,16 +99,9 @@ export const QuizResultFilters: React.FC<QuizResultFiltersProps> = ({
       >
         <MaterialCommunityIcons 
           name="skip-next-circle" 
-          size={16} 
+          size={24} 
           color={activeFilter === 'skipped' ? theme.colors.onPrimary : theme.colors.warning} 
-          style={styles.filterIcon}
         />
-        <Typography
-          variant="button"
-          color={activeFilter === 'skipped' ? 'onPrimary' : 'onSurface'}
-        >
-          Skipped
-        </Typography>
       </TouchableOpacity>
     </View>
   );

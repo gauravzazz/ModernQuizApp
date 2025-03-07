@@ -30,6 +30,8 @@ export const QuizResultScreen: React.FC = () => {
   const [filteredQuestions, setFilteredQuestions] = useState(questionsData || []);
   const scrollViewRef = useRef<ScrollView>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [showStickyFilters, setShowStickyFilters] = useState(false);
 
   const screenWidth = Dimensions.get('window').width - 32; // Full width minus padding
   
@@ -237,6 +239,13 @@ export const QuizResultScreen: React.FC = () => {
     headerTitle: {
       flex: 1,
       textAlign: 'center',
+    },
+    stickyFiltersContainer: {
+      position: 'absolute',
+      top: 70, // Position below the header
+      left: 16,
+      right: 16,
+      zIndex: 10,
     },
   });
 
