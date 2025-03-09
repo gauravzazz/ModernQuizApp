@@ -13,6 +13,7 @@ import { QuizResultCharts } from '../molecules/QuizResultCharts';
 import { QuizResultFilters } from '../molecules/QuizResultFilters';
 import { QuizQuestionCard } from '../molecules/QuizQuestionCard';
 import { Typography } from '../atoms/Typography';
+import { addBookmark, removeBookmark, isQuestionBookmarked } from '../services/bookmarkService';
 
 type QuizResultScreenRouteProp = RouteProp<RootStackParamList, 'QuizResult'>;
 type QuizResultScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -29,6 +30,7 @@ export const QuizResultScreen: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [showStickyFilters, setShowStickyFilters] = useState(false);
+  const [bookmarkedQuestions, setBookmarkedQuestions] = useState<Set<string>>(new Set());
   const scrollY = useRef(new Animated.Value(0)).current;
   const filterSectionY = useRef(0);
   const headerHeight = useRef(0);
@@ -38,10 +40,27 @@ export const QuizResultScreen: React.FC = () => {
       setShowStickyFilters(value > filterSectionY.current);
     });
 
+    // Load bookmarked questions
+    const loadBookmarkedStatus = async () => {
+      if (!questionsData) return;
+      const bookmarkedSet = new Set<string>();
+      
+      for (const question of questionsData) {
+        const isBookmarked = await isQuestionBookmarked(question.id);
+        if (isBookmarked) {
+          bookmarkedSet.add(question.id);
+        }
+      }
+      
+      setBookmarkedQuestions(bookmarkedSet);
+    };
+
+    loadBookmarkedStatus();
+
     return () => {
       scrollY.removeAllListeners();
     };
-  }, []);
+  }, [questionsData]);
 
   const onHeaderLayout = (event: any) => {
     const { height } = event.nativeEvent.layout;
@@ -481,6 +500,25 @@ export const QuizResultScreen: React.FC = () => {
                   question={question}
                   attempt={attempt}
                   index={index}
+                  isBookmarked={bookmarkedQuestions.has(question.id)}
+                  onBookmark={async (questionId) => {
+                    const isCurrentlyBookmarked = bookmarkedQuestions.has(questionId);
+                    try {
+                      if (isCurrentlyBookmarked) {
+                        await removeBookmark(questionId);
+                        setBookmarkedQuestions(prev => {
+                          const newSet = new Set(prev);
+                          newSet.delete(questionId);
+                          return newSet;
+                        });
+                      } else {
+                        await addBookmark(questionId);
+                        setBookmarkedQuestions(prev => new Set(prev).add(questionId));
+                      }
+                    } catch (error) {
+                      console.error('Error toggling bookmark:', error);
+                    }
+                  }}
                 />
               );
             })
