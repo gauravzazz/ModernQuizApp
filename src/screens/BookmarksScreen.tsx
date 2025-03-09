@@ -1,54 +1,86 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, FlatList, TouchableOpacity } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
-import { SearchBar } from '../atoms/SearchBar';
-import { Button } from '../atoms/Button';
 import { Question } from '../types/quiz';
-import { getBookmarkedQuestions, removeBookmark } from '../services/bookmarkService';
+import { getBookmarkedQuestions, removeBookmark, addBookmark } from '../services/bookmarkService';
 import { LoadingIndicator } from '../atoms/LoadingIndicator';
+import { QuizQuestionCard } from '../molecules/QuizQuestionCard';
+import { SwipeableQuestionCard } from '../molecules/SwipeableQuestionCard';
+import { QuizResultHeader } from '../molecules/QuizResultHeader';
+import { useNavigation } from '@react-navigation/native';
+
+type ViewMode = 'scroll' | 'swipe';
 
 export const BookmarksScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
+  const navigation = useNavigation();
   const [bookmarkedQuestions, setBookmarkedQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('scroll');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     loadBookmarkedQuestions();
   }, []);
 
-  const loadBookmarkedQuestions = async () => {
+  const loadBookmarkedQuestions = async (page: number = 1, shouldRefresh: boolean = false) => {
     try {
-      setIsLoading(true);
-      const questions = await getBookmarkedQuestions();
-      setBookmarkedQuestions(questions);
+      if (!shouldRefresh) setIsLoading(true);
+      const result = await getBookmarkedQuestions(page);
+      setBookmarkedQuestions(shouldRefresh ? [] : [...bookmarkedQuestions, ...result.questions]);
+      setTotalPages(result.totalPages);
+      setCurrentPage(page);
     } catch (error) {
       console.error('Error loading bookmarked questions:', error);
     } finally {
       setIsLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const handleRemoveBookmark = async (questionId: string) => {
+  const handleBookmarkToggle = async (questionId: string, isCurrentlyBookmarked: boolean) => {
     try {
-      await removeBookmark(questionId);
-      // Refresh the list after removing
-      await loadBookmarkedQuestions();
+      if (isCurrentlyBookmarked) {
+        await removeBookmark(questionId);
+      } else {
+        await addBookmark(questionId);
+      }
+      await loadBookmarkedQuestions(1, true);
     } catch (error) {
-      console.error('Error removing bookmark:', error);
+      console.error('Error toggling bookmark:', error);
     }
   };
 
-  const handlePractice = (question: Question) => {
-    // TODO: Implement practice functionality
-    console.log('Practice question:', question);
+  const handleLoadMore = () => {
+    if (currentPage < totalPages && !isLoading) {
+      loadBookmarkedQuestions(currentPage + 1);
+    }
   };
 
-  const filteredQuestions = bookmarkedQuestions.filter(question =>
-    question.text.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadBookmarkedQuestions(1, true);
+  };
+
+  const handleSwipeLeft = () => {
+    // Mark as hard
+    if (currentIndex < bookmarkedQuestions.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handleSwipeRight = () => {
+    // Mark as easy
+    if (currentIndex < bookmarkedQuestions.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
 
   const styles = StyleSheet.create({
     container: {
@@ -59,40 +91,36 @@ export const BookmarksScreen: React.FC = () => {
     header: {
       marginBottom: 24,
     },
-    searchContainer: {
-      marginBottom: 24,
+    headerContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
     },
-    bookmarkCard: {
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    headerTitle: {
+      flex: 1,
+      textAlign: 'center',
+    },
+    iconButton: {
+      padding: 8,
+      borderRadius: theme.roundness,
       backgroundColor: theme.colors.neuPrimary,
-      borderRadius: theme.roundness * 2,
-      padding: 16,
-      marginBottom: 16,
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 5, height: 5 },
-      shadowOpacity: 1,
-      shadowRadius: 10,
-      elevation: 8,
+      shadowOffset: { width: 2, height: 2 },
+      shadowOpacity: 0.4,
+      shadowRadius: 4,
+      elevation: 4,
       borderWidth: 1,
       borderColor: theme.colors.neuLight,
     },
-    questionText: {
-      marginBottom: 12,
-    },
-    optionsContainer: {
-      marginTop: 8,
-    },
-    optionText: {
-      marginBottom: 4,
-      paddingLeft: 8,
-    },
-    correctOption: {
-      color: theme.colors.success,
-    },
-    actions: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      marginTop: 12,
-      gap: 8,
+    swipeContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     emptyState: {
       flex: 1,
@@ -109,75 +137,77 @@ export const BookmarksScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Typography variant="h4" weight="bold">
-          Bookmarks
-        </Typography>
-      </View>
-      <View style={styles.searchContainer}>
-        <SearchBar
-          placeholder="Search bookmarks..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
-      <ScrollView>
-        {filteredQuestions.length > 0 ? (
-          filteredQuestions.map((question) => (
-            <View key={question.id} style={styles.bookmarkCard}>
-              <Typography
-                variant="h6"
-                weight="bold"
-                style={styles.questionText}
-              >
-                {question.text}
-              </Typography>
-              <View style={styles.optionsContainer}>
-                {question.options.map((option) => (
-                  <Typography
-                    key={option.id}
-                    variant="body2"
-                    style={[
-                      styles.optionText,
-                      option.id === question.correctOptionId && styles.correctOption,
-                    ]}
-                  >
-                    {option.id}. {option.text}
-                    {option.id === question.correctOptionId && ' ✓'}
-                  </Typography>
-                ))}
-              </View>
-              {question.explanation && (
-                <Typography
-                  variant="body2"
-                  color="onSurfaceVariant"
-                  style={{ marginTop: 8 }}
-                >
-                  Explanation: {question.explanation}
-                </Typography>
-              )}
-              <View style={styles.actions}>
-                <Button
-                  label="Remove"
-                  variant="outline"
-                  size="small"
-                  onPress={() => handleRemoveBookmark(question.id)}
-                />
-                <Button
-                  label="Practice"
-                  size="small"
-                  onPress={() => handlePractice(question)}
-                />
-              </View>
-            </View>
-          ))
-        ) : (
-          <View style={styles.emptyState}>
-            <Typography variant="body1" color="onSurfaceVariant">
-              No bookmarked questions found
-            </Typography>
+        <View style={styles.headerContent}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Typography variant="h6">←</Typography>
+          </TouchableOpacity>
+          <Typography variant="h5" weight="bold" style={styles.headerTitle}>
+            Bookmarks
+          </Typography>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setViewMode(prev => prev === 'scroll' ? 'swipe' : 'scroll')}
+            >
+              <Typography variant="h6">{viewMode === 'scroll' ? '📜' : '🔄'}</Typography>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setShowFilters(prev => !prev)}
+            >
+              <Typography variant="h6">🔍</Typography>
+            </TouchableOpacity>
           </View>
-        )}
-      </ScrollView>
+        </View>
+      </View>
+
+      {viewMode === 'scroll' ? (
+        <FlatList
+          data={bookmarkedQuestions}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => (
+            <QuizQuestionCard
+              question={item}
+              attempt={{ questionId: item.id, selectedOptionId: item.correctOptionId, isSkipped: false }}
+              index={index}
+              isBookmarked={true}
+              onBookmark={(questionId) => handleBookmarkToggle(questionId, true)}
+            />
+          )}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Typography variant="body1" color="onSurfaceVariant">
+                No bookmarked questions found
+              </Typography>
+            </View>
+          }
+        />
+      ) : (
+        <View style={styles.swipeContainer}>
+          {bookmarkedQuestions.length > 0 && (
+            <SwipeableQuestionCard
+              question={bookmarkedQuestions[currentIndex]}
+              attempt={{
+                questionId: bookmarkedQuestions[currentIndex].id,
+                selectedOptionId: bookmarkedQuestions[currentIndex].correctOptionId,
+                isSkipped: false,
+              }}
+              index={currentIndex}
+              isBookmarked={true}
+              onBookmark={(questionId) => handleBookmarkToggle(questionId, true)}
+              onSwipeLeft={handleSwipeLeft}
+              onSwipeRight={handleSwipeRight}
+            />
+          )}
+        </View>
+      )}
     </View>
   );
 };

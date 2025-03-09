@@ -52,18 +52,29 @@ export const isQuestionBookmarked = async (questionId: string): Promise<boolean>
   }
 };
 
-// Get all bookmarked questions with full data
-export const getBookmarkedQuestions = async (): Promise<Question[]> => {
+// Get bookmarked questions with pagination support
+export const getBookmarkedQuestions = async (page: number = 1, pageSize: number = 10): Promise<{ questions: Question[]; totalPages: number }> => {
   try {
     const bookmarkedIds = await getBookmarkedQuestionIds();
-    if (bookmarkedIds.length === 0) return [];
+    if (bookmarkedIds.length === 0) return { questions: [], totalPages: 0 };
 
     // For now, we'll filter from mock questions
     // In the future, this would make an API call with the IDs
     const allQuestions = await fetchQuestions(undefined, 100); // Fetch all available questions
-    return allQuestions.filter(question => bookmarkedIds.includes(question.id));
+    const bookmarkedQuestions = allQuestions.filter(question => bookmarkedIds.includes(question.id));
+
+    // Calculate pagination
+    const totalPages = Math.ceil(bookmarkedQuestions.length / pageSize);
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedQuestions = bookmarkedQuestions.slice(startIndex, endIndex);
+
+    return {
+      questions: paginatedQuestions,
+      totalPages
+    };
   } catch (error) {
     console.error('Error fetching bookmarked questions:', error);
-    return [];
+    return { questions: [], totalPages: 0 };
   }
 };

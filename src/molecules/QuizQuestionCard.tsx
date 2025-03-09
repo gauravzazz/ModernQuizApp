@@ -258,7 +258,7 @@ export const QuizQuestionCard: React.FC<QuizQuestionCardProps> = ({
 
       <View style={styles.actionButtons}>
         <TouchableOpacity 
-          style={styles.actionButton}
+          style={[styles.actionButton, isBookmarked && { backgroundColor: theme.colors.primary + '20' }]}
           onPress={() => onBookmark?.(question.id)}
         >
           <MaterialCommunityIcons 
