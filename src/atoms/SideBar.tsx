@@ -72,7 +72,7 @@ export const SideBar: React.FC<SideBarProps> = ({ visible, onClose }) => {
   const styles = StyleSheet.create({
     container: {
       ...StyleSheet.absoluteFillObject,
-      zIndex: 9999,
+       zIndex: 9999,
     },
     overlay: {
       ...StyleSheet.absoluteFillObject,

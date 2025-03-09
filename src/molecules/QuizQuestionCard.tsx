@@ -48,7 +48,7 @@ export const QuizQuestionCard: React.FC<QuizQuestionCardProps> = ({
   const [showExplanation, setShowExplanation] = React.useState(true);
   const [showFullExplanation, setShowFullExplanation] = React.useState(false);
   const [textHeight, setTextHeight] = React.useState(0);
-  const maxHeight = scaledSpacing(40);
+  const maxHeight = scaledSpacing(24); // Reduced to show approximately 2 lines
 
   const styles = StyleSheet.create({
     questionCard: {
@@ -141,43 +141,28 @@ export const QuizQuestionCard: React.FC<QuizQuestionCardProps> = ({
     selectedDifficultyButton: {
       backgroundColor: theme.colors.primary + '20',
     },
-    explanationSection: {
+    explanationContainer: {
       marginTop: scaledSpacing(16),
-      backgroundColor: theme.colors.primary + '08',
-      borderRadius: theme.roundness,
-      borderWidth: 1,
-      borderColor: theme.colors.primary + '20',
-      shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: moderateScale(2), height: moderateScale(2) },
-      shadowOpacity: 0.3,
-      shadowRadius: moderateScale(4),
-      elevation: moderateScale(2),
+      paddingTop: scaledSpacing(16),
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.neuLight,
     },
-    explanationHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: scaledSpacing(12),
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.primary + '20',
-      backgroundColor: theme.colors.primary + '05',
-    },
-    explanationContent: {
-      padding: scaledSpacing(16),
-      backgroundColor: 'transparent',
+    explanationLabel: {
+      color: theme.colors.primary,
+      fontWeight: '600',
+      marginBottom: scaledSpacing(4),
     },
     explanationText: {
-      lineHeight: scaledSpacing(24),
+      lineHeight: scaledSpacing(20),
       color: theme.colors.onSurface,
-      opacity: 1,
+      opacity: 0.87,
       fontSize: scaledFontSize(14),
     },
     showMoreButton: {
-      marginTop: scaledSpacing(12),
-      alignSelf: 'flex-start',
-      paddingVertical: scaledSpacing(4),
-      paddingHorizontal: scaledSpacing(8),
-      backgroundColor: theme.colors.primary + '10',
-      borderRadius: theme.roundness,
+      marginTop: scaledSpacing(4),
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scaledSpacing(4),
     },
     showMoreText: {
       color: theme.colors.primary,
@@ -236,43 +221,31 @@ export const QuizQuestionCard: React.FC<QuizQuestionCardProps> = ({
       </View>
 
       {question.explanation && (
-        <View style={styles.explanationSection}>
-          <TouchableOpacity 
-            style={styles.explanationHeader} 
-            onPress={() => setShowExplanation(!showExplanation)}
+        <View style={styles.explanationContainer}>
+          <Typography variant="body2" style={styles.explanationLabel}>Explanation:</Typography>
+          <View
+            style={[!showFullExplanation && { maxHeight }]}
+            onLayout={(event) => {
+              const { height } = event.nativeEvent.layout;
+              setTextHeight(height);
+            }}
           >
-            <MaterialCommunityIcons 
-              name={showExplanation ? "chevron-up" : "chevron-down"} 
-              size={scaledIconSize(20)} 
-              color={theme.colors.primary} 
-              style={{marginRight: scaledSpacing(8)}} 
-            />
-            <Typography variant="body2" color="primary">
-              Explanation
-            </Typography>
-          </TouchableOpacity>
-          {showExplanation && (
-            <View style={styles.explanationContent}>
-              <View
-                style={[!showFullExplanation && { maxHeight }]}
-                onLayout={(event) => {
-                  const { height } = event.nativeEvent.layout;
-                  setTextHeight(height);
-                }}
-              >
-                <Typography variant="body2" style={styles.explanationText}>{question.explanation}</Typography>
-              </View>
-              {textHeight > maxHeight && (
-                <TouchableOpacity
-                  style={styles.showMoreButton}
-                  onPress={() => setShowFullExplanation(!showFullExplanation)}
-                >
-                  <Typography variant="body2" style={styles.showMoreText}>
-                    {showFullExplanation ? 'Show Less' : 'Show More'}
-                  </Typography>
-                </TouchableOpacity>
-              )}
-            </View>
+            <Typography variant="body2" style={styles.explanationText}>{question.explanation}</Typography>
+          </View>
+          {textHeight > maxHeight && (
+            <TouchableOpacity
+              style={styles.showMoreButton}
+              onPress={() => setShowFullExplanation(!showFullExplanation)}
+            >
+              <Typography variant="body2" style={styles.showMoreText}>
+                {showFullExplanation ? 'Show Less' : 'Show More'}
+              </Typography>
+              <MaterialCommunityIcons
+                name={showFullExplanation ? 'chevron-up' : 'chevron-down'}
+                size={scaledIconSize(16)}
+                color={theme.colors.primary}
+              />
+            </TouchableOpacity>
           )}
         </View>
       )}
