@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Animated } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,11 +9,15 @@ type FilterType = 'all' | 'correct' | 'incorrect' | 'skipped';
 interface QuizResultFiltersProps {
   activeFilter: FilterType;
   onFilterChange: (filter: FilterType) => void;
+  isSticky?: boolean;
+  style?: any;
 }
 
 export const QuizResultFilters: React.FC<QuizResultFiltersProps> = ({
   activeFilter,
   onFilterChange,
+  isSticky = false,
+  style,
 }) => {
   const theme = useTheme<AppTheme>();
 
@@ -24,14 +28,25 @@ export const QuizResultFilters: React.FC<QuizResultFiltersProps> = ({
       marginBottom: 16,
       backgroundColor: theme.colors.neuPrimary,
       borderRadius: theme.roundness,
-      padding: 4,
+      padding:  4,
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 3, height: 3 },
+      shadowOffset: isSticky ? { width: 0, height: 3 } : { width: 3, height: 3 },
       shadowOpacity: 0.6,
       shadowRadius: 6,
-      elevation: 4,
+      elevation: 8,
       borderWidth: 1,
+      borderBottomWidth: 1,
       borderColor: theme.colors.neuLight,
+      borderBottomColor: theme.colors.neuLight,
+      ...(isSticky && {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        width: '100%',
+        zIndex: 1000,
+        alignSelf: 'center',
+      }),
     },
     filterButton: {
       flex: 1,
@@ -47,7 +62,7 @@ export const QuizResultFilters: React.FC<QuizResultFiltersProps> = ({
   });
 
   return (
-    <View style={styles.filterContainer}>
+    <Animated.View style={[styles.filterContainer, style]}>
       <TouchableOpacity
         style={[
           styles.filterButton,
@@ -103,6 +118,6 @@ export const QuizResultFilters: React.FC<QuizResultFiltersProps> = ({
           color={activeFilter === 'skipped' ? theme.colors.onPrimary : theme.colors.warning} 
         />
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 };

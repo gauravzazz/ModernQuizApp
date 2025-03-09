@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, TouchableOpacity, Animated } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { LineChart, PieChart } from 'react-native-chart-kit';
 import { AppTheme } from '../theme';
@@ -22,6 +22,20 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
   screenWidth,
 }) => {
   const theme = useTheme<AppTheme>();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const animatedHeight = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.timing(animatedHeight, {
+      toValue: isExpanded ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [isExpanded]);
+
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
 
   // Prepare data for time chart
   const timeChartData = {
@@ -82,6 +96,45 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
   };
 
   const styles = StyleSheet.create({
+    collapsedHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 16,
+      backgroundColor: theme.colors.neuPrimary,
+      borderRadius: theme.roundness * 2,
+      shadowColor: theme.colors.neuDark,
+      shadowOffset: { width: 3, height: 3 },
+      shadowOpacity: 0.6,
+      shadowRadius: 6,
+      elevation: 4,
+      borderWidth: 1,
+      borderColor: theme.colors.neuLight,
+    },
+    headerContent: {
+      flex: 1,
+      marginRight: 16,
+    },
+    headerTitle: {
+      marginBottom: 8,
+      fontWeight: 'bold',
+    },
+    headerStats: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 16,
+    },
+    statItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    statIcon: {
+      marginRight: 4,
+    },
+    expandIcon: {
+      padding: 4,
+    },
     container: {
       marginBottom: 24,
     },
@@ -155,6 +208,50 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity onPress={toggleExpand} style={styles.collapsedHeader}>
+        <View style={styles.headerContent}>
+          <Typography variant="h6" style={styles.headerTitle}>
+            Quiz Performance Analysis
+          </Typography>
+          <View style={styles.headerStats}>
+            <View style={styles.statItem}>
+              <MaterialCommunityIcons
+                name="check-circle"
+                size={16}
+                color={theme.colors.success}
+                style={styles.statIcon}
+              />
+              <Typography variant="caption">{correctAnswers} Correct</Typography>
+            </View>
+            <View style={styles.statItem}>
+              <MaterialCommunityIcons
+                name="clock-outline"
+                size={16}
+                color={theme.colors.primary}
+                style={styles.statIcon}
+              />
+              <Typography variant="caption">
+                {Math.round(timePerQuestion.reduce((a, b) => a + b, 0) / timePerQuestion.length)}s Avg
+              </Typography>
+            </View>
+          </View>
+        </View>
+        <MaterialCommunityIcons
+          name={isExpanded ? "chevron-up" : "chevron-down"}
+          size={24}
+          color={theme.colors.onSurface}
+          style={styles.expandIcon}
+        />
+      </TouchableOpacity>
+
+      <Animated.View style={{
+        maxHeight: animatedHeight.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, 1000]
+        }),
+        overflow: 'hidden',
+        opacity: animatedHeight
+      }}>
       {/* Pie Chart for Answer Distribution */}
       <View style={styles.chartContainer}>
         <Typography variant="h6" style={styles.chartTitle}>
@@ -242,6 +339,7 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
           </Typography>
         </View>
       </View>
+      </Animated.View>
     </View>
   );
 };

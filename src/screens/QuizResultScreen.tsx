@@ -7,8 +7,6 @@ import { AppTheme } from '../theme';
 import { Button } from '../atoms/Button';
 import { RootStackParamList } from '../navigation';
 import { saveQuizResults } from '../utils/quizResultsStorage';
-
-// Import molecular components
 import { QuizResultHeader } from '../molecules/QuizResultHeader';
 import { QuizScoreCard } from '../molecules/QuizScoreCard';
 import { QuizResultCharts } from '../molecules/QuizResultCharts';
@@ -30,9 +28,31 @@ export const QuizResultScreen: React.FC = () => {
   const [filteredQuestions, setFilteredQuestions] = useState(questionsData || []);
   const scrollViewRef = useRef<ScrollView>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scrollY = useRef(new Animated.Value(0)).current;
   const [showStickyFilters, setShowStickyFilters] = useState(false);
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const filterSectionY = useRef(0);
+  const headerHeight = useRef(0);
 
+  useEffect(() => {
+    scrollY.addListener(({ value }) => {
+      setShowStickyFilters(value > filterSectionY.current);
+    });
+
+    return () => {
+      scrollY.removeAllListeners();
+    };
+  }, []);
+
+  const onHeaderLayout = (event: any) => {
+    const { height } = event.nativeEvent.layout;
+    headerHeight.current = height;
+  };
+
+  const onFilterSectionLayout = (event: any) => {
+    const { y, height } = event.nativeEvent.layout;
+    // Account for the header height when setting the filter section position
+    filterSectionY.current = y;
+  };
   const screenWidth = Dimensions.get('window').width - 32; // Full width minus padding
   
   const styles = StyleSheet.create({
@@ -241,11 +261,7 @@ export const QuizResultScreen: React.FC = () => {
       textAlign: 'center',
     },
     stickyFiltersContainer: {
-      position: 'absolute',
-      top: 70, // Position below the header
-      left: 16,
-      right: 16,
-      zIndex: 10,
+
     },
   });
 
@@ -408,9 +424,28 @@ export const QuizResultScreen: React.FC = () => {
   // Render method for the screen
   return (
     <View style={styles.container}>
-      <QuizResultHeader title={`${mode} Results`} />
+      <View onLayout={onHeaderLayout}>
+        <QuizResultHeader title={`${mode} Results`} />
+      </View>
       
-      <ScrollView ref={scrollViewRef}>
+      {showStickyFilters && (
+        <View style={styles.stickyFiltersContainer}>
+          <QuizResultFilters
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
+            isSticky={true}
+          />
+        </View>
+      )}
+      
+      <ScrollView
+        ref={scrollViewRef}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
+      >
         <QuizScoreCard
           score={score}
           correctAnswers={correctAnswers}
@@ -430,10 +465,12 @@ export const QuizResultScreen: React.FC = () => {
           screenWidth={screenWidth}
         />
         
-        <QuizResultFilters
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-        />
+        <View onLayout={onFilterSectionLayout}>
+          <QuizResultFilters
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
+          />
+        </View>
         
         <Animated.View style={{ opacity: fadeAnim }}>
           {filteredQuestions.length > 0 ? (
