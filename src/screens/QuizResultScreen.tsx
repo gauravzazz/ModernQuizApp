@@ -390,10 +390,7 @@ export const QuizResultScreen: React.FC = () => {
     
     setFilteredQuestions(filtered);
     
-    // Scroll to top when filter changes
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({ y: 0, animated: true });
-    }
+    // Removed scroll to top behavior to maintain scroll position when filtering
   }, [activeFilter, questionsData, attempts]);
   
   // Save quiz results to AsyncStorage
