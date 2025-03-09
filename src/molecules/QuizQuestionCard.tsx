@@ -20,6 +20,7 @@ interface QuizQuestionCardProps {
     options: Option[];
     correctOptionId: string;
     explanation?: string;
+    exam?: string;
   };
   attempt: {
     questionId: string;
@@ -222,6 +223,11 @@ export const QuizQuestionCard: React.FC<QuizQuestionCardProps> = ({
 
       {question.explanation && (
         <View style={styles.explanationContainer}>
+          {question.exam && (
+            <Typography variant="body2" style={[styles.explanationLabel, { marginBottom: scaledSpacing(8) }]}>
+              Exam: {question.exam}
+            </Typography>
+          )}
           <Typography variant="body2" style={styles.explanationLabel}>Explanation:</Typography>
           <View
             style={[!showFullExplanation && { maxHeight }]}
