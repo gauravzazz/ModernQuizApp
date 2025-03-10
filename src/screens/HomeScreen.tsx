@@ -12,7 +12,7 @@ import { HotTopics } from '../molecules/HotTopics';
 import { BottomNavigation } from '../molecules/BottomNavigation';
 import { SubjectGrid } from '../molecules/SubjectGrid';
 import { RootStackParamList } from '../navigation';
-import { SideBar } from '../atoms/SideBar';
+
 import { Typography } from '../atoms/Typography';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -20,7 +20,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export const HomeScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
   const navigation = useNavigation<NavigationProp>();
-  const [sidebarVisible, setSidebarVisible] = React.useState(false);
+
   const [activeTab, setActiveTab] = React.useState('home');
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -117,17 +117,14 @@ export const HomeScreen: React.FC = () => {
   return (
     <View style={{ flex: 1 }}>
       <HeaderSection
-        onAvatarPress={() => setSidebarVisible(true)}
+        onAvatarPress={() => navigation.navigate('Settings')}
         onNotificationPress={() => {}}
         notificationCount={3}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
       <ScrollView style={styles.container}>
-        <SideBar
-          visible={sidebarVisible}
-          onClose={() => setSidebarVisible(false)}
-        />
+
 
         {searchQuery && filteredSubjects.length === 0 && filteredTopics.length === 0 ? (
           <View style={styles.noResultsContainer}>
