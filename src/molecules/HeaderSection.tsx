@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { useTheme } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, DrawerActions } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
@@ -11,9 +11,6 @@ import { useNotifications } from '../context/NotificationContext';
 import { RootStackParamList } from '../navigation';
 
 export interface HeaderSectionProps {
-  onAvatarPress?: () => void;
-  onNotificationPress?: () => void;
-  notificationCount?: number;
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
@@ -21,7 +18,6 @@ export interface HeaderSectionProps {
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export const HeaderSection: React.FC<HeaderSectionProps> = ({
-  onAvatarPress,
   searchQuery,
   onSearchChange,
 }) => {
@@ -36,7 +32,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
       left: 0,
       right: 0,
       backgroundColor: theme.colors.background,
-      zIndex: 999, // Reduced z-index to be lower than sidebar
+      zIndex: 999,
       paddingTop: 16,
       paddingHorizontal: 16,
     },
@@ -89,7 +85,10 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
     <View style={styles.container}>
       <View style={styles.topSection}>
         <View style={styles.leftSection}>
-          <TouchableOpacity onPress={onAvatarPress} activeOpacity={0.8}>
+          <TouchableOpacity 
+            onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+            activeOpacity={0.8}
+          >
             <Avatar size="medium" />
           </TouchableOpacity>
         </View>
