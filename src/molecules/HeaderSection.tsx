@@ -95,7 +95,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
             onPress={onAvatarPress || (() => navigation.dispatch(DrawerActions.openDrawer()))}
             activeOpacity={0.8}
           >
-            <Avatar size="medium" />
+            <Avatar size="medium" source={require('../../assets/profile.jpeg')} />
           </TouchableOpacity>
         </View>
         <TouchableOpacity

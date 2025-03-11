@@ -8,11 +8,10 @@ import { Typography } from '../atoms/Typography';
 import { Avatar } from '../atoms/Avatar';
 
 const DrawerItems = [
-  { label: 'Home', icon: '🏠', route: 'Home' },
+  { label: 'Profile', icon: '👤', route: 'Profile' },
   { label: 'Bookmarks', icon: '🔖', route: 'Bookmarks' },
   { label: 'Quiz History', icon: '📚', route: 'QuizHistory' },
   { label: 'Progress', icon: '📊', route: 'Progress' },
-  { label: 'Profile', icon: '👤', route: 'Profile' },
   { label: 'Notifications', icon: '🔔', route: 'Notifications' },
   { label: 'Settings', icon: '⚙️', route: 'Settings' },
   { label: 'Logout', icon: '🚫', route: 'Logout', isLogout: true },
@@ -91,7 +90,7 @@ export const CustomDrawerContent = (props: any) => {
     <DrawerContentScrollView {...props} style={styles.container}>
       <View style={styles.profileSection}>
         <View style={styles.avatarContainer}>
-          <Avatar size="medium" source={require('../../assets/icon.png')} />
+          <Avatar size="medium" source={require('../../assets/profile.jpeg')} />
         </View>
         <View style={styles.profileInfo}>
           <Typography variant="h6" style={styles.profileName}>User Name</Typography>

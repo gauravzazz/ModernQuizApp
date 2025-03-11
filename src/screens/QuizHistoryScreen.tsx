@@ -1,11 +1,13 @@
 import React from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, ScrollView, StatusBar } from 'react-native';
 import { useTheme } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
 import { SearchBar } from '../atoms/SearchBar';
 import { Button } from '../atoms/Button';
 import { ProgressBar } from '../atoms/ProgressBar';
+import { NavigationButton } from '../atoms/NavigationButton';
 
 interface QuizAttempt {
   id: string;
@@ -43,15 +45,34 @@ const mockAttempts: QuizAttempt[] = [
 
 export const QuizHistoryScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
+  const navigation = useNavigation();
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-      padding: 16,
     },
-    header: {
+    headerNav: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
       marginBottom: 24,
+      paddingVertical: 16,
+      shadowColor: theme.colors.neuDark,
+      shadowOffset: { width: 4, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 6,
+      elevation: 8,
+    },
+    headerTitle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    content: {
+      flex: 1,
+      padding: 16,
     },
     searchContainer: {
       marginBottom: 24,
@@ -108,65 +129,71 @@ export const QuizHistoryScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Typography variant="h4" weight="bold">
-          Quiz History
-        </Typography>
+      <View style={styles.headerNav}>
+        <View style={styles.headerTitle}>
+          <NavigationButton variant="left" onPress={() => navigation.goBack()} />
+          <Typography variant="h6" weight="bold">
+            📜 Quiz History
+          </Typography>
+        </View>
       </View>
-      <View style={styles.searchContainer}>
-        <SearchBar placeholder="Search history..." />
-      </View>
-      <ScrollView>
-        {mockAttempts.map((attempt) => (
-          <View key={attempt.id} style={styles.historyCard}>
-            <View style={styles.cardHeader}>
-              <Typography variant="h6" weight="bold">
-                {attempt.quiz}
-              </Typography>
-              <Typography variant="caption" color="onSurfaceVariant">
-                {attempt.date}
-              </Typography>
-            </View>
-            <Typography variant="body2" color="onSurfaceVariant">
-              {attempt.subject}
-            </Typography>
-            <View style={styles.scoreContainer}>
-              <View style={styles.progressContainer}>
-                <ProgressBar progress={attempt.score / 100} />
+      
+      <View style={styles.content}>
+        <View style={styles.searchContainer}>
+          <SearchBar placeholder="Search history..." />
+        </View>
+        <ScrollView>
+          {mockAttempts.map((attempt) => (
+            <View key={attempt.id} style={styles.historyCard}>
+              <View style={styles.cardHeader}>
+                <Typography variant="h6" weight="bold">
+                  {attempt.quiz}
+                </Typography>
+                <Typography variant="caption" color="onSurfaceVariant">
+                  {attempt.date}
+                </Typography>
               </View>
-              <Typography
-                variant="h6"
-                weight="bold"
-                color="primary"
-                style={styles.scoreText}
-              >
-                {attempt.score}%
+              <Typography variant="body2" color="onSurfaceVariant">
+                {attempt.subject}
               </Typography>
+              <View style={styles.scoreContainer}>
+                <View style={styles.progressContainer}>
+                  <ProgressBar progress={attempt.score / 100} />
+                </View>
+                <Typography
+                  variant="h6"
+                  weight="bold"
+                  color="primary"
+                  style={styles.scoreText}
+                >
+                  {attempt.score}%
+                </Typography>
+              </View>
+              <View style={styles.metadata}>
+                <Typography variant="caption" color="onSurfaceVariant">
+                  {attempt.correctAnswers}/{attempt.totalQuestions} Correct
+                </Typography>
+                <Typography variant="caption" color="onSurfaceVariant">
+                  Time: {attempt.timeTaken}
+                </Typography>
+              </View>
+              <View style={styles.actions}>
+                <Button
+                  label="View Details"
+                  variant="outline"
+                  size="small"
+                  onPress={() => {}}
+                />
+                <Button
+                  label="Retry Quiz"
+                  size="small"
+                  onPress={() => {}}
+                />
+              </View>
             </View>
-            <View style={styles.metadata}>
-              <Typography variant="caption" color="onSurfaceVariant">
-                {attempt.correctAnswers}/{attempt.totalQuestions} Correct
-              </Typography>
-              <Typography variant="caption" color="onSurfaceVariant">
-                Time: {attempt.timeTaken}
-              </Typography>
-            </View>
-            <View style={styles.actions}>
-              <Button
-                label="View Details"
-                variant="outline"
-                size="small"
-                onPress={() => {}}
-              />
-              <Button
-                label="Retry Quiz"
-                size="small"
-                onPress={() => {}}
-              />
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+          ))}
+        </ScrollView>
+      </View>
     </View>
   );
 };

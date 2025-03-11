@@ -10,6 +10,7 @@ import { QuizQuestionCard } from '../molecules/QuizQuestionCard';
 import { SwipeableQuestionCard } from '../molecules/SwipeableQuestionCard';
 import { QuizResultHeader } from '../molecules/QuizResultHeader';
 import { useNavigation } from '@react-navigation/native';
+import { NavigationButton } from '../atoms/NavigationButton';
 
 type ViewMode = 'scroll' | 'swipe';
 
@@ -90,24 +91,19 @@ export const BookmarksScreen: React.FC = () => {
     },
     header: {
       marginBottom: 24,
-    },
-    headerContent: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
+      gap: 16,
     },
     headerRight: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-    },
-    headerTitle: {
-      flex: 1,
-      textAlign: 'center',
+      marginLeft: 'auto',
     },
     iconButton: {
       padding: 8,
-      borderRadius: theme.roundness,
+      borderRadius: 24,
       backgroundColor: theme.colors.neuPrimary,
       shadowColor: theme.colors.neuDark,
       shadowOffset: { width: 2, height: 2 },
@@ -137,30 +133,26 @@ export const BookmarksScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerContent}>
+        <NavigationButton 
+          variant="left" 
+          onPress={() => navigation.goBack()} 
+        />
+        <Typography variant="h4" weight="bold">
+          Bookmarks
+        </Typography>
+        <View style={styles.headerRight}>
           <TouchableOpacity
             style={styles.iconButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => setViewMode(prev => prev === 'scroll' ? 'swipe' : 'scroll')}
           >
-            <Typography variant="h6">←</Typography>
+            <Typography variant="h6">{viewMode === 'scroll' ? '📜' : '🔄'}</Typography>
           </TouchableOpacity>
-          <Typography variant="h5" weight="bold" style={styles.headerTitle}>
-            Bookmarks
-          </Typography>
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={() => setViewMode(prev => prev === 'scroll' ? 'swipe' : 'scroll')}
-            >
-              <Typography variant="h6">{viewMode === 'scroll' ? '📜' : '🔄'}</Typography>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={() => setShowFilters(prev => !prev)}
-            >
-              <Typography variant="h6">🔍</Typography>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => setShowFilters(prev => !prev)}
+          >
+            <Typography variant="h6">🔍</Typography>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -183,30 +175,48 @@ export const BookmarksScreen: React.FC = () => {
           onRefresh={handleRefresh}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Typography variant="body1" color="onSurfaceVariant">
-                No bookmarked questions found
+              <Typography variant="h6" weight="bold" style={{ marginBottom: 8 }}>
+                No Bookmarks Yet
+              </Typography>
+              <Typography variant="body1" style={{ textAlign: 'center' }}>
+                Bookmark questions during quizzes to review them later.
               </Typography>
             </View>
           }
         />
       ) : (
         <View style={styles.swipeContainer}>
-          {bookmarkedQuestions.length > 0 && (
+          {bookmarkedQuestions.length > 0 ? (
             <SwipeableQuestionCard
               question={bookmarkedQuestions[currentIndex]}
               attempt={{
                 questionId: bookmarkedQuestions[currentIndex].id,
                 selectedOptionId: bookmarkedQuestions[currentIndex].correctOptionId,
-                isSkipped: false,
+                isSkipped: false
               }}
               index={currentIndex}
-              isBookmarked={true}
-              onBookmark={(questionId) => handleBookmarkToggle(questionId, true)}
               onSwipeLeft={handleSwipeLeft}
               onSwipeRight={handleSwipeRight}
+              isBookmarked={true}
+              onBookmark={(questionId) => handleBookmarkToggle(questionId, true)}
             />
+          ) : (
+            <View style={styles.emptyState}>
+              <Typography variant="h6" weight="bold" style={{ marginBottom: 8 }}>
+                No Bookmarks Yet
+              </Typography>
+              <Typography variant="body1" style={{ textAlign: 'center' }}>
+                Bookmark questions during quizzes to review them later.
+              </Typography>
+            </View>
           )}
         </View>
+      )}
+
+      {showFilters && (
+        <QuizResultHeader
+          title="Bookmarked Questions"
+        />
       )}
     </View>
   );

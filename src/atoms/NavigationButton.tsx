@@ -18,6 +18,7 @@ export const NavigationButton: React.FC<NavigationButtonProps> = ({
   onPress = () => {},
   disabled = false,
   style,
+  size = 48,
 }) => {
   const theme = useTheme<AppTheme>();
 
@@ -38,17 +39,17 @@ export const NavigationButton: React.FC<NavigationButtonProps> = ({
 
   const styles = StyleSheet.create({
     button: {
-      width: 48,
-      height: 48,
-      borderRadius: 12,
+      width: size,
+      height: size,
+      borderRadius: size / 2, // Make it round
       backgroundColor: theme.colors.neuPrimary,
       justifyContent: 'center',
       alignItems: 'center',
       shadowColor: theme.colors.neuDark,
       shadowOffset: { width: 4, height: 4 },
-      shadowOpacity: 1,
-      shadowRadius: 8,
-      elevation: 8,
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 6,
       borderWidth: 1,
       borderColor: theme.colors.neuLight,
       opacity: disabled ? 0.5 : 1,

@@ -16,34 +16,18 @@ export const NotificationScreen = () => {
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-      //paddingTop: StatusBar.currentHeight ? StatusBar.currentHeight + 16 : 48,
+      padding: 16,
     },
     header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      //paddingHorizontal: 16,
       marginBottom: 24,
-      //backgroundColor: theme.colors.neuPrimary,
-      //borderRadius: theme.roundness,
-      paddingVertical: 16,
-      shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 4, height: 4 },
-      shadowOpacity: 0.4,
-      shadowRadius: 6,
-      elevation: 8,
-      //borderWidth: 1,
-      //borderColor: theme.colors.neuLight,
-      marginHorizontal: 16,
-    },
-    headerTitle: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: 16,
     },
     headerActions: {
       flexDirection: 'row',
       gap: 12,
+      marginLeft: 'auto',
     },
     markAllButton: {
       backgroundColor: theme.colors.primary,
@@ -59,7 +43,6 @@ export const NotificationScreen = () => {
       borderColor: theme.colors.neuLight,
     },
     notificationList: {
-      paddingHorizontal: 16,
       paddingTop: 8,
     },
     emptyContainer: {
@@ -98,170 +81,122 @@ export const NotificationScreen = () => {
       right: 16,
       shadowColor: theme.colors.neuDark,
       shadowOffset: { width: 1, height: 1 },
-      shadowOpacity: 0.5,
+      shadowOpacity: 0.4,
       shadowRadius: 2,
       elevation: 2,
     },
-    notificationHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 12,
-      alignItems: 'flex-start',
-    },
     notificationTitle: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      flex: 1,
-      paddingRight: 8,
+      marginBottom: 8,
+      paddingRight: 16,
     },
-    notificationIcon: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: theme.colors.primaryContainer,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 8,
+    notificationTime: {
+      marginTop: 8,
+      alignSelf: 'flex-end',
     },
     notificationActions: {
       flexDirection: 'row',
-      alignItems: 'center',
+      justifyContent: 'flex-end',
+      marginTop: 12,
+      gap: 12,
     },
-    timestamp: {
-      opacity: 0.7,
-      marginRight: 8,
-    },
-    clearButton: {
-      backgroundColor: theme.colors.error,
-      borderRadius: theme.roundness,
-      paddingHorizontal: 10,
+    actionButton: {
+      paddingHorizontal: 12,
       paddingVertical: 6,
+      borderRadius: theme.roundness,
+      backgroundColor: theme.colors.neuPrimary,
       shadowColor: theme.colors.neuDark,
       shadowOffset: { width: 2, height: 2 },
-      shadowOpacity: 0.4,
+      shadowOpacity: 0.3,
       shadowRadius: 3,
-      elevation: 4,
+      elevation: 3,
       borderWidth: 1,
       borderColor: theme.colors.neuLight,
     },
-    notificationContent: {
-      marginTop: 4,
-      paddingLeft: 40, // Align with title text after icon
+    deleteButton: {
+      backgroundColor: theme.colors.error,
     },
-    notificationDivider: {
-      height: 1,
-      backgroundColor: theme.colors.neuLight,
-      opacity: 0.5,
-      marginVertical: 12,
-      marginLeft: 40,
+    readButton: {
+      backgroundColor: theme.colors.success,
     },
   });
 
-  const formatTimestamp = (date: Date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'success':
-        return '✅';
-      case 'error':
-        return '❌';
-      case 'warning':
-        return '⚠️';
-      default:
-        return 'ℹ️';
-    }
+  const renderNotificationItem = (notification: any, index: number) => {
+    return (
+      <View 
+        key={notification.id} 
+        style={[styles.notificationItem, notification.unread && styles.unreadNotification]}
+      >
+        {notification.unread && <View style={styles.unreadIndicator} />}
+        <Typography variant="h6" weight="bold" style={styles.notificationTitle}>
+          {notification.title}
+        </Typography>
+        <Typography variant="body1">
+          {notification.message}
+        </Typography>
+        <Typography variant="caption" style={styles.notificationTime}>
+          {notification.time}
+        </Typography>
+        <View style={styles.notificationActions}>
+          {notification.unread && (
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.readButton]}
+              onPress={() => markAsRead(notification.id)}
+            >
+              <Typography variant="caption" color="onPrimary">
+                Mark as Read
+              </Typography>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.deleteButton]}
+            onPress={() => clearNotification(notification.id)}
+          >
+            <Typography variant="caption" color="onPrimary">
+              Delete
+            </Typography>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerTitle}>
-          <NavigationButton variant="left" onPress={() => navigation.goBack()} />
-          <Typography variant="h6" weight="bold">
-            🔔 Notifications
-          </Typography>
-        </View>
-        <View style={styles.headerActions}>
-          {notifications.length > 0 && (
-            <TouchableOpacity style={styles.markAllButton} onPress={markAllAsRead} activeOpacity={0.8}>
-              <Typography variant="button" color="onPrimary" size={12}>
-                Mark all as read
+        <NavigationButton 
+          variant="left" 
+          onPress={() => navigation.goBack()} 
+        />
+        <Typography variant="h4" weight="bold">
+          Notifications
+        </Typography>
+        {notifications.length > 0 && (
+          <View style={styles.headerActions}>
+            <TouchableOpacity 
+              style={styles.markAllButton}
+              onPress={markAllAsRead}
+            >
+              <Typography variant="caption" color="onPrimary">
+                Mark All as Read
               </Typography>
             </TouchableOpacity>
-          )}
-        </View>
+          </View>
+        )}
       </View>
 
-      {notifications.length === 0 ? (
+      {notifications.length > 0 ? (
+        <ScrollView style={styles.notificationList}>
+          {notifications.map(renderNotificationItem)}
+        </ScrollView>
+      ) : (
         <View style={styles.emptyContainer}>
-          <Typography variant="h5" weight="bold" style={{ marginBottom: 16 }}>
-            No notifications yet
+          <Typography variant="h5" weight="bold" style={{ marginBottom: 12 }}>
+            No Notifications
           </Typography>
-          <Typography variant="body1" color="onSurfaceVariant" style={{ textAlign: 'center' }}>
-            When you receive notifications, they will appear here.
+          <Typography variant="body1" style={{ textAlign: 'center' }}>
+            You don't have any notifications at the moment. We'll notify you when there's something new!
           </Typography>
         </View>
-      ) : (
-        <ScrollView style={styles.notificationList} showsVerticalScrollIndicator={false}>
-          {notifications.map((notification) => (
-            <TouchableOpacity
-              key={notification.id}
-              style={[styles.notificationItem, !notification.read && styles.unreadNotification]}
-              onPress={() => markAsRead(notification.id)}
-              activeOpacity={0.9}
-            >
-              {!notification.read && <View style={styles.unreadIndicator} />}
-              <View style={styles.notificationHeader}>
-                <View style={styles.notificationTitle}>
-                  <View style={styles.notificationIcon}>
-                    <Typography variant="body1">
-                      {getNotificationIcon(notification.type)}
-                    </Typography>
-                  </View>
-                  <Typography variant="body1" weight="bold" numberOfLines={2}>
-                    {notification.title}
-                  </Typography>
-                </View>
-                <View style={styles.notificationActions}>
-                  <Typography
-                    variant="caption"
-                    color="onSurfaceVariant"
-                    style={styles.timestamp}
-                  >
-                    {formatTimestamp(notification.timestamp)}
-                  </Typography>
-                  <TouchableOpacity
-                    style={styles.clearButton}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      clearNotification(notification.id);
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <Typography variant="caption" color="onPrimary">
-                      Clear
-                    </Typography>
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <View style={styles.notificationDivider} />
-              <View style={styles.notificationContent}>
-                <Typography variant="body2" color="onSurfaceVariant">
-                  {notification.message}
-                </Typography>
-              </View>
-            </TouchableOpacity>
-          ))}
-          <View style={{ height: 40 }} />
-        </ScrollView>
       )}
     </View>
   );

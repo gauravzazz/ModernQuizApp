@@ -50,24 +50,13 @@ export const ProfileScreen: React.FC = () => {
       backgroundColor: theme.colors.background,
       paddingTop: StatusBar.currentHeight || 0,
     },
-    headerNav: {
+    header: {
+      marginBottom: verticalScale(24),
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
+      gap: scale(16),
       paddingHorizontal: scale(16),
       paddingVertical: verticalScale(16),
-      zIndex: 10,
-      borderBottomWidth: 0,
-      shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 0, height: moderateScale(4) },
-      shadowOpacity: 0.2,
-      shadowRadius: moderateScale(8),
-      elevation: moderateScale(8),
-    },
-    headerTitle: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: scale(12),
     },
     content: {
       flex: 1,
@@ -185,13 +174,14 @@ export const ProfileScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerNav}>
-        <View style={styles.headerTitle}>
-          <NavigationButton variant="left" onPress={() => navigation.goBack()} />
-          <Typography variant="h6" weight="bold">
-            👤 Profile
-          </Typography>
-        </View>
+      <View style={styles.header}>
+        <NavigationButton 
+          variant="left" 
+          onPress={() => navigation.goBack()} 
+        />
+        <Typography variant="h4" weight="bold">
+          Profile
+        </Typography>
       </View>
       
       <ProfileHeader

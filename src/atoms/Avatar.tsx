@@ -20,7 +20,8 @@ export const Avatar: React.FC<AvatarProps> = ({
 }) => {
   const theme = useTheme<AppTheme>();
 
-  const defaultImageUrl = 'https://ui-avatars.com/api/?background=random&name=' + (initials || '?');
+  // Use local profile image as default instead of UI Avatars API
+  const defaultImage = require('../../assets/profile.jpeg');
 
   const getSize = () => {
     switch (size) {
@@ -58,6 +59,8 @@ export const Avatar: React.FC<AvatarProps> = ({
       shadowOpacity: 0.5,
       shadowRadius: moderateScale(10),
       elevation: moderateScale(10),
+      borderWidth: moderateScale(1.5),
+      borderColor: theme.colors.neuLight,
     },
     image: {
       width: '100%',
@@ -79,7 +82,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         <Image source={source} style={styles.image} resizeMode="cover" />
       ) : (
         <Image 
-          source={{ uri: defaultImageUrl }} 
+          source={defaultImage} 
           style={styles.image} 
           resizeMode="cover"
         />

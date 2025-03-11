@@ -1,9 +1,11 @@
 import React from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, ScrollView, StatusBar } from 'react-native';
 import { useTheme } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
 import { ProgressBar } from '../atoms/ProgressBar';
+import { NavigationButton } from '../atoms/NavigationButton';
 
 interface SubjectProgress {
   id: string;
@@ -43,6 +45,7 @@ const mockProgress: SubjectProgress[] = [
 
 export const ProgressScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
+  const navigation = useNavigation();
 
   const totalQuizzesTaken = mockProgress.reduce(
     (sum, subject) => sum + subject.completedQuizzes,
@@ -57,10 +60,28 @@ export const ProgressScreen: React.FC = () => {
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-      padding: 16,
     },
-    header: {
+    headerNav: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
       marginBottom: 24,
+      paddingVertical: 16,
+      shadowColor: theme.colors.neuDark,
+      shadowOffset: { width: 4, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 6,
+      elevation: 8,
+    },
+    headerTitle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    content: {
+      flex: 1,
+      padding: 16,
     },
     overviewContainer: {
       flexDirection: 'row',
@@ -119,62 +140,67 @@ export const ProgressScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Typography variant="h4" weight="bold">
-          Your Progress
-        </Typography>
-      </View>
-
-      <View style={styles.overviewContainer}>
-        <View style={styles.overviewCard}>
-          <Typography variant="h5" weight="bold" color="primary">
-            {totalQuizzesTaken}
-          </Typography>
-          <Typography variant="caption" color="onSurfaceVariant">
-            Quizzes Taken
-          </Typography>
-        </View>
-        <View style={styles.overviewCard}>
-          <Typography variant="h5" weight="bold" color="primary">
-            {averageOverallScore.toFixed(1)}%
-          </Typography>
-          <Typography variant="caption" color="onSurfaceVariant">
-            Average Score
+      <View style={styles.headerNav}>
+        <View style={styles.headerTitle}>
+          <NavigationButton variant="left" onPress={() => navigation.goBack()} />
+          <Typography variant="h6" weight="bold">
+            📊 Your Progress
           </Typography>
         </View>
       </View>
 
-      <ScrollView>
-        {mockProgress.map((subject) => (
-          <View key={subject.id} style={styles.subjectCard}>
-            <View style={styles.subjectHeader}>
-              <Typography variant="h6" weight="bold">
-                {subject.subject}
-              </Typography>
-              {subject.streak > 0 && (
-                <View style={styles.streakBadge}>
-                  <Typography variant="caption" color="onPrimary">
-                    {subject.streak} Day Streak 🔥
+      <View style={styles.content}>
+        <View style={styles.overviewContainer}>
+          <View style={styles.overviewCard}>
+            <Typography variant="h5" weight="bold" color="primary">
+              {totalQuizzesTaken}
+            </Typography>
+            <Typography variant="caption" color="onSurfaceVariant">
+              Quizzes Taken
+            </Typography>
+          </View>
+          <View style={styles.overviewCard}>
+            <Typography variant="h5" weight="bold" color="primary">
+              {averageOverallScore.toFixed(1)}%
+            </Typography>
+            <Typography variant="caption" color="onSurfaceVariant">
+              Average Score
+            </Typography>
+          </View>
+        </View>
+
+        <ScrollView>
+          {mockProgress.map((subject) => (
+            <View key={subject.id} style={styles.subjectCard}>
+              <View style={styles.subjectHeader}>
+                <Typography variant="h6" weight="bold">
+                  {subject.subject}
+                </Typography>
+                {subject.streak > 0 && (
+                  <View style={styles.streakBadge}>
+                    <Typography variant="caption" color="onPrimary">
+                      {subject.streak} Day Streak 🔥
+                    </Typography>
+                  </View>
+                )}
+              </View>
+              <View style={styles.progressContainer}>
+                <ProgressBar
+                  progress={subject.completedQuizzes / subject.totalQuizzes}
+                />
+                <View style={styles.progressStats}>
+                  <Typography variant="caption" color="onSurfaceVariant">
+                    {subject.completedQuizzes}/{subject.totalQuizzes} Quizzes
+                  </Typography>
+                  <Typography variant="caption" color="primary">
+                    Avg: {subject.averageScore}%
                   </Typography>
                 </View>
-              )}
-            </View>
-            <View style={styles.progressContainer}>
-              <ProgressBar
-                progress={subject.completedQuizzes / subject.totalQuizzes}
-              />
-              <View style={styles.progressStats}>
-                <Typography variant="caption" color="onSurfaceVariant">
-                  {subject.completedQuizzes}/{subject.totalQuizzes} Quizzes
-                </Typography>
-                <Typography variant="caption" color="primary">
-                  Avg: {subject.averageScore}%
-                </Typography>
               </View>
             </View>
-          </View>
-        ))}
-      </ScrollView>
+          ))}
+        </ScrollView>
+      </View>
     </View>
   );
 };
