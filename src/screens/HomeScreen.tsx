@@ -117,8 +117,7 @@ export const HomeScreen: React.FC = () => {
   return (
     <View style={{ flex: 1 }}>
       <HeaderSection
-        onAvatarPress={() => navigation.navigate('Settings')}
-        onNotificationPress={() => {}}
+        onNotificationPress={() => navigation.navigate('Notifications')}
         notificationCount={3}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

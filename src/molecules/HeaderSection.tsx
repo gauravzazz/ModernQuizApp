@@ -57,7 +57,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
       width: 44,
       height: 44,
       backgroundColor: theme.colors.neuPrimary,
-      borderRadius: theme.roundness,
+      borderRadius: 22,
       justifyContent: 'center',
       alignItems: 'center',
       shadowColor: theme.colors.neuDark,

@@ -1,13 +1,47 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Notifications from 'expo-notifications';
 import { Navigation } from './src/navigation';
-import { NotificationProvider } from './src/context/NotificationContext';
+import { NotificationProvider, useNotifications } from './src/context/NotificationContext';
 import { ThemeProvider, useThemeContext } from './src/context/ThemeContext';
+import { NotificationService } from './src/services/notificationService';
 
 const AppContent = () => {
   const { theme } = useThemeContext();
+  const { addNotification } = useNotifications();
+  const notificationListener = useRef<any>();
+  const responseListener = useRef<any>();
+
+  useEffect(() => {
+    NotificationService.registerForPushNotifications();
+
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      const { title, body } = notification.request.content;
+      addNotification({
+        title: title || 'New Notification',
+        message: body || '',
+        type: 'info'
+      });
+    });
+
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      const { data } = response.notification.request.content;
+      // Handle notification response/interaction here
+      console.log('Notification interaction:', data);
+    });
+
+    return () => {
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
+    };
+  }, [addNotification]);
+
   
   const styles = StyleSheet.create({
     container: {

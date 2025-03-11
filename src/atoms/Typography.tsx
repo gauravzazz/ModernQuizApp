@@ -9,6 +9,7 @@ export interface TypographyProps extends TextProps {
   color?: keyof AppTheme['colors'];
   align?: 'left' | 'center' | 'right';
   weight?: 'normal' | 'medium' | 'bold';
+  size?: number;
   children: React.ReactNode;
 }
 
@@ -17,6 +18,7 @@ export const Typography: React.FC<TypographyProps> = ({
   color = 'onBackground',
   align = 'left',
   weight = 'normal',
+  size,
   style,
   children,
   ...props
@@ -24,6 +26,11 @@ export const Typography: React.FC<TypographyProps> = ({
   const theme = useTheme<AppTheme>();
 
   const getFontSize = () => {
+    // If a custom size is provided, use it instead of the variant-based size
+    if (size !== undefined) {
+      return scaledFontSize(size);
+    }
+    
     switch (variant) {
       case 'h1':
         return scaledFontSize(32);

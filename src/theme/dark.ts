@@ -40,14 +40,8 @@ export const darkColors = {
   neuLight: 'rgba(60, 60, 60, 0.9)',
   neuDark: 'rgba(15, 15, 15, 0.9)',
   elevation: {
-    level0: { shadowColor: 'transparent', elevation: 0 },
-    level1: {
-      shadowColor: 'rgba(15, 15, 15, 0.9)', // neuDark
-      shadowOffset: { width: 3, height: 3 },
-      shadowOpacity: 0.9,
-      shadowRadius: 6,
-      elevation: 3,
-    },
+    level0: 'none',
+    level1: '0px 3px 3px rgba(15, 15, 15, 0.9)',
     level2: {
       shadowColor: 'rgba(15, 15, 15, 0.9)',
       shadowOffset: { width: 5, height: 5 },
@@ -55,7 +49,27 @@ export const darkColors = {
       shadowRadius: 10,
       elevation: 5,
     },
-    // Add more levels as needed
+    level3: {
+      shadowColor: 'rgba(15, 15, 15, 0.9)',
+      shadowOffset: { width: 8, height: 8 },
+      shadowOpacity: 0.9,
+      shadowRadius: 15,
+      elevation: 8,
+    },
+    level4: {
+      shadowColor: 'rgba(15, 15, 15, 0.9)',
+      shadowOffset: { width: 12, height: 12 },
+      shadowOpacity: 0.9,
+      shadowRadius: 20,
+      elevation: 12,
+    },
+    level5: {
+      shadowColor: 'rgba(15, 15, 15, 0.9)',
+      shadowOffset: { width: 16, height: 16 },
+      shadowOpacity: 0.9,
+      shadowRadius: 25,
+      elevation: 16,
+    }
   },
   pressedElevation: {
     level1: {
