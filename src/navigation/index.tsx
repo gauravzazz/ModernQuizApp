@@ -15,7 +15,16 @@ import { CustomDrawerContent } from '../components/CustomDrawerContent';
 
 export type RootStackParamList = {
   Home: undefined;
-  MainStack: undefined;
+  MainStack: undefined | {
+    screen: string;
+    params: {
+      questionCount?: number;
+      mode?: 'Practice' | 'Test';
+      topicId?: string;
+      subjectId?: string;
+      title?: string;
+    } | { subjectId: string; title: string };
+  };
   SubjectDetail: { subjectId: string; title: string };
   Quiz: {
     questionCount: number;

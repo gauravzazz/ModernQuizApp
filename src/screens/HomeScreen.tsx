@@ -155,9 +155,12 @@ export const HomeScreen: React.FC = () => {
                 subjects={filteredSubjects}
                 onSubjectPress={(id) => {
                   const subject = filteredSubjects.find(s => s.id === id);
-                  navigation.navigate('SubjectDetail', { 
-                    subjectId: id,
-                    title: subject?.title || 'Subject'
+                  navigation.navigate('MainStack', {
+                    screen: 'SubjectDetail',
+                    params: { 
+                      subjectId: id,
+                      title: subject?.title || 'Subject'
+                    }
                   });
                 }}
               />
@@ -168,9 +171,12 @@ export const HomeScreen: React.FC = () => {
                 topics={filteredTopics}
                 onTopicPress={(id) => {
                   const topic = filteredTopics.find(t => t.id === id);
-                  navigation.navigate('SubjectDetail', { 
-                    subjectId: id,
-                    title: topic?.title || 'Topic'
+                  navigation.navigate('MainStack', {
+                    screen: 'SubjectDetail',
+                    params: { 
+                      subjectId: id,
+                      title: topic?.title || 'Topic'
+                    }
                   });
                 }}
               />

@@ -85,10 +85,16 @@ export const RecentSubjects: React.FC<RecentSubjectsProps> = ({ searchQuery = ''
                 description={subject.description}
                 progress={subject.progress}
                 icon={subject.icon}
-                onPress={() => navigation.navigate('SubjectDetail', { 
-                  subjectId: subject.id,
-                  title: subject.title 
-                })}
+                onPress={() => {
+                  // Navigate to SubjectDetail through MainStack
+                  navigation.navigate('MainStack', {
+                    screen: 'SubjectDetail',
+                    params: { 
+                      subjectId: subject.id,
+                      title: subject.title 
+                    }
+                  });
+                }}
                 backgroundImage={subject.image}
                 id={subject.id}
               />

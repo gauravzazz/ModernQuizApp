@@ -70,15 +70,19 @@ export const HotTopics: React.FC<{ searchQuery?: string }> = ({ searchQuery = ''
       </ScrollView>
 
       <QuizConfigModal
-              visible={modalVisible}
-              onClose={() => setModalVisible(false)}
-              initialQuestionCount={questionCount}
-              initialMode={quizMode}
-              onStart={({ questionCount: count, mode }) => {
-                  setQuestionCount(count);
-                  setQuizMode(mode);
-                  // Add your quiz start logic here
-              } } title={''} questionCount={0}      />
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        initialQuestionCount={questionCount}
+        initialMode={quizMode}
+        onStart={({ questionCount: count, mode }) => {
+          setQuestionCount(count);
+          setQuizMode(mode);
+          // Add your quiz start logic here
+        }}
+        title={selectedTopic?.title || 'Configure Quiz'}
+        questionCount={selectedTopic?.questionCount || 10}
+        topicId={selectedTopic?.id}
+      />
     </View>
   );
 };

@@ -13,6 +13,9 @@ import { RootStackParamList } from '../navigation';
 export interface HeaderSectionProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onAvatarPress?: () => void;
+  onNotificationPress?: () => void;
+  notificationCount?: number;
 }
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -20,6 +23,9 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export const HeaderSection: React.FC<HeaderSectionProps> = ({
   searchQuery,
   onSearchChange,
+  onAvatarPress,
+  onNotificationPress,
+  notificationCount,
 }) => {
   const theme = useTheme<AppTheme>();
   const navigation = useNavigation<NavigationProp>();
@@ -86,7 +92,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
       <View style={styles.topSection}>
         <View style={styles.leftSection}>
           <TouchableOpacity 
-            onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+            onPress={onAvatarPress || (() => navigation.dispatch(DrawerActions.openDrawer()))}
             activeOpacity={0.8}
           >
             <Avatar size="medium" />
@@ -94,13 +100,13 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
         </View>
         <TouchableOpacity
           style={styles.notificationButton}
-          onPress={() => navigation.navigate('Notifications')}
+          onPress={onNotificationPress || (() => navigation.navigate('Notifications'))}
           activeOpacity={0.8}
         >
-          {unreadCount > 0 && (
+          {(notificationCount || unreadCount) > 0 && (
             <View style={styles.notificationBadge}>
               <Typography variant="caption" color="onPrimary">
-                {unreadCount}
+                {notificationCount || unreadCount}
               </Typography>
             </View>
           )}

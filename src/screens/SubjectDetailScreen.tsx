@@ -161,12 +161,15 @@ export const SubjectDetailScreen: React.FC = () => {
     // Close the modal
     setModalVisible(false);
 
-    // Navigate to the Quiz screen
-    navigation.navigate('Quiz', {
-      questionCount: config.questionCount,
-      mode: config.mode,
-      topicId: selectedTopicId,
-      subjectId: subjectId
+    // Navigate to the Quiz screen through MainStack
+    navigation.navigate('MainStack', {
+      screen: 'Quiz',
+      params: {
+        questionCount: config.questionCount,
+        mode: config.mode,
+        topicId: selectedTopicId,
+        subjectId: subjectId
+      }
     });
   };
 

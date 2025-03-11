@@ -42,6 +42,7 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
       justifyContent: 'center',
       alignItems: 'center',
       padding: 20,
+      zIndex: 1,
     },
     blurOverlay: {
       position: 'absolute',
@@ -49,6 +50,7 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
       left: 0,
       bottom: 0,
       right: 0,
+      zIndex: -1,
     },
     fallbackOverlay: {
       position: 'absolute',
@@ -56,7 +58,8 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
       left: 0,
       bottom: 0,
       right: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      zIndex: -1,
     },
     modalContent: {
       width: '100%',
@@ -148,13 +151,15 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
     // Call the onStart callback if provided
     onStart?.({ questionCount: selectedQuestionCount, mode: quizMode });
     
-    // Navigate to the Quiz screen with the configuration data
-    // Ensure we're explicitly passing the topicId and subjectId
-    navigation.navigate('Quiz', {
-      questionCount: selectedQuestionCount,
-      mode: quizMode,
-      topicId,
-      subjectId
+    // Navigate to the Quiz screen through the MainStack navigator
+    navigation.navigate('MainStack', {
+      screen: 'Quiz',
+      params: {
+        questionCount: selectedQuestionCount,
+        mode: quizMode,
+        topicId,
+        subjectId
+      }
     });
     
     // Log the navigation parameters for debugging
@@ -179,7 +184,7 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
         {Platform.OS === 'ios' ? (
           <BlurView
             tint="dark"
-            intensity={50}
+            intensity={80}
             style={styles.blurOverlay}
           />
         ) : (
