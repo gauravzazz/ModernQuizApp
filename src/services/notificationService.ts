@@ -29,7 +29,9 @@ export class NotificationService {
         return null;
       }
 
-      const token = await Notifications.getExpoPushTokenAsync();
+      const token = await Notifications.getExpoPushTokenAsync({
+        projectId: 'your-expo-project-id' // Explicitly provide projectId
+      });
       if (Platform.OS === 'android') {
         await this.setupAndroidChannel();
       }

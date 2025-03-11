@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, View, ScrollView, Dimensions, Animated } from 'react-native';
+import { StyleSheet, View, ScrollView, Dimensions, Animated, TouchableOpacity } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,6 +14,11 @@ import { QuizResultFilters } from '../molecules/QuizResultFilters';
 import { QuizQuestionCard } from '../molecules/QuizQuestionCard';
 import { Typography } from '../atoms/Typography';
 import { addBookmark, removeBookmark, isQuestionBookmarked } from '../services/bookmarkService';
+import { updateUserStats } from '../services/profileService';
+import { UserAward } from '../types/profile';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { moderateScale, scaledFontSize, scaledSpacing, scaledRadius } from '../utils/scaling';
+import { AchievementModal } from '../molecules/AchievementModal';
 
 type QuizResultScreenRouteProp = RouteProp<RootStackParamList, 'QuizResult'>;
 type QuizResultScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -34,6 +39,8 @@ export const QuizResultScreen: React.FC = () => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const filterSectionY = useRef(0);
   const headerHeight = useRef(0);
+  const [unlockedAwards, setUnlockedAwards] = useState<UserAward[]>([]);
+  const [showAwardModal, setShowAwardModal] = useState(false);
 
   useEffect(() => {
     scrollY.addListener(({ value }) => {
@@ -412,9 +419,10 @@ export const QuizResultScreen: React.FC = () => {
     // Removed scroll to top behavior to maintain scroll position when filtering
   }, [activeFilter, questionsData, attempts]);
   
-  // Save quiz results to AsyncStorage
+  // Save quiz results to AsyncStorage and update user stats
   useEffect(() => {
     const saveResults = async () => {
+      // Save quiz results to storage
       await saveQuizResults({
         subjectId,
         topicId,
@@ -423,10 +431,27 @@ export const QuizResultScreen: React.FC = () => {
         totalQuestions: attempts.length,
         timePerQuestion
       });
+      
+      // Update user stats and trigger badge earning
+      const timeSpentInMinutes = totalTime / 60000; // Convert ms to minutes
+      const updatedProfile = await updateUserStats(
+        correctAnswers,
+        attempts.length,
+        timeSpentInMinutes,
+        mode as 'Practice' | 'Test'
+      );
+      
+      // Check if any new awards were unlocked
+      if (updatedProfile.newlyUnlockedAwards && updatedProfile.newlyUnlockedAwards.length > 0) {
+        setUnlockedAwards(updatedProfile.newlyUnlockedAwards);
+        setShowAwardModal(true);
+      }
     };
     
     saveResults();
-  }, [subjectId, topicId, mode, correctAnswers, attempts.length, timePerQuestion]);
+  }, [subjectId, topicId, mode, correctAnswers, attempts.length, timePerQuestion, totalTime]);
+
+
 
   // Fade in the screen when it loads
   useEffect(() => {
@@ -437,9 +462,18 @@ export const QuizResultScreen: React.FC = () => {
     }).start();
   }, []);
 
-  // Render method for the screen
+  // Import the AchievementModal component at the top of the file
+  // import { AchievementModal } from '../molecules/AchievementModal';
+  
+
   return (
     <View style={styles.container}>
+      <AchievementModal
+        visible={showAwardModal}
+        onClose={() => setShowAwardModal(false)}
+        awards={unlockedAwards}
+      />
+      
       <View onLayout={onHeaderLayout}>
         <QuizResultHeader title={`${mode} Results`} />
       </View>

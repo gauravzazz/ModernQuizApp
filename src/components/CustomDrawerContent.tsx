@@ -12,6 +12,7 @@ const DrawerItems = [
   { label: 'Bookmarks', icon: '🔖', route: 'Bookmarks' },
   { label: 'Quiz History', icon: '📚', route: 'QuizHistory' },
   { label: 'Progress', icon: '📊', route: 'Progress' },
+  { label: 'Profile', icon: '👤', route: 'Profile' },
   { label: 'Notifications', icon: '🔔', route: 'Notifications' },
   { label: 'Settings', icon: '⚙️', route: 'Settings' },
   { label: 'Logout', icon: '🚫', route: 'Logout', isLogout: true },
@@ -52,7 +53,7 @@ export const CustomDrawerContent = (props: any) => {
     },
     drawerItem: {
       borderRadius: 16,
-      marginHorizontal: 20,
+      marginHorizontal: 10,
       marginVertical: 8,
       height: 56,
       justifyContent: 'center',

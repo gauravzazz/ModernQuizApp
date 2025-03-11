@@ -11,6 +11,7 @@ import { QuizHistoryScreen } from '../screens/QuizHistoryScreen';
 import { ProgressScreen } from '../screens/ProgressScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { NotificationScreen } from '../screens/NotificationScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 import { CustomDrawerContent } from '../components/CustomDrawerContent';
 
 export type RootStackParamList = {
@@ -62,6 +63,7 @@ export type RootStackParamList = {
   Bookmarks: undefined;
   QuizHistory: undefined;
   Progress: undefined;
+  Profile: undefined;
   Settings: undefined;
   Notifications: undefined;
 };
@@ -104,6 +106,7 @@ export const Navigation = () => {
         <Drawer.Screen name="Bookmarks" component={BookmarksScreen} />
         <Drawer.Screen name="QuizHistory" component={QuizHistoryScreen} />
         <Drawer.Screen name="Progress" component={ProgressScreen} />
+        <Drawer.Screen name="Profile" component={ProfileScreen} />
         <Drawer.Screen name="Settings" component={SettingsScreen} />
         <Drawer.Screen name="Notifications" component={NotificationScreen} />
       </Drawer.Navigator>

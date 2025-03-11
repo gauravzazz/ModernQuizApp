@@ -1,3 +1,12 @@
+// Gradient color definitions for UI elements
+export const lightGradients = {
+  primary: ['#2196F3', '#E3F2FD'] as const,
+  success: ['#4CAF50', '#A5D6A7'] as const,
+  info: ['#2196F3', '#64B5F6'] as const,
+  warning: ['#FF9800', '#FFB74D'] as const,
+  error: ['#F44336', '#E57373'] as const
+};
+
 export const lightColors = {
   // Primary colors
   primary: '#2196F3',
@@ -21,9 +30,13 @@ export const lightColors = {
 
   // Status colors
   error: '#F44336',
+  errorContainer: '#FFEBEE',
   success: '#4CAF50',
+  successContainer: '#E8F5E9',
   warning: '#FFC107',
+  warningContainer: '#FFF8E1',
   info: '#2196F3',
+  infoContainer: '#E3F2FD',
 
   // Custom colors for quiz app
   quizCard: '#FFFFFF',

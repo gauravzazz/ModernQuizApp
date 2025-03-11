@@ -8,16 +8,16 @@ interface ElevationLevel {
   elevation: number;
 }
 
-// This interface matches what MD3Colors expects (all string values)
+// This interface matches what MD3Colors expects but with our custom types
 interface CustomElevation {
   level0: string;
   level1: string;
-  level2: string;
-  level3: string;
-  level4: string;
-  level5: string;
+  level2: ElevationLevel;
+  level3: ElevationLevel;
+  level4: ElevationLevel;
+  level5: ElevationLevel;
   // Add index signature for numeric keys to match MD3ElevationColors
-  [key: number]: string;
+  [key: number]: string | ElevationLevel;
 }
 
 // This interface is for our actual implementation with complex elevation objects
@@ -48,9 +48,25 @@ export interface CustomColors extends Omit<MD3Colors, 'elevation'> {
   success: string;
   error: string;
   warning: string;
+  info: string;
+  
+  // Container colors for status colors
+  successContainer: string;
+  errorContainer: string;
+  warningContainer: string;
+  infoContainer: string;
 
   // Custom elevation
   elevation: CustomElevation;
+}
+
+// Gradient color pairs for different UI elements
+export interface GradientColors {
+  primary: string[];
+  success: string[];
+  info: string[];
+  warning: string[];
+  error: string[];
 }
 
 // This interface represents our actual implementation with complex elevation objects
