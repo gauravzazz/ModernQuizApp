@@ -172,7 +172,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
   const styles = StyleSheet.create({
     header: {
-      paddingTop: verticalScale(20),
+      paddingTop: verticalScale(24),
       paddingBottom: verticalScale(36),
       paddingHorizontal: scale(24),
       backgroundColor: theme.colors.neuPrimary,
@@ -255,14 +255,15 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       opacity: 0.9,
       fontSize: moderateScale(14),
       marginTop: verticalScale(2),
+      
     },
     editButton: {
       position: 'absolute',
-      top: insets.top + verticalScale(16),
-      right: scale(20),
+      top: insets.top + verticalScale(35),
+      right: scale(10),
       backgroundColor: 'rgba(255,255,255,0.25)',
       borderRadius: moderateScale(20),
-      padding: moderateScale(10),
+      padding: moderateScale(1),
       shadowColor: 'rgba(0,0,0,0.3)',
       shadowOffset: { width: 0, height: moderateScale(2) },
       shadowOpacity: 0.3,

@@ -170,7 +170,7 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
       marginTop: verticalScale(16),
       backgroundColor: theme.colors.neuPrimary,
       borderRadius: theme.roundness * 2,
-      padding: moderateScale(isSmallScreen ? 16 : 24),
+      padding: moderateScale(isSmallScreen ? 8 : 10),
       shadowColor: theme.colors.neuDark,
       shadowOffset: { width: moderateScale(6), height: moderateScale(6) },
       shadowOpacity: 0.4,
@@ -198,7 +198,7 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
       alignItems: 'flex-start',
       marginBottom: verticalScale(isSmallScreen ? 10 : 20),
       paddingHorizontal: scale(isSmallScreen ? 8 : 16),
-      gap: scale(isSmallScreen ? 8 : 12),
+      gap: scale(isSmallScreen ? 4 : 8),
       zIndex: 2,
     },
     sectionTitle: {

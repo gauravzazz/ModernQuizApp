@@ -2,7 +2,7 @@ import { DefaultTheme as NavigationLightTheme, DarkTheme as NavigationDarkTheme 
 import { MD3LightTheme, MD3DarkTheme, adaptNavigationTheme } from 'react-native-paper';
 import { darkColors, darkGradients } from './dark'; 
 import { lightColors, lightGradients } from './light';
-import { AppColors, GradientColors } from './types';
+import { AppColors, convertElevationConfig } from './types';
 
 const { LightTheme, DarkTheme } = adaptNavigationTheme({
   reactNavigationLight: NavigationLightTheme,
@@ -18,6 +18,7 @@ export const lightTheme = {
     ...LightTheme.colors,
     ...MD3LightTheme.colors,
     ...lightColors,
+    elevation: convertElevationConfig(lightColors.elevation),
   } as AppColors,
   roundness: 12,
   animation: {
@@ -32,6 +33,7 @@ export const darkTheme = {
     ...DarkTheme.colors,
     ...MD3DarkTheme.colors,
     ...darkColors,
+    elevation: convertElevationConfig(darkColors.elevation),
   } as AppColors,
   roundness: 12,
   animation: {
