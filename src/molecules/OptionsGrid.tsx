@@ -37,7 +37,7 @@ export const OptionsGrid: React.FC<OptionsGridProps> = ({
   const styles = StyleSheet.create({
     container: {
       marginTop: scaledSpacing(16),
-      paddingHorizontal: scaledSpacing(12),
+      paddingHorizontal: scaledSpacing(1),
     },
     optionContainer: {
       marginBottom: scaledSpacing(7),
@@ -89,7 +89,7 @@ export const OptionsGrid: React.FC<OptionsGridProps> = ({
     },
     optionText: {
       color: theme.colors.primary,
-      fontWeight: '600',
+      fontWeight: '200',
       padding: scaledSpacing(4),
       textAlign: 'left',
       fontSize: moderateScale(14),

@@ -2,7 +2,6 @@ import React from 'react';
 import { StyleSheet, View, Image, ViewStyle, ImageSourcePropType } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
-import { Typography } from './Typography';
 import { moderateScale, scaledFontSize } from '../utils/scaling';
 
 export interface AvatarProps {

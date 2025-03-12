@@ -65,8 +65,8 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
   };
 
   // Calculate responsive sizes based on screen width
-  const chartHeight = screenWidth < 360 ? 200 : 240; // Increased height for better visibility
-  const pieChartSize = screenWidth < 360 ? screenWidth * 0.5 : screenWidth * 0.55; // Increased pie chart size
+  const chartHeight = screenWidth < 360 ? 180 : 220;
+  const pieChartSize = screenWidth < 360 ? screenWidth * 0.4 : screenWidth * 0.45;
   const dotRadius = screenWidth < 360 ? 4 : 6;
   const strokeWidth = screenWidth < 360 ? 1.5 : 2;
   const fontSize = screenWidth < 360 ? 10 : 12;
@@ -183,8 +183,7 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
       alignItems: 'center',
       backgroundColor: theme.colors.neuPrimary,
       borderRadius: theme.roundness * 2,
-      padding: scaledSpacing(20), // Increased padding
-      paddingBottom: scaledSpacing(24), // Extra padding at bottom
+      padding: scaledSpacing(1),
       shadowColor: theme.colors.neuDark,
       shadowOffset: { width: 3, height: 3 },
       shadowOpacity: 0.6,
@@ -192,7 +191,6 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
       elevation: 4,
       borderWidth: 1,
       borderColor: theme.colors.neuLight,
-      width: screenWidth - scaledSpacing(32), // Set explicit width
     },
     chartTitle: {
       marginBottom: scaledSpacing(16),
@@ -203,25 +201,21 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
       marginTop: scaledSpacing(24),
     },
     accuracyContainer: {
-      flexDirection: screenWidth < 400 ? 'column' : 'row', // Changed breakpoint from 360 to 400
+      flexDirection: screenWidth < 360 ? 'column' : 'row',
       justifyContent: 'space-around',
       alignItems: 'center',
       marginVertical: scaledSpacing(16),
-      width: '100%', // Ensure full width
     },
     pieChartContainer: {
       alignItems: 'center',
       justifyContent: 'center',
-      width: screenWidth < 400 ? screenWidth - scaledSpacing(80) : screenWidth / 2.5, // Adjusted width
-      marginBottom: screenWidth < 400 ? scaledSpacing(16) : 0,
-      paddingRight: screenWidth < 400 ? 0 : scaledSpacing(16), // Add padding when in row layout
+      width: screenWidth < 360 ? screenWidth - scaledSpacing(64) : screenWidth / 3,
+      marginBottom: screenWidth < 360 ? scaledSpacing(16) : 0,
     },
     legendContainer: {
       flexDirection: 'column',
       justifyContent: 'center',
-      marginLeft: screenWidth < 400 ? 0 : scaledSpacing(16),
-      width: screenWidth < 400 ? '100%' : 'auto', // Full width on small screens
-      alignItems: screenWidth < 400 ? 'center' : 'flex-start', // Center on small screens
+      marginLeft: screenWidth < 360 ? 0 : scaledSpacing(16),
     },
     legendItem: {
       flexDirection: 'row',
@@ -350,7 +344,7 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
         </Typography>
         <LineChart
           data={timeChartData}
-          width={screenWidth - scaledSpacing(80)} // Adjusted width
+          width={screenWidth - scaledSpacing(64)}
           height={chartHeight}
           chartConfig={{
             ...chartConfig,
@@ -369,8 +363,7 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
           bezier
           style={{
             borderRadius: 16,
-            paddingRight: 24, // Increased padding
-            marginLeft: -10 // Adjust left margin to prevent cutting
+            paddingRight: 16
           }}
           withInnerLines={true}
           withOuterLines={true}

@@ -20,11 +20,10 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export const HomeScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
   const navigation = useNavigation<NavigationProp>();
-
   const [activeTab, setActiveTab] = React.useState('home');
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-
+  
   const filteredSubjects = React.useMemo(() => {
     if (!searchQuery) return mockSubjects;
     const query = searchQuery.toLowerCase();

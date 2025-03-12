@@ -592,8 +592,8 @@ export const QuizResultScreen: React.FC = () => {
         </Animated.View>
         
         <Button
-          label="Back to Home"
-          onPress={() => navigation.navigate('Home')}
+          label="Check Your Progress"
+          onPress={() => navigation.navigate('Progress')}
           variant="primary"
           style={styles.backButton}
         />

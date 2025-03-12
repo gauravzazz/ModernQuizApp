@@ -9,4 +9,7 @@ export interface Question {
   options: Option[];
   correctOptionId: string;
   explanation?: string;
+  difficulty?: number;
+  tags?: string[];
+  exam?: string;
 }

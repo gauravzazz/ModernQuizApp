@@ -57,7 +57,7 @@ export const NavigationButton: React.FC<NavigationButtonProps> = ({
     icon: {
       fontSize: variant === 'close' ? 28 : 24,
       color: theme.colors.onSurface,
-      fontWeight: 'bold',
+      //fontWeight: 'bold',
       textShadowColor: theme.colors.neuDark,
       textShadowOffset: { width: 1, height: 1 },
       textShadowRadius: 1,

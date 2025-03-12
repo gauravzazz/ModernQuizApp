@@ -48,9 +48,9 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
       right: 0,
       backgroundColor: theme.colors.background,
       zIndex: 100,
-      paddingTop: verticalScale(12),
-      paddingBottom: verticalScale(14),
-      borderBottomWidth: 1,
+      paddingTop: verticalScale(2),
+      paddingBottom: verticalScale(8),
+      borderBottomWidth: 2,
       borderBottomColor: theme.colors.neuLight,
       shadowColor: theme.colors.neuDark,
       shadowOffset: { width: 0, height: moderateScale(2) },
@@ -62,9 +62,9 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: verticalScale(12),
-      height: verticalScale(48),
-      marginHorizontal: scale(16),
+      marginBottom: verticalScale(8),
+      height: verticalScale(30),
+      marginHorizontal: scale(4),
     },
     timer: {
       paddingVertical: verticalScale(4),
@@ -86,15 +86,16 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
     timerText: {
       fontFamily: 'monospace',
       fontSize: moderateScale(screenWidth < 375 ? 10 : 18),
-      fontWeight: 'bold',
+      //fontWeight: 'bold',
       color: theme.colors.primary,
     },
     progressContainer: {
-      marginTop: verticalScale(4),
+      marginTop: verticalScale(6),
+      marginBottom : verticalScale(8),
       paddingHorizontal: scale(16),
     },
     submitButton: {
-      height: verticalScale(45),
+      height: verticalScale(40),
       minWidth: scale(screenWidth < 375 ? 30 : 40),
       paddingHorizontal: scale(screenWidth < 375 ? 8 : 10),
       backgroundColor: theme.colors.success,
@@ -161,6 +162,7 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
             onPress={onSubmit}
             variant="primary"
             style={styles.submitButton}
+            size='small'
           />
         )}
       </View>

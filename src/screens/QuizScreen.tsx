@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, ScrollView } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
@@ -37,8 +37,8 @@ interface QuestionAttempt {
 type QuizScreenRouteProp = RouteProp<RootStackParamList, 'Quiz'>;
 type QuizScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const QUESTION_REVEAL_DELAY = 1500; // 1.5 seconds delay for showing correct answer in practice mode
-const AUTO_NEXT_DELAY = 2500; // 2.5 seconds delay before moving to next question in practice mode
+const QUESTION_REVEAL_DELAY = 1000; // 1.5 seconds delay for showing correct answer in practice mode
+const AUTO_NEXT_DELAY = 1500; // 2.5 seconds delay before moving to next question in practice mode
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
@@ -48,18 +48,18 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
-    padding: 16,
+    padding: 8,
   },
   centerContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: 8,
   },
   questionCard: {
     backgroundColor: theme.colors.neuPrimary,
     borderRadius: scaledRadius(theme.roundness * 2.5),
-    padding: scaledSpacing(24),
+    padding: scaledSpacing(16),
     marginHorizontal: scaledSpacing(16),
     marginBottom: scaledSpacing(24),
     shadowColor: theme.colors.neuDark,
@@ -131,7 +131,6 @@ export const QuizScreen: React.FC = () => {
 
   // Import mockQuestions at the top of the component to ensure it's available
   const { mockQuestions } = require('../services/questionService');
-
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
   const [questionAttempts, setQuestionAttempts] = useState<QuestionAttempt[]>([]);
@@ -478,7 +477,6 @@ export const QuizScreen: React.FC = () => {
           </View>
         )}
       </ScrollView>
-
       <View>
         <QuizNavigation
           mode={mode}
