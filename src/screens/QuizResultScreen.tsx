@@ -16,7 +16,6 @@ import { Typography } from '../atoms/Typography';
 import { addBookmark, removeBookmark, isQuestionBookmarked } from '../services/bookmarkService';
 import { updateUserStats } from '../services/profileService';
 import { UserAward } from '../types/profile';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { moderateScale, scaledFontSize, scaledSpacing, scaledRadius } from '../utils/scaling';
 import { AchievementModal } from '../molecules/AchievementModal';
 import { Confetti } from '../atoms/ConfettiCannon';
@@ -263,15 +262,15 @@ export const QuizResultScreen: React.FC = () => {
       borderRadius: theme.roundness,
     },
     scoreText: {
-      fontSize: 48,
+      fontSize: scaledFontSize(40),
       fontWeight: 'bold',
       color: theme.colors.primary,
-      marginBottom: 8,
+      marginBottom: scaledSpacing(4),
     },
     scoreLabel: {
-      fontSize: 16,
+      fontSize: scaledFontSize(10),
       color: theme.colors.onSurfaceVariant,
-      marginBottom: 16,
+      marginBottom: scaledSpacing(10),
     },
     backButton: {
       marginTop: 24,

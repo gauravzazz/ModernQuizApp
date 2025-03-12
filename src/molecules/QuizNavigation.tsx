@@ -5,6 +5,7 @@ import { AppTheme } from '../theme';
 import { Button } from '../atoms/Button';
 import { NavigationButton } from '../atoms/NavigationButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { moderateScale } from '../utils/scaling';
 
 interface QuizNavigationProps {
   mode: 'Practice' | 'Test';
@@ -54,27 +55,27 @@ export const QuizNavigation: React.FC<QuizNavigationProps> = ({
     },
     skipButton: {
       flex: 1,
-      marginHorizontal: 8,
-      minWidth: 120,
+      marginHorizontal: moderateScale(8),
+      minWidth: moderateScale(100),
       backgroundColor: theme.colors.neuPrimary,
       shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 4, height: 4 },
+      shadowOffset: { width: moderateScale(4), height: moderateScale(4) },
       shadowOpacity: 0.4,
-      shadowRadius: 6,
+      shadowRadius: moderateScale(6),
       elevation: 6,
-      borderWidth: 1.5,
+      borderWidth: moderateScale(1.5),
       borderColor: theme.colors.neuLight,
-      paddingVertical: 14,
-      marginTop: -8
+      paddingVertical: moderateScale(14),
+      marginTop: moderateScale(-8)
     },
     submitButton: {
       flex: 1,
-      marginHorizontal: 8,
-      minWidth: 120,
+      marginHorizontal: moderateScale(8),
+      minWidth: moderateScale(100),
     },
     navigationButton: {
-      width: 48,
-      marginHorizontal: 4,
+      width: moderateScale(48),
+      marginHorizontal: moderateScale(4),
     },
   });
 

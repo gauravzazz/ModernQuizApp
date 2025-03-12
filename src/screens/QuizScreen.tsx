@@ -13,6 +13,7 @@ import { QuizNavigation } from '../molecules/QuizNavigation';
 import { QuizHeader } from '../molecules/QuizHeader';
 import { OptionsGrid } from '../molecules/OptionsGrid';
 import { QuestionCard } from '../molecules/QuestionCard';
+import { moderateScale, scaledSpacing, scaledRadius, scaledFontSize, verticalScale } from '../utils/scaling';
 
 interface Option {
   id: string;
@@ -47,6 +48,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
+    padding: 16,
   },
   centerContent: {
     flex: 1,
@@ -56,67 +58,67 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   questionCard: {
     backgroundColor: theme.colors.neuPrimary,
-    borderRadius: theme.roundness * 2,
-    padding: 24,
-    marginHorizontal: 16,
-    marginBottom: 24,
+    borderRadius: scaledRadius(theme.roundness * 2.5),
+    padding: scaledSpacing(24),
+    marginHorizontal: scaledSpacing(16),
+    marginBottom: scaledSpacing(24),
     shadowColor: theme.colors.neuDark,
-    shadowOffset: { width: 5, height: 5 },
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
-    elevation: 8,
-    borderWidth: 1,
+    shadowOffset: { width: moderateScale(5), height: moderateScale(5) },
+    shadowOpacity: theme.dark ? 0.6 : 0.3,
+    shadowRadius: moderateScale(10),
+    elevation: moderateScale(8),
+    borderWidth: moderateScale(1.5),
     borderColor: theme.colors.neuLight,
-    marginTop: 16, // Added margin top for better spacing
+    marginTop: scaledSpacing(16),
   },
   optionsContainer: {
-    marginTop: 24,
-    gap: 16, // Increased gap between options
+    marginTop: scaledSpacing(24),
+    gap: scaledSpacing(16),
   },
   optionButton: {
     backgroundColor: theme.colors.neuPrimary,
-    borderRadius: theme.roundness * 1.5, // Increased border radius
-    padding: 20, // Increased padding
+    borderRadius: scaledRadius(theme.roundness * 2),
+    padding: scaledSpacing(20),
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: theme.colors.neuDark,
-    shadowOffset: { width: 4, height: 4 },
+    shadowOffset: { width: moderateScale(4), height: moderateScale(4) },
     shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 6,
-    borderWidth: 1.5, // Increased border width
+    shadowRadius: moderateScale(8),
+    elevation: moderateScale(6),
+    borderWidth: moderateScale(1.5),
     borderColor: theme.colors.neuLight,
-    marginBottom: 16 // Increased margin bottom
+    marginBottom: scaledSpacing(16)
   },
   optionIndicator: {
-    width: 40, // Increased size
-    height: 40,
-    borderRadius: 20,
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(20),
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 20, // Increased margin
+    marginRight: scaledSpacing(20),
     shadowColor: theme.colors.neuDark,
-    shadowOffset: { width: 2, height: 2 },
+    shadowOffset: { width: moderateScale(2), height: moderateScale(2) },
     shadowOpacity: 0.4,
-    shadowRadius: 4,
-    borderWidth: 1.5,
+    shadowRadius: moderateScale(4),
+    borderWidth: moderateScale(1.5),
     borderColor: theme.colors.neuLight,
   },
   optionText: {
     flex: 1,
-    fontSize: 16, // Added explicit font size
-    lineHeight: 24, // Added line height for better readability
+    fontSize: scaledFontSize(16),
+    lineHeight: scaledFontSize(24),
   },
   correctOption: {
     backgroundColor: theme.colors.success,
     borderColor: theme.colors.success,
-    transform: [{ scale: 1.02 }], // Added subtle scale effect
+    transform: [{ scale: 1.02 }],
   },
   incorrectOption: {
     backgroundColor: theme.colors.error,
     borderColor: theme.colors.error,
-    transform: [{ scale: 0.98 }], // Added subtle scale effect
+    transform: [{ scale: 0.98 }],
   },
 });
 
@@ -421,7 +423,7 @@ export const QuizScreen: React.FC = () => {
   if (isLoading) return <LoadingIndicator message="Loading questions..." />;
   if (error) return (
     <View style={[styles.container, styles.centerContent]}>
-      <Typography variant="body1" color="error" style={{ marginBottom: 16 }}>
+      <Typography variant="body1" color="error" style={{ marginBottom: scaledSpacing(16) }}>
         {error}
       </Typography>
       <Button
@@ -437,7 +439,7 @@ export const QuizScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={{ height: '15%' }}>
+      <View style={{ height: verticalScale(100) }}>
         <QuizHeader
           currentQuestionIndex={currentQuestionIndex}
           totalQuestions={quizQuestions.length}
@@ -455,7 +457,7 @@ export const QuizScreen: React.FC = () => {
         />
       </View>
 
-      <ScrollView style={{  }}>
+      <ScrollView style={{ flex: 1 }}>
         <QuestionCard
           text={currentQuestion?.text || 'Loading question...'}
           questionNumber={currentQuestionIndex + 1}
@@ -471,7 +473,7 @@ export const QuizScreen: React.FC = () => {
             disabled={showCorrectAnswer}
           />
         ) : (
-          <View style={{padding: 20, alignItems: 'center'}}>
+          <View style={{padding: scaledSpacing(20), alignItems: 'center'}}>
             <Typography variant="body1">No more questions available.</Typography>
           </View>
         )}

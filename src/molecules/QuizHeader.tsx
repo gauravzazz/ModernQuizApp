@@ -7,7 +7,7 @@ import { ProgressBar } from '../atoms/ProgressBar';
 import { NavigationButton } from '../atoms/NavigationButton';
 import { Button } from '../atoms/Button';
 import { QuizSummary } from './QuizSummary';
-import { scale, verticalScale, moderateScale } from '../utils/scaling';
+import { scale, verticalScale, moderateScale, scaledRadius, scaledFontSize } from '../utils/scaling';
 
 interface QuizHeaderProps {
   currentQuestionIndex: number;
@@ -68,8 +68,8 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
     },
     timer: {
       paddingVertical: verticalScale(4),
-      paddingHorizontal: scale(16),
-      minWidth: scale(100),
+      paddingHorizontal: scale(screenWidth < 375 ? 12 : 16),
+      minWidth: scale(screenWidth < 375 ? 80 : 100),
       height: verticalScale(48),
       alignItems: 'center',
       justifyContent: 'center',
@@ -95,16 +95,16 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
     },
     submitButton: {
       height: verticalScale(45),
-      minWidth: scale(40),
-      paddingHorizontal: scale(10),
+      minWidth: scale(screenWidth < 375 ? 30 : 40),
+      paddingHorizontal: scale(screenWidth < 375 ? 8 : 10),
       backgroundColor: theme.colors.success,
-      borderRadius: theme.roundness * 2,
+      borderRadius: scaledRadius(theme.roundness * 2),
       shadowColor: theme.colors.neuDark,
       shadowOffset: { width: moderateScale(3), height: moderateScale(3) },
       shadowOpacity: 0.4,
       shadowRadius: moderateScale(6),
       elevation: 6,
-      borderWidth: 1.5,
+      borderWidth: moderateScale(1.5),
       borderColor: theme.colors.success,
     },
     navigationButton: {
