@@ -19,6 +19,7 @@ import { UserAward } from '../types/profile';
 import { moderateScale, scaledFontSize, scaledSpacing, scaledRadius } from '../utils/scaling';
 import { AchievementModal } from '../molecules/AchievementModal';
 import { Confetti } from '../atoms/ConfettiCannon';
+import { quizAnalyticsService } from '../services/quizAnalyticsService';
 
 type QuizResultScreenRouteProp = RouteProp<RootStackParamList, 'QuizResult'>;
 type QuizResultScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -29,7 +30,7 @@ export const QuizResultScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
   const route = useRoute<QuizResultScreenRouteProp>();
   const navigation = useNavigation<QuizResultScreenNavigationProp>();
-  const { attempts, totalTime, mode, subjectId, topicId, questionsData } = route.params;
+  const { attempts, totalTime, mode = 'Practice', subjectId = '', topicId = '', questionsData } = route.params;
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [filteredQuestions, setFilteredQuestions] = useState(questionsData || []);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -432,6 +433,24 @@ export const QuizResultScreen: React.FC = () => {
         totalQuestions: attempts.length,
         timePerQuestion
       });
+      
+      // Save analytics data
+      if (questionsData) {
+        await quizAnalyticsService.saveQuizAnalytics({
+          questions: questionsData,
+          answers: attempts.reduce((acc, attempt) => {
+            acc[attempt.questionId] = attempt.selectedOptionId || '';
+            return acc;
+          }, {} as Record<string, string>),
+          timePerQuestion: attempts.reduce((acc, attempt) => {
+            acc[attempt.questionId] = attempt.timeSpent;
+            return acc;
+          }, {} as Record<string, number>),
+          totalTime,
+          subjectId,
+          topicId
+        });
+      }
       
       // Update user stats and trigger badge earning
       const timeSpentInMinutes = totalTime / 60000; // Convert ms to minutes

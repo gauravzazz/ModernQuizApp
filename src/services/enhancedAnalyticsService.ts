@@ -129,6 +129,23 @@ export class EnhancedAnalyticsEngine {
     };
   }
 
+  public async getSubjectIdFromTopicId(topicId: string): Promise<string | null> {
+    try {
+      const key = ANALYTICS_KEYS.TOPIC_STATS + topicId;
+      const data = await AsyncStorage.getItem(key);
+      if (data) {
+        const stats = JSON.parse(data);
+        if (stats.subjectId) {
+          return stats.subjectId;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error getting subject ID for topic ${topicId}:`, error);
+      return null;
+    }
+  }
+
   private async updateQuestionStats(questionId: string, data: Partial<QuestionAnalytics>): Promise<void> {
     const key = ANALYTICS_KEYS.QUESTION_STATS + questionId;
     try {
@@ -201,6 +218,36 @@ export class EnhancedAnalyticsEngine {
       engagementScore * weights.engagement +
       behaviorScore * weights.behavior
     );
+  }
+
+  public async getSubjectStats(subject: string): Promise<{
+    streak: number;
+    masteryLevel: number;
+    confidenceScore: number;
+    engagementScore: number;
+    improvementAreas: string[];
+  }> {
+    try {
+      const key = ANALYTICS_KEYS.SUBJECT_STATS + subject;
+      const stats = await this.getEnhancedStats(key);
+      
+      return {
+        streak: stats.streak,
+        masteryLevel: stats.masteryLevel,
+        confidenceScore: stats.confidenceScore,
+        engagementScore: stats.engagementScore,
+        improvementAreas: stats.improvementAreas
+      };
+    } catch (error) {
+      console.error(`Error getting stats for subject ${subject}:`, error);
+      return {
+        streak: 0,
+        masteryLevel: 0,
+        confidenceScore: 0,
+        engagementScore: 0,
+        improvementAreas: []
+      };
+    }
   }
 
   private analyzeLearningPattern(sessionMetrics: SessionMetrics[]): LearningPattern {
@@ -281,6 +328,68 @@ export class EnhancedAnalyticsEngine {
       learningPattern: this.analyzeLearningPattern([]),
       questionStats: {}
     };
+  }
+
+  public async processQuizResults(data: {
+    questions: Question[];
+    answers: Record<string, string>;
+    timePerQuestion: Record<string, number>;
+    totalTime: number;
+    subjectId?: string;
+    topicId?: string;
+  }): Promise<void> {
+    const { questions, answers, timePerQuestion, totalTime, subjectId, topicId } = data;
+    
+    // Calculate confidence score
+    const confidenceScore = this.calculateConfidenceScore(timePerQuestion, answers, questions);
+    
+    // Get current stats
+    const statsKey = topicId
+      ? ANALYTICS_KEYS.TOPIC_STATS + topicId
+      : subjectId
+      ? ANALYTICS_KEYS.SUBJECT_STATS + subjectId
+      : ANALYTICS_KEYS.OVERALL_STATS;
+    
+    const currentStats = await this.getEnhancedStats(statsKey);
+    
+    // Update stats with new quiz data
+    const correctAnswers = questions.filter(q => answers[q.id] === q.correctOptionId).length;
+    const accuracy = (correctAnswers / questions.length) * 100;
+    
+    const updatedStats: EnhancedQuizAnalytics = {
+      ...currentStats,
+      correct: currentStats.correct + correctAnswers,
+      total: currentStats.total + questions.length,
+      accuracy: accuracy,
+      confidenceScore: confidenceScore,
+      engagementScore: Math.min(100, currentStats.engagementScore + 5),
+      timeDistribution: {
+        reading: Math.round(totalTime * 0.3),
+        thinking: Math.round(totalTime * 0.5),
+        answering: Math.round(totalTime * 0.2)
+      },
+      behavioralMetrics: {
+        ...currentStats.behavioralMetrics,
+        skips: questions.filter(q => !answers[q.id]).length
+      }
+    };
+    
+    // Calculate and update mastery level
+    updatedStats.masteryLevel = this.calculateMasteryLevel(updatedStats);
+    
+    // Save updated stats
+    await AsyncStorage.setItem(statsKey, JSON.stringify(updatedStats));
+    
+    // Update individual question stats
+    for (const question of questions) {
+      await this.updateQuestionStats(question.id, {
+        attempts: 1,
+        correctAttempts: answers[question.id] === question.correctOptionId ? 1 : 0,
+        averageTime: timePerQuestion[question.id],
+        timesTaken: [timePerQuestion[question.id]],
+        difficulty: question.difficulty || 1
+      });
+    }
   }
 }
 

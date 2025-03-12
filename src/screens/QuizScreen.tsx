@@ -25,6 +25,10 @@ interface Question {
   text: string;
   options: Option[];
   correctOptionId: string;
+  explanation?: string;
+  difficulty?: number;
+  tags?: string[];
+  exam?: string;
 }
 
 interface QuestionAttempt {

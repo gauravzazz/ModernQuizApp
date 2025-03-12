@@ -76,6 +76,23 @@ export class AnalyticsEngine {
     };
   }
 
+  public async getSubjectIdFromTopicId(topicId: string): Promise<string | null> {
+    try {
+      const key = ANALYTICS_KEYS.TOPIC_STATS + topicId;
+      const data = await AsyncStorage.getItem(key);
+      if (data) {
+        const stats = JSON.parse(data);
+        if (stats.subjectId) {
+          return stats.subjectId;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error getting subject ID for topic ${topicId}:`, error);
+      return null;
+    }
+  }
+
   private async updateStats(key: string, newData: Partial<QuizAnalytics>): Promise<void> {
     try {
       const currentStats = await this.getStats(key);
