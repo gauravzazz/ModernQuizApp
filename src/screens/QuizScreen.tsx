@@ -278,7 +278,8 @@ export const QuizScreen: React.FC = () => {
     console.log('[DEBUG] handleSkipQuestion called', {
       currentQuestionId: currentQuestion.id,
       currentQuestionIndex,
-      timeSpent
+      timeSpent,
+      mode
     });
 
     setQuestionAttempts(prev => {
@@ -301,9 +302,15 @@ export const QuizScreen: React.FC = () => {
       setShowCorrectAnswer(false);
       setQuestionStartTime(Date.now());
       console.log('[DEBUG] Advanced to next question after skip');
-    } else {
-      console.log('[DEBUG] Last question skipped, submitting quiz');
+    } else if (mode === 'Practice') {
+      // In Practice mode, submit the quiz when the last question is skipped
+      console.log('[DEBUG] Last question skipped in Practice mode, submitting quiz');
       handleQuizSubmit();
+    } else {
+      // In Test mode, don't submit automatically when skipping the last question
+      // Instead, keep the user on the last question to allow review
+      console.log('[DEBUG] Last question skipped in Test mode, not submitting quiz');
+      // Optionally show a message to the user that they can review their answers
     }
   }, [currentQuestionIndex, questionStartTime, quizQuestions]);
 
@@ -479,6 +486,7 @@ export const QuizScreen: React.FC = () => {
           onPrevious={() => handleNavigationButtonPress('prev')}
           onNext={() => handleNavigationButtonPress('next')}
           onSubmit={handleQuizSubmit}
+          hasSelectedOption={!!selectedOptionId}
         />
       </View>
     </View>

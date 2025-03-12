@@ -19,6 +19,7 @@ import { UserAward } from '../types/profile';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { moderateScale, scaledFontSize, scaledSpacing, scaledRadius } from '../utils/scaling';
 import { AchievementModal } from '../molecules/AchievementModal';
+import { Confetti } from '../atoms/ConfettiCannon';
 
 type QuizResultScreenRouteProp = RouteProp<RootStackParamList, 'QuizResult'>;
 type QuizResultScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -41,6 +42,7 @@ export const QuizResultScreen: React.FC = () => {
   const headerHeight = useRef(0);
   const [unlockedAwards, setUnlockedAwards] = useState<UserAward[]>([]);
   const [showAwardModal, setShowAwardModal] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     scrollY.addListener(({ value }) => {
@@ -453,14 +455,32 @@ export const QuizResultScreen: React.FC = () => {
 
 
 
-  // Fade in the screen when it loads
+  // Fade in the screen when it loads and show confetti for good scores
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
       useNativeDriver: true,
     }).start();
-  }, []);
+    
+    // Show confetti for scores above 70% with a slight delay to ensure proper initialization
+    if (score >= 70) {
+      // Add a small delay before showing confetti to ensure the component is fully rendered
+      const showTimer = setTimeout(() => {
+        setShowConfetti(true);
+      }, 300);
+      
+      // Hide confetti after animation completes
+      const hideTimer = setTimeout(() => {
+        setShowConfetti(false);
+      }, 6000);
+      
+      return () => {
+        clearTimeout(showTimer);
+        clearTimeout(hideTimer);
+      };
+    }
+  }, [score]);
 
   // Import the AchievementModal component at the top of the file
   // import { AchievementModal } from '../molecules/AchievementModal';
@@ -468,6 +488,13 @@ export const QuizResultScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {showConfetti && (
+        <Confetti 
+          count={100}
+          duration={5000}
+          fadeOut={true}
+        />
+      )}
       <AchievementModal
         visible={showAwardModal}
         onClose={() => setShowAwardModal(false)}

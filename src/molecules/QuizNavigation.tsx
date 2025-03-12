@@ -14,6 +14,7 @@ interface QuizNavigationProps {
   onPrevious?: () => void;
   onNext?: () => void;
   onSubmit?: () => void;
+  hasSelectedOption?: boolean;
 }
 
 export const QuizNavigation: React.FC<QuizNavigationProps> = ({
@@ -24,6 +25,7 @@ export const QuizNavigation: React.FC<QuizNavigationProps> = ({
   onPrevious,
   onNext,
   onSubmit,
+  hasSelectedOption = false,
 }) => {
   const theme = useTheme<AppTheme>();
   const insets = useSafeAreaInsets();
@@ -76,6 +78,8 @@ export const QuizNavigation: React.FC<QuizNavigationProps> = ({
     },
   });
 
+  const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
+
   return (
     <View style={styles.container}>
       {mode === 'Test' && (
@@ -87,18 +91,29 @@ export const QuizNavigation: React.FC<QuizNavigationProps> = ({
         />
       )}
       
-      <Button
-        label="Skip"
-        onPress={onSkip}
-        variant="outline"
-        style={styles.skipButton}
-      />
+      {/* Show Submit button instead of Skip button on the last question in Test mode */}
+      {mode === 'Test' && isLastQuestion ? (
+        <Button
+          label="Submit Quiz"
+          onPress={onSubmit}
+          variant="primary"
+          style={styles.submitButton}
+        />
+      ) : (
+        <Button
+          label="Skip"
+          onPress={onSkip}
+          variant="outline"
+          style={styles.skipButton}
+          disabled={hasSelectedOption}
+        />
+      )}
       
       {mode === 'Test' && (
         <NavigationButton
           variant="right"
           onPress={onNext}
-          disabled={currentQuestionIndex === totalQuestions - 1}
+          disabled={isLastQuestion}
           style={styles.navigationButton}
         />
       )}
