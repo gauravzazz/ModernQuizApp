@@ -19,7 +19,6 @@ import { UserAward } from '../types/profile';
 import { moderateScale, scaledFontSize, scaledSpacing, scaledRadius } from '../utils/scaling';
 import { AchievementModal } from '../molecules/AchievementModal';
 import { Confetti } from '../atoms/ConfettiCannon';
-import { quizAnalyticsService } from '../services/quizAnalyticsService';
 import { granularAnalyticsService } from '../services/granularAnalyticsService';
 
 
@@ -32,7 +31,7 @@ export const QuizResultScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
   const route = useRoute<QuizResultScreenRouteProp>();
   const navigation = useNavigation<QuizResultScreenNavigationProp>();
-  const { attempts, totalTime, mode = 'Practice', subjectId = '', topicId = '', questionsData } = route.params;
+  const { attempts, totalTime, mode = 'Practice', subjectId = '', topicId = '', questionsData, topicTitle, subjectTitle } = route.params;
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [filteredQuestions, setFilteredQuestions] = useState(questionsData || []);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -45,6 +44,9 @@ export const QuizResultScreen: React.FC = () => {
   const [unlockedAwards, setUnlockedAwards] = useState<UserAward[]>([]);
   const [showAwardModal, setShowAwardModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState<string>('Processing quiz results...');
 
   useEffect(() => {
     scrollY.addListener(({ value }) => {
@@ -426,55 +428,72 @@ export const QuizResultScreen: React.FC = () => {
   // Save quiz results to AsyncStorage and update user stats
   useEffect(() => {
     const saveResults = async () => {
-      // Save quiz results to storage
-      await saveQuizResults({
-        subjectId,
-        topicId,
-        mode,
-        correctAnswers,
-        totalQuestions: attempts.length,
-        timePerQuestion
-      });
-      
-      // Save analytics data
-      if (questionsData) {
-        await granularAnalyticsService.processQuizResults({
+      try {
+        setIsProcessing(true);
+        // Save quiz results to storage
+        await saveQuizResults({
           subjectId,
-          subjectTitle: questionsData[0]?.subject || 'Unknown Subject',
           topicId,
-          topicTitle: questionsData[0]?.topic || 'Unknown Topic',
-          questions: questionsData,
-          answers: attempts.reduce((acc, attempt) => {
-            acc[attempt.questionId] = attempt.selectedOptionId || '';
-            return acc;
-          }, {} as Record<string, string>),
-          timePerQuestion: attempts.reduce((acc, attempt) => {
-            acc[attempt.questionId] = attempt.timeSpent;
-            return acc;
-          }, {} as Record<string, number>),
-          totalTime,
-          mode
+          mode,
+          correctAnswers,
+          totalQuestions: attempts.length,
+          timePerQuestion
         });
-      }
-      
-      // Update user stats and trigger badge earning
-      const timeSpentInMinutes = totalTime / 60000; // Convert ms to minutes
-      const updatedProfile = await updateUserStats(
-        correctAnswers,
-        attempts.length,
-        timeSpentInMinutes,
-        mode as 'Practice' | 'Test'
-      );
-      
-      // Check if any new awards were unlocked
-      if (updatedProfile.newlyUnlockedAwards && updatedProfile.newlyUnlockedAwards.length > 0) {
-        setUnlockedAwards(updatedProfile.newlyUnlockedAwards);
-        setShowAwardModal(true);
+        
+        // Save analytics data
+        if (questionsData && questionsData.length > 0) {
+          const subjectTitle = route.params.subjectTitle || 'Unknown Subject';
+          const topicTitle = route.params.topicTitle || 'Unknown Topic';
+          
+          await granularAnalyticsService.processQuizResults({
+            subjectId,
+            subjectTitle,
+            topicId,
+            topicTitle,
+            questions: questionsData,
+            answers: attempts.reduce((acc, attempt) => {
+              acc[attempt.questionId] = attempt.selectedOptionId || '';
+              return acc;
+            }, {} as Record<string, string>),
+            timePerQuestion: attempts.reduce((acc, attempt) => {
+              acc[attempt.questionId] = attempt.timeSpent;
+              return acc;
+            }, {} as Record<string, number>),
+            totalTime,
+            mode
+          });
+        }
+        
+        // Update user stats and trigger badge earning
+        const timeSpentInMinutes = totalTime / 60000; // Convert ms to minutes
+        const updatedProfile = await updateUserStats(
+          correctAnswers,
+          attempts.length,
+          timeSpentInMinutes,
+          mode as 'Practice' | 'Test'
+        );
+        
+        // Check if any new awards were unlocked
+        if (updatedProfile.newlyUnlockedAwards && updatedProfile.newlyUnlockedAwards.length > 0) {
+          setUnlockedAwards(updatedProfile.newlyUnlockedAwards);
+          setShowAwardModal(true);
+        }
+        
+        // Show confetti for good scores after a slight delay
+        if (score >= 70) {
+          setTimeout(() => setShowConfetti(true), 300);
+          setTimeout(() => setShowConfetti(false), 6000);
+        }
+      } catch (error) {
+        console.error('Error saving quiz results:', error);
+        // Continue showing results even if saving fails
+      } finally {
+        setIsProcessing(false);
       }
     };
     
     saveResults();
-  }, [subjectId, topicId, mode, correctAnswers, attempts.length, timePerQuestion, totalTime]);
+  }, [subjectId, topicId, mode, correctAnswers, attempts.length, timePerQuestion, totalTime, score]);
 
 
 

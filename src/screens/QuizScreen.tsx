@@ -34,6 +34,7 @@ interface Question {
 interface QuestionAttempt {
   questionId: string;
   selectedOptionId: string | null;
+  correctOptionId: string;
   timeSpent: number;
   isSkipped: boolean;
 }
@@ -128,7 +129,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 export const QuizScreen: React.FC = () => {
   const route = useRoute<QuizScreenRouteProp>();
   const navigation = useNavigation<QuizScreenNavigationProp>();
-  const { questionCount, mode, topicId, subjectId } = route.params;
+  const { questionCount, mode, topicId, subjectId, topicTitle, subjectTitle } = route.params;
   const theme = useTheme<AppTheme>();
   const styles = createStyles(theme);
 
@@ -195,58 +196,32 @@ export const QuizScreen: React.FC = () => {
     const currentQuestion = quizQuestions[currentQuestionIndex];
     const timeSpent = Date.now() - questionStartTime;
 
-    console.log('[DEBUG] handleOptionSelect called with:', {
-      mode,
-      optionId,
-      currentQuestionId: currentQuestion.id,
-      currentQuestionIndex,
-      timeSpent
-    });
-
     if (mode === 'Practice') {
       setSelectedOptionId(optionId);
       setShowCorrectAnswer(true);
 
-      console.log('[DEBUG] Practice mode - before updating attempts:', {
-        currentAttempts: questionAttempts,
-        newAttempt: {
-          questionId: currentQuestion.id,
-          selectedOptionId: optionId,
-          timeSpent,
-          isSkipped: false
-        }
-      });
-
-      // Update question attempt
+      // Update question attempt with correctOptionId
       setQuestionAttempts(prev => {
         const newAttempts = [
           ...prev,
           {
             questionId: currentQuestion.id,
             selectedOptionId: optionId,
+            correctOptionId: currentQuestion.correctOptionId,
             timeSpent,
             isSkipped: false
           }
         ];
-        console.log('[DEBUG] Practice mode - after updating attempts:', newAttempts);
         return newAttempts;
       });
 
-      // Auto-advance to next question after delay
       setTimeout(() => {
-        console.log('[DEBUG] Auto-advance timeout triggered', {
-          currentIndex: currentQuestionIndex,
-          totalQuestions: quizQuestions.length
-        });
-        
         if (currentQuestionIndex < quizQuestions.length - 1) {
           setCurrentQuestionIndex(prev => prev + 1);
           setSelectedOptionId(null);
           setShowCorrectAnswer(false);
           setQuestionStartTime(Date.now());
-          console.log('[DEBUG] Advanced to next question');
         } else {
-          console.log('[DEBUG] Last question reached, submitting quiz');
           handleQuizSubmit();
         }
       }, AUTO_NEXT_DELAY);
@@ -255,11 +230,12 @@ export const QuizScreen: React.FC = () => {
       const newOptionId = selectedOptionId === optionId ? null : optionId;
       setSelectedOptionId(newOptionId);
 
-      // Update question attempts
+      // Update question attempts with correctOptionId
       const existingAttemptIndex = questionAttempts.findIndex(a => a.questionId === currentQuestion.id);
       const newAttempt = {
         questionId: currentQuestion.id,
         selectedOptionId: newOptionId,
+        correctOptionId: currentQuestion.correctOptionId,
         timeSpent,
         isSkipped: false
       };
@@ -279,130 +255,54 @@ export const QuizScreen: React.FC = () => {
     const currentQuestion = quizQuestions[currentQuestionIndex];
     const timeSpent = Date.now() - questionStartTime;
 
-    console.log('[DEBUG] handleSkipQuestion called', {
-      currentQuestionId: currentQuestion.id,
-      currentQuestionIndex,
-      timeSpent,
-      mode
-    });
-
-    setQuestionAttempts(prev => {
-      const newAttempts = [
-        ...prev,
-        {
-          questionId: currentQuestion.id,
-          selectedOptionId: null,
-          timeSpent,
-          isSkipped: true
-        }
-      ];
-      console.log('[DEBUG] After skipping, attempts:', newAttempts);
-      return newAttempts;
-    });
+    setQuestionAttempts(prev => [
+      ...prev,
+      {
+        questionId: currentQuestion.id,
+        selectedOptionId: null,
+        correctOptionId: currentQuestion.correctOptionId,
+        timeSpent,
+        isSkipped: true
+      }
+    ]);
 
     if (currentQuestionIndex < quizQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setSelectedOptionId(null);
       setShowCorrectAnswer(false);
       setQuestionStartTime(Date.now());
-      console.log('[DEBUG] Advanced to next question after skip');
-    } else if (mode === 'Practice') {
-      // In Practice mode, submit the quiz when the last question is skipped
-      console.log('[DEBUG] Last question skipped in Practice mode, submitting quiz');
-      handleQuizSubmit();
     } else {
-      // In Test mode, don't submit automatically when skipping the last question
-      // Instead, keep the user on the last question to allow review
-      console.log('[DEBUG] Last question skipped in Test mode, not submitting quiz');
-      // Optionally show a message to the user that they can review their answers
+      handleQuizSubmit();
     }
-  }, [currentQuestionIndex, questionStartTime, quizQuestions]);
+  }, [currentQuestionIndex, questionStartTime, quizQuestions.length]);
 
   const handleQuizSubmit = useCallback(() => {
     const totalTime = Date.now() - quizStartTime;
     
-    console.log('[DEBUG] handleQuizSubmit called', {
-      totalTime,
-      currentQuestionIndex,
-      totalQuestions: quizQuestions.length,
-      currentAttempts: questionAttempts
-    });
-    
-    // Get the current question's time spent if it's not yet recorded
-    const currentQuestion = quizQuestions[currentQuestionIndex];
-    const currentTimeSpent = Date.now() - questionStartTime;
-    
-    // Update the current question's attempt if it exists, or add a new one
-    const updatedAttempts = [...questionAttempts];
-    const currentAttemptIndex = updatedAttempts.findIndex(a => a.questionId === currentQuestion.id);
-    
-    console.log('[DEBUG] Current question attempt check:', {
-      currentQuestionId: currentQuestion.id,
-      currentAttemptIndex,
-      hasSelectedOption: !!selectedOptionId
-    });
-    
-    if (currentAttemptIndex >= 0) {
-      updatedAttempts[currentAttemptIndex] = {
-        ...updatedAttempts[currentAttemptIndex],
-        timeSpent: currentTimeSpent
-      };
-      console.log('[DEBUG] Updated existing attempt timeSpent');
-    } else if (selectedOptionId) {
-      updatedAttempts.push({
-        questionId: currentQuestion.id,
-        selectedOptionId: selectedOptionId,
-        timeSpent: currentTimeSpent,
-        isSkipped: false
-      });
-      console.log('[DEBUG] Added new attempt for current question');
-    }
-    
-    // Ensure all questions have an attempt
-    const finalAttempts = quizQuestions.map(question => {
-      const existingAttempt = updatedAttempts.find(a => a.questionId === question.id);
-      if (existingAttempt) return existingAttempt;
-      
-      // Create a skipped attempt for unanswered questions
+    // Map the attempts to include correctOptionId from quizQuestions
+    const attemptsWithCorrectOptions = questionAttempts.map(attempt => {
+      const question = quizQuestions.find(q => q.id === attempt.questionId);
       return {
-        questionId: question.id,
-        selectedOptionId: null,
-        timeSpent: 0,
-        isSkipped: true,
-        correctOptionId: question.correctOptionId
+        ...attempt,
+        correctOptionId: question?.correctOptionId || '',
       };
     });
-
-    console.log('[DEBUG] Final attempts before navigation:', {
-      attemptsCount: finalAttempts.length,
-      attempts: finalAttempts
-    });
-
-    // Navigate to results screen
-    // Explicitly log the IDs before navigation to verify they're being passed
-    console.log('[QuizScreen] Submitting quiz with IDs:', { subjectId, topicId });
     
     const navigationParams = {
-      attempts: finalAttempts.map(attempt => {
-        const question = quizQuestions.find(q => q.id === attempt.questionId);
-        return {
-          ...attempt,
-          correctOptionId: question?.correctOptionId || '',
-          question: question?.text,
-          options: question?.options
-        };
-      }),
+      attempts: attemptsWithCorrectOptions,
       totalTime,
       mode,
-      subjectId: subjectId, // Explicitly assign to ensure it's passed
-      topicId: topicId,     // Explicitly assign to ensure it's passed
+      subjectId,
+      topicId,
+      topicTitle,
+      subjectTitle,
       questionsData: quizQuestions
     };
     
     console.log('[DEBUG] Navigation params:', navigationParams);
     
     navigation.replace('QuizResult', navigationParams);
-  }, [navigation, questionAttempts, quizStartTime, mode, quizQuestions, currentQuestionIndex, questionStartTime, selectedOptionId, subjectId, topicId]);
+  }, [navigation, questionAttempts, quizStartTime, mode, quizQuestions, subjectId, topicId, topicTitle, subjectTitle]);
 
 
   const handleNavigationButtonPress = useCallback((direction: 'prev' | 'next') => {

@@ -23,7 +23,8 @@ export type RootStackParamList = {
       mode?: 'Practice' | 'Test';
       topicId?: string;
       subjectId?: string;
-      title?: string;
+      topicTitle?: string;
+      subjectTitle?: string;
     } | { subjectId: string; title: string };
   };
   SubjectDetail: { subjectId: string; title: string };
@@ -32,6 +33,8 @@ export type RootStackParamList = {
     mode: 'Practice' | 'Test';
     topicId?: string;
     subjectId?: string;
+    topicTitle?: string;
+    subjectTitle?: string;
   };
   QuizResult: {
     attempts: Array<{
@@ -50,6 +53,8 @@ export type RootStackParamList = {
     mode: 'Practice' | 'Test';
     subjectId?: string;
     topicId?: string;
+    topicTitle?: string;
+    subjectTitle?: string;
     questionsData?: Array<{
       id: string;
       text: string;

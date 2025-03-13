@@ -41,25 +41,29 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
 
   useEffect(() => {
     const fetchTitles = async () => {
-      if (topicId) {
-        const topic = getTopicById(topicId);
-        if (topic) {
-          setTopicTitle(topic.title);
+      try {
+        if (topicId) {
+          const topic = await getTopicById(topicId);
+          if (topic) {
+            setTopicTitle(topic.title);
+          }
+
+          if (!subjectId) {
+            const subject = await getSubjectByTopicId(topicId);
+            if (subject) {
+              setSubjectTitle(subject.title);
+            }
+          }
         }
 
-        if (!subjectId) {
-          const subject = getSubjectByTopicId(topicId);
+        if (subjectId) {
+          const subject = await getSubjectById(subjectId);
           if (subject) {
             setSubjectTitle(subject.title);
           }
         }
-      }
-
-      if (subjectId) {
-        const subject = getSubjectById(subjectId);
-        if (subject) {
-          setSubjectTitle(subject.title);
-        }
+      } catch (error) {
+        console.error('Error fetching titles:', error);
       }
     };
 
@@ -190,7 +194,9 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
         questionCount: selectedQuestionCount,
         mode: quizMode,
         topicId,
-        subjectId
+        subjectId,
+        topicTitle,
+        subjectTitle
       }
     });
     
@@ -199,7 +205,9 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
       questionCount: selectedQuestionCount,
       mode: quizMode,
       topicId,
-      subjectId
+      subjectId,
+      topicTitle,
+      subjectTitle
     });
     
     onClose();
