@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Modal, TouchableOpacity, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useTheme } from 'react-native-paper';
@@ -8,6 +8,7 @@ import { Slider } from './Slider';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation';
+import { getSubjectById, getTopicById, getSubjectByTopicId } from '../services/subjectService';
 
 interface QuizConfigModalProps {
   visible: boolean;
@@ -15,7 +16,7 @@ interface QuizConfigModalProps {
   onStart?: (config: { questionCount: number; mode: 'Practice' | 'Test' }) => void;
   initialQuestionCount?: number;
   initialMode?: 'Practice' | 'Test';
-  title: string;
+  title?: string;
   questionCount: number;
   topicId?: string;
   subjectId?: string;
@@ -27,7 +28,7 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
   onStart,
   initialQuestionCount = 5,
   initialMode = 'Practice',
-  title = 'Configure Quiz',
+  title: initialTitle,
   questionCount,
   topicId,
   subjectId,
@@ -35,6 +36,37 @@ export const QuizConfigModal: React.FC<QuizConfigModalProps> = ({
   const theme = useTheme<AppTheme>();
   const [selectedQuestionCount, setSelectedQuestionCount] = React.useState(initialQuestionCount);
   const [quizMode, setQuizMode] = React.useState<'Practice' | 'Test'>(initialMode);
+  const [topicTitle, setTopicTitle] = useState<string>('');
+  const [subjectTitle, setSubjectTitle] = useState<string>('');
+
+  useEffect(() => {
+    const fetchTitles = async () => {
+      if (topicId) {
+        const topic = getTopicById(topicId);
+        if (topic) {
+          setTopicTitle(topic.title);
+        }
+
+        if (!subjectId) {
+          const subject = getSubjectByTopicId(topicId);
+          if (subject) {
+            setSubjectTitle(subject.title);
+          }
+        }
+      }
+
+      if (subjectId) {
+        const subject = getSubjectById(subjectId);
+        if (subject) {
+          setSubjectTitle(subject.title);
+        }
+      }
+    };
+
+    fetchTitles();
+  }, [topicId, subjectId]);
+
+  const title = initialTitle || (topicTitle ? `${topicTitle} Quiz` : 'Configure Quiz');
 
   const styles = StyleSheet.create({
     modalOverlay: {
