@@ -45,12 +45,13 @@ const styles = StyleSheet.create({
       marginTop: scaledSpacing(1),
       minHeight: moderateScale(isSmallScreen ? 140 : 170),
       maxHeight: moderateScale(isSmallScreen ? 320 : 420),
-      transform: [{ scale: 1 }], // Added for animation base state  
+      justifyContent: 'center', // Add vertical centering
     },
     questionText: {
       marginBottom: scaledSpacing(isSmallScreen ? 1 : 1),
-      paddingHorizontal: scaledSpacing(isSmallScreen ? 1 : 1),
-      opacity: 1, // Added for fade animation
+      paddingHorizontal: scaledSpacing(2),
+      flex: 1,
+      justifyContent: 'center',
     },
     questionNumber: {
       marginBottom: scaledSpacing(8),
@@ -122,19 +123,27 @@ const styles = StyleSheet.create({
 
   return (
     <View style={styles.container}>
-
       <View style={[styles.questionText, { alignItems: 'center', justifyContent: 'center' }]}>
         {text.includes('<') && text.includes('>') ? (
           <HTML 
             source={{ html: `Q${questionNumber}. ${text}` }}
-            contentWidth={SCREEN_WIDTH - moderateScale(80)}
+            contentWidth={SCREEN_WIDTH - moderateScale(100)}
             baseStyle={{
               color: theme.colors.onSurface,
-              fontSize: scaledFontSize(isSmallScreen ? (text.length > 200 ? 10 : 10) : (text.length > 200 ? 10 : 10)),
-              fontWeight: '200',
-              lineHeight: scaledFontSize(isSmallScreen ? 22 : 28),
-              letterSpacing: 0.1,
-              textAlign: 'center'
+              fontSize: scaledFontSize(
+                isSmallScreen ?
+                  (text.length < 50 ? 18 : 
+                   text.length < 150 ? 16 : 
+                   text.length < 300 ? 14 : 12) : 
+                  (text.length < 100 ? 20 : 
+                   text.length < 250 ? 18 : 
+                   text.length < 400 ? 16 : 14)
+              ),
+              fontWeight: '400',
+              lineHeight: scaledFontSize(isSmallScreen ? 22 : 28) * 1.2,
+              letterSpacing: 0.3,
+              textAlign: 'left',
+              paddingVertical: scaledSpacing(8),
             }}
           />
         ) : (
@@ -142,11 +151,20 @@ const styles = StyleSheet.create({
             style={{
               body: {
                 color: theme.colors.onSurface,
-                fontSize: scaledFontSize(isSmallScreen ? (text.length > 200 ? 10: 10) : (text.length > 200 ? 10 : 15)),
-                fontWeight: '200',
-                lineHeight: scaledFontSize(isSmallScreen ? 22 : 28),
-                letterSpacing: 0.1,
-                textAlign: 'center'
+                fontSize: scaledFontSize(
+                  isSmallScreen ?
+                    (text.length < 50 ? 18 : 
+                     text.length < 150 ? 16 : 
+                     text.length < 300 ? 14 : 12) : 
+                    (text.length < 100 ? 20 : 
+                     text.length < 250 ? 18 : 
+                     text.length < 400 ? 16 : 14)
+                ),
+                fontWeight: '400',
+                lineHeight: scaledFontSize(isSmallScreen ? 22 : 28) * 1.2,
+                letterSpacing: 0.3,
+                textAlign: 'left',
+                paddingVertical: scaledSpacing(8),
               }
             }}
           >
