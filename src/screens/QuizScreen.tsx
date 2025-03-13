@@ -125,7 +125,6 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     transform: [{ scale: 0.98 }],
   },
 });
-
 export const QuizScreen: React.FC = () => {
   const route = useRoute<QuizScreenRouteProp>();
   const navigation = useNavigation<QuizScreenNavigationProp>();

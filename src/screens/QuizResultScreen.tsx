@@ -20,6 +20,8 @@ import { moderateScale, scaledFontSize, scaledSpacing, scaledRadius } from '../u
 import { AchievementModal } from '../molecules/AchievementModal';
 import { Confetti } from '../atoms/ConfettiCannon';
 import { quizAnalyticsService } from '../services/quizAnalyticsService';
+import { granularAnalyticsService } from '../services/granularAnalyticsService';
+
 
 type QuizResultScreenRouteProp = RouteProp<RootStackParamList, 'QuizResult'>;
 type QuizResultScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -436,7 +438,11 @@ export const QuizResultScreen: React.FC = () => {
       
       // Save analytics data
       if (questionsData) {
-        await quizAnalyticsService.saveQuizAnalytics({
+        await granularAnalyticsService.processQuizResults({
+          subjectId,
+          subjectTitle: questionsData[0]?.subject || 'Unknown Subject',
+          topicId,
+          topicTitle: questionsData[0]?.topic || 'Unknown Topic',
           questions: questionsData,
           answers: attempts.reduce((acc, attempt) => {
             acc[attempt.questionId] = attempt.selectedOptionId || '';
@@ -447,8 +453,7 @@ export const QuizResultScreen: React.FC = () => {
             return acc;
           }, {} as Record<string, number>),
           totalTime,
-          subjectId,
-          topicId
+          mode
         });
       }
       
