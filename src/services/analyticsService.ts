@@ -31,6 +31,7 @@ interface TimeAnalytics {
 }
 
 export interface QuizSubmissionData {
+  quizId?: string;
   subjectId?: string;
   topicId?: string;
   mode: 'Practice' | 'Test';

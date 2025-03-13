@@ -195,26 +195,23 @@ export const QuizScreen: React.FC = () => {
   const handleOptionSelect = useCallback((optionId: string) => {
     const currentQuestion = quizQuestions[currentQuestionIndex];
     const timeSpent = Date.now() - questionStartTime;
-
+  
     if (mode === 'Practice') {
       setSelectedOptionId(optionId);
       setShowCorrectAnswer(true);
-
-      // Update question attempt with correctOptionId
-      setQuestionAttempts(prev => {
-        const newAttempts = [
-          ...prev,
-          {
-            questionId: currentQuestion.id,
-            selectedOptionId: optionId,
-            correctOptionId: currentQuestion.correctOptionId,
-            timeSpent,
-            isSkipped: false
-          }
-        ];
-        return newAttempts;
-      });
-
+  
+      // Update attempts immediately
+      setQuestionAttempts(prev => [
+        ...prev,
+        {
+          questionId: currentQuestion.id,
+          selectedOptionId: optionId,
+          correctOptionId: currentQuestion.correctOptionId,
+          timeSpent,
+          isSkipped: false
+        }
+      ]);
+  
       setTimeout(() => {
         if (currentQuestionIndex < quizQuestions.length - 1) {
           setCurrentQuestionIndex(prev => prev + 1);
@@ -222,6 +219,8 @@ export const QuizScreen: React.FC = () => {
           setShowCorrectAnswer(false);
           setQuestionStartTime(Date.now());
         } else {
+          // Force update attempts before submission
+          setQuestionAttempts(prev => [...prev]);
           handleQuizSubmit();
         }
       }, AUTO_NEXT_DELAY);
@@ -279,30 +278,33 @@ export const QuizScreen: React.FC = () => {
   const handleQuizSubmit = useCallback(() => {
     const totalTime = Date.now() - quizStartTime;
     
-    // Map the attempts to include correctOptionId from quizQuestions
-    const attemptsWithCorrectOptions = questionAttempts.map(attempt => {
-      const question = quizQuestions.find(q => q.id === attempt.questionId);
-      return {
-        ...attempt,
-        correctOptionId: question?.correctOptionId || '',
+    // Use functional update to get latest state
+    setQuestionAttempts(prevAttempts => {
+      const attemptsWithCorrectOptions = prevAttempts.map(attempt => {
+        const question = quizQuestions.find(q => q.id === attempt.questionId);
+        return {
+          ...attempt,
+          correctOptionId: question?.correctOptionId || '',
+        };
+      });
+      
+      const navigationParams = {
+        attempts: attemptsWithCorrectOptions,
+        totalTime,
+        mode,
+        subjectId,
+        topicId,
+        topicTitle,
+        subjectTitle,
+        questionsData: quizQuestions
       };
+      
+      console.log('[DEBUG] Navigation params:', navigationParams);
+      
+      navigation.replace('QuizResult', navigationParams);
+      return prevAttempts; // Preserve state for potential re-renders
     });
-    
-    const navigationParams = {
-      attempts: attemptsWithCorrectOptions,
-      totalTime,
-      mode,
-      subjectId,
-      topicId,
-      topicTitle,
-      subjectTitle,
-      questionsData: quizQuestions
-    };
-    
-    console.log('[DEBUG] Navigation params:', navigationParams);
-    
-    navigation.replace('QuizResult', navigationParams);
-  }, [navigation, questionAttempts, quizStartTime, mode, quizQuestions, subjectId, topicId, topicTitle, subjectTitle]);
+  }, [navigation, quizStartTime, mode, quizQuestions, subjectId, topicId, topicTitle, subjectTitle]);
 
 
   const handleNavigationButtonPress = useCallback((direction: 'prev' | 'next') => {

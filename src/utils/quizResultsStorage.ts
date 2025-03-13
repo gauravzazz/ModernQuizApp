@@ -1,9 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { v4 as uuidv4 } from 'uuid';
+import { QuizAttempt } from '../types/quizAttempt';
 
 // Storage keys
 const OVERALL_ACCURACY_KEY = '@quiz_overall_accuracy';
 const SUBJECT_ACCURACY_KEY_PREFIX = '@quiz_subject_accuracy_';
 const TOPIC_ACCURACY_KEY_PREFIX = '@quiz_topic_accuracy_';
+const QUIZ_ATTEMPTS_KEY = '@quiz_attempts';
 const MODE_SUFFIX = {
   Practice: '_practice',
   Test: '_test'
@@ -19,9 +22,20 @@ interface QuizResultData {
   subjectId?: string;
   topicId?: string;
   mode: 'Practice' | 'Test';
-  correctAnswers: number;
-  totalQuestions: number;
-  timePerQuestion: Record<string, number>;
+  totalTime: number;
+  attempts: Array<{
+    questionId: string;
+    selectedOptionId: string | null;
+    correctOptionId: string;
+    timeSpent: number;
+    isSkipped: boolean;
+  }>;
+  topicTitle?: string;
+  subjectTitle?: string;
+  timestamp?: number;
+  timePerQuestion?: Record<string, number>;
+  correctAnswers?: number;
+  totalQuestions?: number;
 }
 
 // Helper function to get or initialize accuracy data
@@ -65,19 +79,48 @@ const updateAccuracyData = async (key: string, correct: number, total: number): 
 };
 
 // Save quiz results and update accuracy metrics
-export const saveQuizResults = async (quizData: QuizResultData): Promise<void> => {
-  const { subjectId, topicId, mode, correctAnswers, totalQuestions } = quizData;
+export const saveQuizResults = async (quizData: QuizResultData): Promise<string> => {
+  const { subjectId, topicId, mode, attempts, totalTime } = quizData;
   const modeSuffix = MODE_SUFFIX[mode];
+  const quizId = uuidv4();
+  
+  // Calculate correctAnswers and totalQuestions from attempts if not provided
+  const correctAnswers = quizData.correctAnswers || attempts.filter(a => a.selectedOptionId === a.correctOptionId).length;
+  const totalQuestions = quizData.totalQuestions || attempts.length;
+  
+  // Calculate timePerQuestion if not provided
+  const timePerQuestion = quizData.timePerQuestion || attempts.reduce((acc, attempt) => {
+    acc[attempt.questionId] = attempt.timeSpent;
+    return acc;
+  }, {} as Record<string, number>);
   
   try {
-    // Update overall accuracy
+    // Create quiz attempt record
+    const quizAttempt: QuizAttempt = {
+      id: quizId,
+      subjectId: subjectId || '',
+      topicId,
+      mode,
+      correctAnswers,
+      totalQuestions,
+      timePerQuestion,
+      timestamp: Date.now(),
+      processed: false
+    };
+
+    // Save quiz attempt
+    const existingAttempts = await AsyncStorage.getItem(QUIZ_ATTEMPTS_KEY);
+    const attempts: QuizAttempt[] = existingAttempts ? JSON.parse(existingAttempts) : [];
+    attempts.push(quizAttempt);
+    await AsyncStorage.setItem(QUIZ_ATTEMPTS_KEY, JSON.stringify(attempts));
+
+    // Update accuracy metrics
     await updateAccuracyData(
       OVERALL_ACCURACY_KEY + modeSuffix, 
       correctAnswers, 
       totalQuestions
     );
     
-    // Update subject accuracy if subjectId is provided
     if (subjectId) {
       await updateAccuracyData(
         SUBJECT_ACCURACY_KEY_PREFIX + subjectId + modeSuffix,
@@ -86,7 +129,6 @@ export const saveQuizResults = async (quizData: QuizResultData): Promise<void> =
       );
     }
     
-    // Update topic accuracy if topicId is provided
     if (topicId) {
       await updateAccuracyData(
         TOPIC_ACCURACY_KEY_PREFIX + topicId + modeSuffix,
@@ -96,8 +138,39 @@ export const saveQuizResults = async (quizData: QuizResultData): Promise<void> =
     }
     
     console.log('Quiz results saved successfully');
+    return quizId;
   } catch (error) {
     console.error('Error saving quiz results:', error);
+    throw error;
+  }
+};
+
+// Get unprocessed quiz attempts
+export const getUnprocessedQuizAttempts = async (): Promise<QuizAttempt[]> => {
+  try {
+    const existingAttempts = await AsyncStorage.getItem(QUIZ_ATTEMPTS_KEY);
+    const attempts: QuizAttempt[] = existingAttempts ? JSON.parse(existingAttempts) : [];
+    return attempts.filter(attempt => !attempt.processed);
+  } catch (error) {
+    console.error('Error getting unprocessed quiz attempts:', error);
+    return [];
+  }
+};
+
+// Mark quiz attempt as processed
+export const markQuizAttemptAsProcessed = async (quizId: string): Promise<void> => {
+  try {
+    const existingAttempts = await AsyncStorage.getItem(QUIZ_ATTEMPTS_KEY);
+    if (!existingAttempts) return;
+
+    const attempts: QuizAttempt[] = JSON.parse(existingAttempts);
+    const updatedAttempts = attempts.map(attempt => 
+      attempt.id === quizId ? { ...attempt, processed: true } : attempt
+    );
+
+    await AsyncStorage.setItem(QUIZ_ATTEMPTS_KEY, JSON.stringify(updatedAttempts));
+  } catch (error) {
+    console.error('Error marking quiz attempt as processed:', error);
   }
 };
 

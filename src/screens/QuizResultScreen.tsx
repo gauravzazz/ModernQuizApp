@@ -425,75 +425,70 @@ export const QuizResultScreen: React.FC = () => {
     // Removed scroll to top behavior to maintain scroll position when filtering
   }, [activeFilter, questionsData, attempts]);
   
-  // Save quiz results to AsyncStorage and update user stats
   useEffect(() => {
-    const saveResults = async () => {
+    const processQuizResults = async () => {
       try {
         setIsProcessing(true);
-        // Save quiz results to storage
+        setLoadingMessage('Saving quiz results...');
+        
+        // Save quiz results
         await saveQuizResults({
+          attempts,
+          totalTime,
+          mode,
           subjectId,
           topicId,
-          mode,
-          correctAnswers,
-          totalQuestions: attempts.length,
-          timePerQuestion
+          topicTitle,
+          subjectTitle,
+          timestamp: Date.now()
         });
+
+        setLoadingMessage('Updating analytics...');
+        // Update analytics
+        const correctCount = attempts.filter(a => a.selectedOptionId === a.correctOptionId).length;
+        const incorrectCount = attempts.filter(a => a.selectedOptionId && a.selectedOptionId !== a.correctOptionId).length;
+        const skippedCount = attempts.filter(a => !a.selectedOptionId).length;
         
-        // Save analytics data
-        if (questionsData && questionsData.length > 0) {
-          const subjectTitle = route.params.subjectTitle || 'Unknown Subject';
-          const topicTitle = route.params.topicTitle || 'Unknown Topic';
-          
-          await granularAnalyticsService.processQuizResults({
-            subjectId,
-            subjectTitle,
-            topicId,
-            topicTitle,
-            questions: questionsData,
-            answers: attempts.reduce((acc, attempt) => {
-              acc[attempt.questionId] = attempt.selectedOptionId || '';
-              return acc;
-            }, {} as Record<string, string>),
-            timePerQuestion: attempts.reduce((acc, attempt) => {
-              acc[attempt.questionId] = attempt.timeSpent;
-              return acc;
-            }, {} as Record<string, number>),
-            totalTime,
-            mode
-          });
-        }
-        
-        // Update user stats and trigger badge earning
-        const timeSpentInMinutes = totalTime / 60000; // Convert ms to minutes
-        const updatedProfile = await updateUserStats(
-          correctAnswers,
+        const timePerQuestion = attempts.reduce((acc, attempt) => {
+          acc[attempt.questionId] = attempt.timeSpent;
+          return acc;
+        }, {} as Record<string, number>);
+
+        const analyticsData = {
+          subjectId,
+          topicId,
+          accuracy: (correctCount / attempts.length) * 100,
+          timePerQuestion,
+          totalTime,
+          correctAnswers: correctCount,
+          incorrectAnswers: incorrectCount,
+          skippedAnswers: skippedCount,
+          difficultyScore: 0, // Calculate based on question difficulty if available
+          confidenceScore: 0, // Calculate based on time taken and correctness
+          masteryLevel: 0, // Calculate based on performance metrics
+          timestamp: Date.now()
+        };
+
+        await granularAnalyticsService.saveQuizAnalytics(analyticsData);
+        setLoadingMessage('Updating user stats...');
+        await updateUserStats(
+          correctCount,
           attempts.length,
-          timeSpentInMinutes,
-          mode as 'Practice' | 'Test'
+          totalTime / 60000, // Convert milliseconds to minutes
+          mode
         );
-        
-        // Check if any new awards were unlocked
-        if (updatedProfile.newlyUnlockedAwards && updatedProfile.newlyUnlockedAwards.length > 0) {
-          setUnlockedAwards(updatedProfile.newlyUnlockedAwards);
-          setShowAwardModal(true);
-        }
-        
-        // Show confetti for good scores after a slight delay
-        if (score >= 70) {
-          setTimeout(() => setShowConfetti(true), 300);
-          setTimeout(() => setShowConfetti(false), 6000);
-        }
-      } catch (error) {
-        console.error('Error saving quiz results:', error);
-        // Continue showing results even if saving fails
-      } finally {
+
+        setIsProcessing(false);
+        setShowConfetti(true);
+      } catch (err) {
+        console.error('Error processing quiz results:', err);
+        setError('Failed to process quiz results');
         setIsProcessing(false);
       }
     };
-    
-    saveResults();
-  }, [subjectId, topicId, mode, correctAnswers, attempts.length, timePerQuestion, totalTime, score]);
+
+    processQuizResults();
+  }, [attempts, totalTime, mode, subjectId, topicId, topicTitle, subjectTitle]);
 
 
 

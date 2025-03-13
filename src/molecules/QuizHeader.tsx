@@ -20,8 +20,6 @@ interface QuizHeaderProps {
   questionAttempts: Array<{
     questionId: string;
     selectedOptionId: string | null;
-    correctOptionId: string;
-    timeSpent: number;
     isSkipped: boolean;
   }>;
   onQuestionSelect?: (index: number) => void;

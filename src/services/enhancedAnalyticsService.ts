@@ -330,65 +330,52 @@ export class EnhancedAnalyticsEngine {
     };
   }
 
-  public async processQuizResults(data: {
-    questions: Question[];
-    answers: Record<string, string>;
+  public async processQuizAnalytics(data: {
+    subjectId: string;
+    topicId: string;
+    accuracy: number;
     timePerQuestion: Record<string, number>;
     totalTime: number;
-    subjectId?: string;
-    topicId?: string;
+    correctAnswers: number;
+    incorrectAnswers: number;
+    skippedAnswers: number;
+    difficultyScore: number;
+    confidenceScore: number;
+    masteryLevel: number;
+    timestamp: number;
   }): Promise<void> {
-    const { questions, answers, timePerQuestion, totalTime, subjectId, topicId } = data;
-    
-    // Calculate confidence score
-    const confidenceScore = this.calculateConfidenceScore(timePerQuestion, answers, questions);
-    
-    // Get current stats
-    const statsKey = topicId
-      ? ANALYTICS_KEYS.TOPIC_STATS + topicId
-      : subjectId
-      ? ANALYTICS_KEYS.SUBJECT_STATS + subjectId
-      : ANALYTICS_KEYS.OVERALL_STATS;
-    
-    const currentStats = await this.getEnhancedStats(statsKey);
-    
-    // Update stats with new quiz data
-    const correctAnswers = questions.filter(q => answers[q.id] === q.correctOptionId).length;
-    const accuracy = (correctAnswers / questions.length) * 100;
-    
-    const updatedStats: EnhancedQuizAnalytics = {
-      ...currentStats,
-      correct: currentStats.correct + correctAnswers,
-      total: currentStats.total + questions.length,
-      accuracy: accuracy,
-      confidenceScore: confidenceScore,
-      engagementScore: Math.min(100, currentStats.engagementScore + 5),
-      timeDistribution: {
-        reading: Math.round(totalTime * 0.3),
-        thinking: Math.round(totalTime * 0.5),
-        answering: Math.round(totalTime * 0.2)
-      },
-      behavioralMetrics: {
-        ...currentStats.behavioralMetrics,
-        skips: questions.filter(q => !answers[q.id]).length
-      }
-    };
-    
-    // Calculate and update mastery level
-    updatedStats.masteryLevel = this.calculateMasteryLevel(updatedStats);
-    
-    // Save updated stats
-    await AsyncStorage.setItem(statsKey, JSON.stringify(updatedStats));
-    
-    // Update individual question stats
-    for (const question of questions) {
-      await this.updateQuestionStats(question.id, {
-        attempts: 1,
-        correctAttempts: answers[question.id] === question.correctOptionId ? 1 : 0,
-        averageTime: timePerQuestion[question.id],
-        timesTaken: [timePerQuestion[question.id]],
-        difficulty: question.difficulty || 1
-      });
+    try {
+      const statsKey = data.topicId
+        ? ANALYTICS_KEYS.TOPIC_STATS + data.topicId
+        : ANALYTICS_KEYS.SUBJECT_STATS + data.subjectId;
+
+      const currentStats = await this.getEnhancedStats(statsKey);
+
+      const totalQuestions = data.correctAnswers + data.incorrectAnswers + data.skippedAnswers;
+
+      const updatedStats: EnhancedQuizAnalytics = {
+        ...currentStats,
+        correct: currentStats.correct + data.correctAnswers,
+        total: currentStats.total + totalQuestions,
+        accuracy: data.accuracy,
+        confidenceScore: data.confidenceScore,
+        masteryLevel: data.masteryLevel,
+        engagementScore: Math.min(100, currentStats.engagementScore + 5),
+        timeDistribution: {
+          reading: Math.round(data.totalTime * 0.3),
+          thinking: Math.round(data.totalTime * 0.5),
+          answering: Math.round(data.totalTime * 0.2)
+        },
+        behavioralMetrics: {
+          ...currentStats.behavioralMetrics,
+          skips: data.skippedAnswers
+        }
+      };
+
+      await AsyncStorage.setItem(statsKey, JSON.stringify(updatedStats));
+    } catch (error) {
+      console.error('Error processing quiz analytics:', error);
+      throw error;
     }
   }
 }

@@ -9,10 +9,8 @@ import { mockSubjects, mockTopics } from '../data/mockData';
 import { RecentSubjects } from '../molecules/RecentSubjects';
 import { PopularTopics } from '../molecules/PopularTopics';
 import { HotTopics } from '../molecules/HotTopics';
-import { BottomNavigation } from '../molecules/BottomNavigation';
 import { SubjectGrid } from '../molecules/SubjectGrid';
 import { RootStackParamList } from '../navigation';
-
 import { Typography } from '../atoms/Typography';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;

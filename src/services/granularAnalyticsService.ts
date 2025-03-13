@@ -558,6 +558,7 @@ class GranularAnalyticsService {
 
   // Process quiz results and update all analytics levels
   public async processQuizResults(params: {
+    quizId: string;
     subjectId: string;
     subjectTitle: string;
     topicId?: string;
@@ -569,6 +570,7 @@ class GranularAnalyticsService {
     mode: 'Practice' | 'Test';
   }): Promise<void> {
     const { 
+      quizId, 
       subjectId, 
       subjectTitle, 
       topicId, 
@@ -613,6 +615,7 @@ class GranularAnalyticsService {
 
     // Also update enhanced analytics
     await enhancedAnalyticsEngine.processQuizResults({
+      quizId,
       questions,
       answers,
       timePerQuestion,
@@ -620,6 +623,86 @@ class GranularAnalyticsService {
       subjectId,
       topicId
     });
+  }
+  
+  public async saveQuizAnalytics(data: {
+    subjectId: string;
+    topicId: string;
+    accuracy: number;
+    timePerQuestion: Record<string, number>;
+    totalTime: number;
+    correctAnswers: number;
+    incorrectAnswers: number;
+    skippedAnswers: number;
+    difficultyScore: number;
+    confidenceScore: number;
+    masteryLevel: number;
+    timestamp: number;
+  }): Promise<void> {
+    try {
+      const {
+        subjectId,
+        topicId,
+        accuracy,
+        timePerQuestion,
+        totalTime,
+        correctAnswers,
+        incorrectAnswers,
+        skippedAnswers,
+        difficultyScore,
+        confidenceScore,
+        masteryLevel,
+        timestamp
+      } = data;
+
+      // Calculate total questions
+      const totalQuestions = correctAnswers + incorrectAnswers + skippedAnswers;
+      const score = accuracy;
+
+      // Update subject analytics
+      await this.updateSubjectAnalytics({
+        subjectId,
+        title: '', // Will be updated by the subject service
+        score,
+        timeSpent: totalTime,
+        correctAnswers,
+        totalQuestions,
+        topicId
+      });
+
+      // Update topic analytics
+      await this.updateTopicAnalytics({
+        topicId,
+        subjectId,
+        title: '', // Will be updated by the topic service
+        score,
+        timeSpent: totalTime,
+        correctAnswers,
+        totalQuestions,
+        questions: [], // Will be updated when question data is available
+        answers: {}, // Will be updated when answer data is available
+        timePerQuestion
+      });
+
+      // Process enhanced analytics
+      await enhancedAnalyticsEngine.processQuizAnalytics({
+        subjectId,
+        topicId,
+        accuracy,
+        timePerQuestion,
+        totalTime,
+        correctAnswers,
+        incorrectAnswers,
+        skippedAnswers,
+        difficultyScore,
+        confidenceScore,
+        masteryLevel,
+        timestamp
+      });
+    } catch (error) {
+      console.error('Error saving quiz analytics:', error);
+      throw error;
+    }
   }
 }
 
