@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { QuizHistory } from '../types/quiz';
 import { v4 as uuidv4 } from 'uuid';
 import { QuizAttempt } from '../types/quizAttempt';
 
@@ -196,4 +197,35 @@ export const calculateAverageTimePerQuestion = (timePerQuestion: Record<string, 
   
   const totalTime = times.reduce((sum, time) => sum + time, 0);
   return Math.round(totalTime / times.length);
+};
+
+const STORAGE_KEY = '@quiz_history';
+
+export const saveQuizAttempt = async (attempt: QuizHistory) => {
+  try {
+    const existing = await AsyncStorage.getItem(STORAGE_KEY);
+    const history = existing ? JSON.parse(existing) : [];
+    history.push(attempt);
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  } catch (error) {
+    console.error('Failed to save quiz attempt:', error);
+  }
+};
+
+export const getQuizHistory = async (): Promise<QuizHistory[]> => {
+  try {
+    const history = await AsyncStorage.getItem(STORAGE_KEY);
+    return history ? JSON.parse(history) : [];
+  } catch (error) {
+    console.error('Failed to load quiz history:', error);
+    return [];
+  }
+};
+
+export const clearQuizHistory = async () => {
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEY);
+  } catch (error) {
+    console.error('Failed to clear quiz history:', error);
+  }
 };

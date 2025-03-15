@@ -13,3 +13,15 @@ export interface Question {
   tags?: string[];
   exam?: string;
 }
+
+export interface QuizHistory {
+  id: string;
+  timestamp: number;
+  scorePercentage: number;
+  correctAnswers: number;
+  totalQuestions: number;
+  subjectId?: string;
+  topicId?: string;
+  duration?: number;
+  questionIds: string[];
+}
