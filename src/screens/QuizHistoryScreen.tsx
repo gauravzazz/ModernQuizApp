@@ -9,6 +9,7 @@ import { Typography } from '../atoms/Typography';
 import { LoadingIndicator } from '../atoms/LoadingIndicator';
 import { getQuizHistory } from '../services/quizResultService';
 import { ProcessedQuizResult } from '../services/quizResultService';
+import { QuizResultHeader } from '../molecules/QuizResultHeader';
 
 export const QuizHistoryScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
@@ -104,6 +105,8 @@ export const QuizHistoryScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <QuizResultHeader title="Quiz History" />
+      
       {quizHistory.length === 0 && !isLoading ? (
         <View style={styles.emptyContainer}>
           <Typography variant="h3">No Quiz History</Typography>
