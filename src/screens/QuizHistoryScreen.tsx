@@ -11,6 +11,8 @@ import { getQuizHistory } from '../services/quizResultService';
 import { ProcessedQuizResult } from '../services/quizResultService';
 import { QuizResultHeader } from '../molecules/QuizResultHeader';
 import { QuizHistoryCard } from '../molecules/QuizHistoryCard';
+import { fetchQuestionsByIds } from '../services/questionService';
+import { Question } from '../types/quiz';
 
 export const QuizHistoryScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
@@ -30,7 +32,24 @@ export const QuizHistoryScreen: React.FC = () => {
   const loadQuizHistory = async () => {
     try {
       const history = await getQuizHistory();
-      setQuizHistory(history);
+      
+      // Load questions for each quiz result
+      const historyWithQuestions = await Promise.all(
+        history.map(async (result) => {
+          try {
+            const questions = await fetchQuestionsByIds(result.questionIds);
+            return {
+              ...result,
+              questionsData: questions
+            };
+          } catch (error) {
+            console.error('Error fetching questions for quiz:', error);
+            return result;
+          }
+        })
+      );
+      
+      setQuizHistory(historyWithQuestions);
     } catch (error) {
       console.error('Error loading quiz history:', error);
     } finally {
@@ -57,7 +76,7 @@ export const QuizHistoryScreen: React.FC = () => {
         topicTitle: quizResult.quiz,
         subjectTitle: quizResult.subject,
         fromHistory: true,
-        questionIds: quizResult.questionIds
+        questionsData: quizResult.questionsData
       }
     });
   };

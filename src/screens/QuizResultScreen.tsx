@@ -53,44 +53,30 @@ export const QuizResultScreen: React.FC = () => {
     const processQuizData = async () => {
       try {
         setIsProcessing(true);
-        
-        if (fromHistory) {
-          if (questionIds && questionIds.length > 0) {
-            setLoadingMessage('Loading quiz questions...');
-            try {
-              const questions = await fetchQuestionsByIds(questionIds);
-              if (questions && questions.length > 0) {
-                setFilteredQuestions(questions);
-              } else {
-                setError('Failed to load questions. The quiz data may be incomplete.');
-              }
-            } catch (fetchError) {
-              console.error('Error fetching questions by IDs:', fetchError);
-              setError('Failed to load questions. Please try again.');
-            }
-          } else {
-            setError('No question data available for this quiz history.');
-          }
-          setIsProcessing(false);
-          return;
-        }
-        
         setLoadingMessage('Processing quiz results...');
         
-        const result = await processAndSaveQuizResult(
-          attempts,
-          totalTime,
-          mode,
-          subjectId,
-          topicId,
-          topicTitle || '',
-          subjectTitle || '',
-          questionsData || []
-        );
+        if (!fromHistory) {
+          const result = await processAndSaveQuizResult(
+            attempts,
+            totalTime,
+            mode,
+            subjectId,
+            topicId,
+            topicTitle || '',
+            subjectTitle || '',
+            questionsData || []
+          );
+          setProcessedResult(result);
+        }
         
-        setProcessedResult(result);
         setFilteredQuestions(questionsData || []);
+        setActiveFilter('all'); // Reset filter when screen mounts
         setIsProcessing(false);
+        
+        // Scroll to top when mounting
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollTo({ y: 0, animated: false });
+        }
       } catch (err) {
         console.error('Error processing quiz results:', err);
         setError('Failed to process quiz results. Please try again.');
@@ -425,62 +411,54 @@ export const QuizResultScreen: React.FC = () => {
 
   // Filter questions based on the active filter
   useEffect(() => {
-    // Check if we have questions data to filter
-    if (!questionsData && (!fromHistory || filteredQuestions.length === 0)) return;
-    
-    let filtered;
-    // Use questionsData as the source for new quizzes, and the current filteredQuestions only for history view
-    const sourceQuestions = fromHistory ? 
-      (questionIds && questionIds.length > 0 ? filteredQuestions : []) : 
-      (questionsData || []);
-    
-    if (!sourceQuestions || sourceQuestions.length === 0) return;
-    
-    switch (activeFilter) {
-      case 'correct':
-        filtered = sourceQuestions.filter(q => {
-          const attempt = attempts.find(a => a.questionId === q.id);
-          return attempt && !attempt.isSkipped && attempt.selectedOptionId === attempt.correctOptionId;
-        });
-        break;
-      case 'incorrect':
-        filtered = sourceQuestions.filter(q => {
-          const attempt = attempts.find(a => a.questionId === q.id);
-          return attempt && !attempt.isSkipped && attempt.selectedOptionId !== attempt.correctOptionId && attempt.selectedOptionId !== null;
-        });
-        break;
-      case 'skipped':
-        filtered = sourceQuestions.filter(q => {
-          const attempt = attempts.find(a => a.questionId === q.id);
-          return attempt && (attempt.isSkipped || attempt.selectedOptionId === null);
-        });
-        break;
-      default: // 'all'
-        filtered = sourceQuestions;
-    }
-    
-    // Animate the transition
-    Animated.sequence([
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      })
-    ]).start();
-    
-    // Only update if we have questions to show and they're different from current
-    if (filtered && filtered.length > 0) {
-      setFilteredQuestions(filtered);
-    }
-    
-    // Removed scroll to top behavior to maintain scroll position when filtering
-  }, [activeFilter, questionsData, attempts, fromHistory, questionIds]);
-  
+    if (!questionsData) return;
+
+    const filteredData = questionsData.filter(question => {
+      const attempt = attempts.find(a => a.questionId === question.id);
+      if (!attempt) return false;
+
+      switch (activeFilter) {
+        case 'correct':
+          return !attempt.isSkipped && attempt.selectedOptionId === attempt.correctOptionId;
+        case 'incorrect':
+          return !attempt.isSkipped && attempt.selectedOptionId !== attempt.correctOptionId && attempt.selectedOptionId !== null;
+        case 'skipped':
+          return attempt.isSkipped || attempt.selectedOptionId === null;
+        default:
+          return true;
+      }
+    });
+
+    setFilteredQuestions(filteredData);
+  }, [activeFilter, questionsData, attempts]);
+
+  // Load bookmarked status for filtered questions
+  useEffect(() => {
+    const loadBookmarkedStatus = async () => {
+      if (!filteredQuestions || filteredQuestions.length === 0) return;
+      
+      const bookmarkedSet = new Set<string>();
+      
+      for (const question of filteredQuestions) {
+        try {
+          const isBookmarked = await isQuestionBookmarked(question.id);
+          if (isBookmarked) {
+            bookmarkedSet.add(question.id);
+          }
+        } catch (error) {
+          console.error(`Error checking bookmark status for question ${question.id}:`, error);
+        }
+      }
+      
+      // Only update state if the component is still mounted
+      if (isMounted.current) {
+        setBookmarkedQuestions(bookmarkedSet);
+      }
+    };
+
+    loadBookmarkedStatus();
+  }, [filteredQuestions])
+
 
   // Fade in the screen when it loads and show confetti for good scores
   useEffect(() => {
