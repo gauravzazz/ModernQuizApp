@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, View, ScrollView, Dimensions, Animated, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, ScrollView, Dimensions, Animated, ActivityIndicator } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppTheme } from '../theme';
 import { Button } from '../atoms/Button';
 import { RootStackParamList } from '../navigation';
-import { saveQuizResults } from '../utils/quizResultsStorage';
 import { QuizResultHeader } from '../molecules/QuizResultHeader';
 import { QuizScoreCard } from '../molecules/QuizScoreCard';
 import { QuizResultCharts } from '../molecules/QuizResultCharts';
@@ -14,24 +13,23 @@ import { QuizResultFilters } from '../molecules/QuizResultFilters';
 import { QuizQuestionCard } from '../molecules/QuizQuestionCard';
 import { Typography } from '../atoms/Typography';
 import { addBookmark, removeBookmark, isQuestionBookmarked } from '../services/bookmarkService';
-import { updateUserStats } from '../services/profileService';
 import { UserAward } from '../types/profile';
-import { moderateScale, scaledFontSize, scaledSpacing, scaledRadius } from '../utils/scaling';
+import { scaledFontSize, scaledSpacing, } from '../utils/scaling';
 import { AchievementModal } from '../molecules/AchievementModal';
 import { Confetti } from '../atoms/ConfettiCannon';
-import { granularAnalyticsService } from '../services/granularAnalyticsService';
-
+import { createPieChartData } from '../constants/quizConstants';
+import { processAndSaveQuizResult, ProcessedQuizResult } from '../services/quizResultService';
+import { fetchQuestionsByIds } from '../services/questionService';
 
 type QuizResultScreenRouteProp = RouteProp<RootStackParamList, 'QuizResult'>;
 type QuizResultScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
 type FilterType = 'all' | 'correct' | 'incorrect' | 'skipped';
 
 export const QuizResultScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
   const route = useRoute<QuizResultScreenRouteProp>();
   const navigation = useNavigation<QuizResultScreenNavigationProp>();
-  const { attempts, totalTime, mode = 'Practice', subjectId = '', topicId = '', questionsData, topicTitle, subjectTitle } = route.params;
+  const { attempts, totalTime, mode = 'Practice', subjectId = '', topicId = '', questionsData, topicTitle, subjectTitle, fromHistory, questionIds } = route.params;
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [filteredQuestions, setFilteredQuestions] = useState(questionsData || []);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -44,24 +42,89 @@ export const QuizResultScreen: React.FC = () => {
   const [unlockedAwards, setUnlockedAwards] = useState<UserAward[]>([]);
   const [showAwardModal, setShowAwardModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(!fromHistory);
   const [error, setError] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState<string>('Processing quiz results...');
+  const [processedResult, setProcessedResult] = useState<ProcessedQuizResult | null>(null);
 
+  // Process and save quiz results when the screen loads (only if not from history)
+  // Or fetch questions by IDs when viewing from history
+  useEffect(() => {
+    const processQuizData = async () => {
+      try {
+        setIsProcessing(true);
+        
+        if (fromHistory) {
+          if (questionIds && questionIds.length > 0) {
+            setLoadingMessage('Loading quiz questions...');
+            try {
+              const questions = await fetchQuestionsByIds(questionIds);
+              if (questions && questions.length > 0) {
+                setFilteredQuestions(questions);
+              } else {
+                setError('Failed to load questions. The quiz data may be incomplete.');
+              }
+            } catch (fetchError) {
+              console.error('Error fetching questions by IDs:', fetchError);
+              setError('Failed to load questions. Please try again.');
+            }
+          } else {
+            setError('No question data available for this quiz history.');
+          }
+          setIsProcessing(false);
+          return;
+        }
+        
+        setLoadingMessage('Processing quiz results...');
+        
+        const result = await processAndSaveQuizResult(
+          attempts,
+          totalTime,
+          mode,
+          subjectId,
+          topicId,
+          topicTitle || '',
+          subjectTitle || '',
+          questionsData || []
+        );
+        
+        setProcessedResult(result);
+        setFilteredQuestions(questionsData || []);
+        setIsProcessing(false);
+      } catch (err) {
+        console.error('Error processing quiz results:', err);
+        setError('Failed to process quiz results. Please try again.');
+        setIsProcessing(false);
+      }
+    };
+    
+    processQuizData();
+  }, [fromHistory, attempts, totalTime, mode, subjectId, topicId, topicTitle, subjectTitle, questionsData, questionIds]);
+  
   useEffect(() => {
     scrollY.addListener(({ value }) => {
       setShowStickyFilters(value > filterSectionY.current);
     });
-
-    // Load bookmarked questions
+    return () => {
+      scrollY.removeAllListeners();
+    };
+  }, []);
+  
+  // Load bookmarked questions whenever filteredQuestions changes
+  useEffect(() => {
     const loadBookmarkedStatus = async () => {
-      if (!questionsData) return;
+      if (!filteredQuestions || filteredQuestions.length === 0) return;
+      
       const bookmarkedSet = new Set<string>();
       
-      for (const question of questionsData) {
-        const isBookmarked = await isQuestionBookmarked(question.id);
-        if (isBookmarked) {
-          bookmarkedSet.add(question.id);
+      for (const question of filteredQuestions) {
+        try {
+          const isBookmarked = await isQuestionBookmarked(question.id);
+          if (isBookmarked) {
+            bookmarkedSet.add(question.id);
+          }
+        } catch (error) {
+          console.error(`Error checking bookmark status for question ${question.id}:`, error);
         }
       }
       
@@ -69,11 +132,7 @@ export const QuizResultScreen: React.FC = () => {
     };
 
     loadBookmarkedStatus();
-
-    return () => {
-      scrollY.removeAllListeners();
-    };
-  }, [questionsData]);
+  }, [filteredQuestions]);
 
   const onHeaderLayout = (event: any) => {
     const { height } = event.nativeEvent.layout;
@@ -295,6 +354,12 @@ export const QuizResultScreen: React.FC = () => {
     stickyFiltersContainer: {
 
     },
+    centerContent: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 16,
+    },
   });
 
   const correctAnswers = attempts.filter(
@@ -337,73 +402,37 @@ export const QuizResultScreen: React.FC = () => {
   };
 
   // Prepare data for pie chart
-  const pieChartData = [
-    {
-      name: 'Correct',
-      population: correctAnswers,
-      color: theme.colors.success,
-      legendFontColor: theme.colors.onSurface,
-      legendFontSize: 12
-    },
-    {
-      name: 'Incorrect',
-      population: incorrectAnswers,
-      color: theme.colors.error,
-      legendFontColor: theme.colors.onSurface,
-      legendFontSize: 12
-    },
-    {
-      name: 'Skipped',
-      population: skippedAnswers,
-      color: theme.colors.warning,
-      legendFontColor: theme.colors.onSurface,
-      legendFontSize: 12
-    }
-  ];
-
-  // Chart configuration
-  const chartConfig = {
-    backgroundGradientFrom: theme.colors.background,
-    backgroundGradientTo: theme.colors.background,
-    decimalPlaces: 1,
-    color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
-    labelColor: (opacity = 1) => theme.colors.onSurface,
-    style: {
-      borderRadius: 16
-    },
-    propsForDots: {
-      r: '6',
-      strokeWidth: '2',
-      stroke: theme.colors.primary
-    }
-  };
+  const pieChartData = createPieChartData(theme, correctAnswers, incorrectAnswers, skippedAnswers);
 
   // Filter questions based on the active filter
   useEffect(() => {
-    if (!questionsData) return;
+    // Check both questionsData and filteredQuestions to handle both new quizzes and history
+    if (!questionsData && filteredQuestions.length === 0) return;
     
     let filtered;
+    const sourceQuestions = fromHistory ? filteredQuestions : questionsData;
+    
     switch (activeFilter) {
       case 'correct':
-        filtered = questionsData.filter(q => {
+        filtered = sourceQuestions.filter(q => {
           const attempt = attempts.find(a => a.questionId === q.id);
           return attempt && !attempt.isSkipped && attempt.selectedOptionId === attempt.correctOptionId;
         });
         break;
       case 'incorrect':
-        filtered = questionsData.filter(q => {
+        filtered = sourceQuestions.filter(q => {
           const attempt = attempts.find(a => a.questionId === q.id);
           return attempt && !attempt.isSkipped && attempt.selectedOptionId !== attempt.correctOptionId && attempt.selectedOptionId !== null;
         });
         break;
       case 'skipped':
-        filtered = questionsData.filter(q => {
+        filtered = sourceQuestions.filter(q => {
           const attempt = attempts.find(a => a.questionId === q.id);
           return attempt && (attempt.isSkipped || attempt.selectedOptionId === null);
         });
         break;
       default: // 'all'
-        filtered = questionsData;
+        filtered = sourceQuestions;
     }
     
     // Animate the transition
@@ -420,77 +449,14 @@ export const QuizResultScreen: React.FC = () => {
       })
     ]).start();
     
-    setFilteredQuestions(filtered);
+    // Only update if we have questions to show
+    if (filtered && filtered.length > 0) {
+      setFilteredQuestions(filtered);
+    }
     
     // Removed scroll to top behavior to maintain scroll position when filtering
-  }, [activeFilter, questionsData, attempts]);
+  }, [activeFilter, questionsData, attempts, fromHistory, filteredQuestions]);
   
-  useEffect(() => {
-    const processQuizResults = async () => {
-      try {
-        setIsProcessing(true);
-        setLoadingMessage('Saving quiz results...');
-        
-        // Save quiz results
-        await saveQuizResults({
-          attempts,
-          totalTime,
-          mode,
-          subjectId,
-          topicId,
-          topicTitle,
-          subjectTitle,
-          timestamp: Date.now()
-        });
-
-        setLoadingMessage('Updating analytics...');
-        // Update analytics
-        const correctCount = attempts.filter(a => a.selectedOptionId === a.correctOptionId).length;
-        const incorrectCount = attempts.filter(a => a.selectedOptionId && a.selectedOptionId !== a.correctOptionId).length;
-        const skippedCount = attempts.filter(a => !a.selectedOptionId).length;
-        
-        const timePerQuestion = attempts.reduce((acc, attempt) => {
-          acc[attempt.questionId] = attempt.timeSpent;
-          return acc;
-        }, {} as Record<string, number>);
-
-        const analyticsData = {
-          subjectId,
-          topicId,
-          accuracy: (correctCount / attempts.length) * 100,
-          timePerQuestion,
-          totalTime,
-          correctAnswers: correctCount,
-          incorrectAnswers: incorrectCount,
-          skippedAnswers: skippedCount,
-          difficultyScore: 0, // Calculate based on question difficulty if available
-          confidenceScore: 0, // Calculate based on time taken and correctness
-          masteryLevel: 0, // Calculate based on performance metrics
-          timestamp: Date.now()
-        };
-
-        await granularAnalyticsService.saveQuizAnalytics(analyticsData);
-        setLoadingMessage('Updating user stats...');
-        await updateUserStats(
-          correctCount,
-          attempts.length,
-          totalTime / 60000, // Convert milliseconds to minutes
-          mode
-        );
-
-        setIsProcessing(false);
-        setShowConfetti(true);
-      } catch (err) {
-        console.error('Error processing quiz results:', err);
-        setError('Failed to process quiz results');
-        setIsProcessing(false);
-      }
-    };
-
-    processQuizResults();
-  }, [attempts, totalTime, mode, subjectId, topicId, topicTitle, subjectTitle]);
-
-
 
   // Fade in the screen when it loads and show confetti for good scores
   useEffect(() => {
@@ -522,6 +488,32 @@ export const QuizResultScreen: React.FC = () => {
   // Import the AchievementModal component at the top of the file
   // import { AchievementModal } from '../molecules/AchievementModal';
   
+
+  if (isProcessing) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Typography variant="body1" style={{ marginTop: 16 }}>
+          {loadingMessage}
+        </Typography>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Typography variant="body1" color="error" style={{ marginBottom: 16 }}>
+          {error}
+        </Typography>
+        <Button
+          label="Go Back"
+          onPress={() => navigation.goBack()}
+          variant="primary"
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -639,3 +631,4 @@ export const QuizResultScreen: React.FC = () => {
     </View>
   );
 };
+

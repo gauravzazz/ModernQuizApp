@@ -1,7 +1,7 @@
 import { Question } from '../types/quiz';
 
 // Mock questions data
-const mockQuestions: Question[] = [
+export const mockQuestions: Question[] = [
   {
     id: '1',
     text: 'What is the square root of 144?',
@@ -60,5 +60,26 @@ export const fetchQuestions = async (
   } catch (error) {
     console.error('Error fetching questions:', error);
     throw new Error('Failed to fetch questions');
+  }
+};
+
+/**
+ * Fetch questions by their IDs
+ * This is used when viewing quiz results from history
+ */
+export const fetchQuestionsByIds = async (questionIds: string[]): Promise<Question[]> => {
+  try {
+    // Simulate API call delay
+    await delay(500);
+
+    // In the future, this would be replaced with a real API call
+    // const response = await api.get(`/questions/batch?ids=${questionIds.join(',')}`);
+    // return response.data;
+
+    // For now, filter mock data by the provided IDs
+    return mockQuestions.filter(question => questionIds.includes(question.id));
+  } catch (error) {
+    console.error('Error fetching questions by IDs:', error);
+    throw new Error('Failed to fetch questions by IDs');
   }
 };

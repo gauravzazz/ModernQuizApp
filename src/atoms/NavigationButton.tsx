@@ -3,7 +3,7 @@ import { StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 
-export type NavigationButtonVariant = 'left' | 'right' | 'close' | 'menu';
+export type NavigationButtonVariant = 'left' | 'right' | 'close' | 'menu' | 'filter';
 
 export interface NavigationButtonProps {
   variant: NavigationButtonVariant;
@@ -32,6 +32,8 @@ export const NavigationButton: React.FC<NavigationButtonProps> = ({
         return '×';
       case 'menu':
         return '☰';
+      case 'filter':
+        return '⚡';
       default:
         return '';
     }

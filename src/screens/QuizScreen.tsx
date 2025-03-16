@@ -296,7 +296,7 @@ export const QuizScreen: React.FC = () => {
         topicId,
         topicTitle,
         subjectTitle,
-        questionsData: quizQuestions
+        questionsData: quizQuestions,
       };
       
       console.log('[DEBUG] Navigation params:', navigationParams);

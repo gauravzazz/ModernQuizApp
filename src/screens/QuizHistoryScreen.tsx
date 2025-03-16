@@ -1,199 +1,195 @@
-import React from 'react';
-import { StyleSheet, View, ScrollView, StatusBar } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { useTheme } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
-import { SearchBar } from '../atoms/SearchBar';
-import { Button } from '../atoms/Button';
-import { ProgressBar } from '../atoms/ProgressBar';
-import { NavigationButton } from '../atoms/NavigationButton';
-
-interface QuizAttempt {
-  id: string;
-  subject: string;
-  quiz: string;
-  score: number;
-  totalQuestions: number;
-  correctAnswers: number;
-  timeTaken: string;
-  date: string;
-}
-
-const mockAttempts: QuizAttempt[] = [
-  {
-    id: '1',
-    subject: 'Mathematics',
-    quiz: 'Basic Algebra',
-    score: 85,
-    totalQuestions: 20,
-    correctAnswers: 17,
-    timeTaken: '15:30',
-    date: '2023-12-01',
-  },
-  {
-    id: '2',
-    subject: 'Science',
-    quiz: 'Chemistry Basics',
-    score: 92,
-    totalQuestions: 25,
-    correctAnswers: 23,
-    timeTaken: '18:45',
-    date: '2023-12-02',
-  },
-];
+import { LoadingIndicator } from '../atoms/LoadingIndicator';
+import { getQuizHistory } from '../services/quizResultService';
+import { ProcessedQuizResult } from '../services/quizResultService';
 
 export const QuizHistoryScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [quizHistory, setQuizHistory] = useState<ProcessedQuizResult[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    headerNav: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      marginBottom: 24,
-      paddingVertical: 16,
-      shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 4, height: 4 },
-      shadowOpacity: 0.4,
-      shadowRadius: 6,
-      elevation: 8,
-    },
-    headerTitle: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    content: {
-      flex: 1,
-      padding: 16,
-    },
-    searchContainer: {
-      marginBottom: 24,
-    },
-    historyCard: {
-      backgroundColor: theme.colors.neuPrimary,
-      borderRadius: theme.roundness * 2,
-      padding: 16,
-      marginBottom: 16,
-      shadowColor: theme.colors.neuDark,
-      shadowOffset: { width: 5, height: 5 },
-      shadowOpacity: 1,
-      shadowRadius: 10,
-      elevation: 8,
-      borderWidth: 1,
-      borderColor: theme.colors.neuLight,
-    },
-    cardHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    metadata: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    scoreContainer: {
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.roundness,
-      padding: 12,
-      marginTop: 8,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    progressContainer: {
-      flex: 1,
-      marginRight: 16,
-    },
-    scoreText: {
-      minWidth: 80,
-      textAlign: 'right',
-    },
-    actions: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      marginTop: 12,
-      gap: 8,
-    },
-  });
+  // Load quiz history when the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      loadQuizHistory();
+      return () => {};
+    }, [])
+  );
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.headerNav}>
-        <View style={styles.headerTitle}>
-          <NavigationButton variant="left" onPress={() => navigation.goBack()} />
-          <Typography variant="h6" weight="bold">
-            📜 Quiz History
+  const loadQuizHistory = async () => {
+    try {
+      const history = await getQuizHistory();
+      setQuizHistory(history);
+    } catch (error) {
+      console.error('Error loading quiz history:', error);
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  };
+  
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadQuizHistory();
+  }, []);
+
+  const handleQuizCardPress = (quizResult: ProcessedQuizResult) => {
+    // Navigate through MainStack to reach QuizResult
+    navigation.navigate('MainStack', {
+      screen: 'QuizResult',
+      params: {
+        attempts: quizResult.attempts,
+        totalTime: quizResult.duration,
+        mode: quizResult.mode,
+        subjectId: quizResult.subjectId,
+        topicId: quizResult.topicId,
+        topicTitle: quizResult.quiz,
+        subjectTitle: quizResult.subject,
+        fromHistory: true,
+        questionIds: quizResult.questionIds
+      }
+    });
+  };
+
+  const renderQuizCard = ({ item }: { item: ProcessedQuizResult }) => {
+    const date = new Date(item.timestamp).toLocaleDateString();
+    return (
+      <TouchableOpacity
+        style={[styles.card, { backgroundColor: theme.colors.neuPrimary }]}
+        onPress={() => handleQuizCardPress(item)}
+      >
+        <View style={styles.cardHeader}>
+          <Typography variant="h3" style={styles.quizTitle}>
+            {item.quiz}
+          </Typography>
+          <Typography variant="body2" style={styles.date}>
+            {date}
           </Typography>
         </View>
-      </View>
-      
-      <View style={styles.content}>
-        <View style={styles.searchContainer}>
-          <SearchBar placeholder="Search history..." />
+        <View style={styles.cardContent}>
+          <View style={styles.statItem}>
+            <Typography variant="body2">Score</Typography>
+            <Typography variant="h4">{Math.round(item.scorePercentage)}%</Typography>
+          </View>
+          <View style={styles.statItem}>
+            <Typography variant="body2">Time</Typography>
+            <Typography variant="h4">{item.timeTaken}</Typography>
+          </View>
+          <View style={styles.statItem}>
+            <Typography variant="body2">Mode</Typography>
+            <Typography variant="h4">{item.mode}</Typography>
+          </View>
         </View>
-        <ScrollView>
-          {mockAttempts.map((attempt) => (
-            <View key={attempt.id} style={styles.historyCard}>
-              <View style={styles.cardHeader}>
-                <Typography variant="h6" weight="bold">
-                  {attempt.quiz}
-                </Typography>
-                <Typography variant="caption" color="onSurfaceVariant">
-                  {attempt.date}
-                </Typography>
-              </View>
-              <Typography variant="body2" color="onSurfaceVariant">
-                {attempt.subject}
-              </Typography>
-              <View style={styles.scoreContainer}>
-                <View style={styles.progressContainer}>
-                  <ProgressBar progress={attempt.score / 100} />
-                </View>
-                <Typography
-                  variant="h6"
-                  weight="bold"
-                  color="primary"
-                  style={styles.scoreText}
-                >
-                  {attempt.score}%
-                </Typography>
-              </View>
-              <View style={styles.metadata}>
-                <Typography variant="caption" color="onSurfaceVariant">
-                  {attempt.correctAnswers}/{attempt.totalQuestions} Correct
-                </Typography>
-                <Typography variant="caption" color="onSurfaceVariant">
-                  Time: {attempt.timeTaken}
-                </Typography>
-              </View>
-              <View style={styles.actions}>
-                <Button
-                  label="View Details"
-                  variant="outline"
-                  size="small"
-                  onPress={() => {}}
-                />
-                <Button
-                  label="Retry Quiz"
-                  size="small"
-                  onPress={() => {}}
-                />
-              </View>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
+        <View style={styles.subjectContainer}>
+          <Typography variant="body2" style={styles.subjectText}>
+            {item.subject}
+          </Typography>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  if (isLoading) {
+    return <LoadingIndicator message="Loading quiz history..." />;
+  }
+
+  return (
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {quizHistory.length === 0 && !isLoading ? (
+        <View style={styles.emptyContainer}>
+          <Typography variant="h3">No Quiz History</Typography>
+          <Typography variant="body1" style={styles.emptyText}>
+            Complete some quizzes to see your history here!
+          </Typography>
+        </View>
+      ) : (
+        <FlatList
+          data={quizHistory}
+          renderItem={renderQuizCard}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[theme.colors.primary]}
+              tintColor={theme.colors.primary}
+            />
+          }
+        />
+      )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  listContainer: {
+    paddingBottom: 16,
+  },
+  card: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  quizTitle: {
+    flex: 1,
+    marginRight: 8,
+  },
+  date: {
+    opacity: 0.7,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  subjectContainer: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.1)',
+    paddingTop: 12,
+  },
+  subjectText: {
+    opacity: 0.7,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    marginTop: 8,
+    opacity: 0.7,
+    textAlign: 'center',
+  },
+});

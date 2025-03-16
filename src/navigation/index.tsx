@@ -7,13 +7,11 @@ import { SubjectDetailScreen } from '../screens/SubjectDetailScreen';
 import { QuizScreen } from '../screens/QuizScreen';
 import { QuizResultScreen } from '../screens/QuizResultScreen';
 import { BookmarksScreen } from '../screens/BookmarksScreen';
-import { QuizHistoryScreen } from '../screens/QuizHistoryScreen';
-import { ProgressScreen } from '../screens/ProgressScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { NotificationScreen } from '../screens/NotificationScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { CustomDrawerContent } from '../components/CustomDrawerContent';
-
+import { QuizHistoryScreen } from '../screens/QuizHistoryScreen';
 export type RootStackParamList = {
   Home: undefined;
   MainStack: undefined | {
@@ -35,6 +33,7 @@ export type RootStackParamList = {
     subjectId?: string;
     topicTitle?: string;
     subjectTitle?: string;
+    fromHistory: boolean;
   };
   QuizResult: {
     attempts: Array<{
@@ -55,6 +54,9 @@ export type RootStackParamList = {
     topicId?: string;
     topicTitle?: string;
     subjectTitle?: string;
+    fromHistory?: boolean;
+
+    questionIds?: string[];
     questionsData?: Array<{
       id: string;
       text: string;
@@ -110,7 +112,6 @@ export const Navigation = () => {
         <Drawer.Screen name="MainStack" component={MainStack} />
         <Drawer.Screen name="Bookmarks" component={BookmarksScreen} />
         <Drawer.Screen name="QuizHistory" component={QuizHistoryScreen} />
-        <Drawer.Screen name="Progress" component={ProgressScreen} />
         <Drawer.Screen name="Profile" component={ProfileScreen} />
         <Drawer.Screen name="Settings" component={SettingsScreen} />
         <Drawer.Screen name="Notifications" component={NotificationScreen} />
