@@ -19,7 +19,7 @@ import { AchievementModal } from '../molecules/AchievementModal';
 import { Confetti } from '../atoms/ConfettiCannon';
 import { createPieChartData } from '../constants/quizConstants';
 import { processAndSaveQuizResult, ProcessedQuizResult } from '../services/quizResultService';
-import { fetchQuestionsByIds } from '../services/questionService';
+
 
 type QuizResultScreenRouteProp = RouteProp<RootStackParamList, 'QuizResult'>;
 type QuizResultScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
