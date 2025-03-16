@@ -111,7 +111,23 @@ export const QuizResultScreen: React.FC = () => {
   }, []);
   
   // Load bookmarked questions whenever filteredQuestions changes
+  // Using a ref to track if the component is mounted to prevent state updates after unmount
+  const isMounted = useRef(true);
+  
+  // Set up the ref on mount and clear on unmount
   useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+  
+  // Load bookmarked status with memoized filteredQuestions IDs to prevent unnecessary reruns
+  useEffect(() => {
+    // Create a stable reference of question IDs to check
+    const questionIds = filteredQuestions.map(q => q.id);
+    const questionIdsKey = questionIds.join(',');
+    
     const loadBookmarkedStatus = async () => {
       if (!filteredQuestions || filteredQuestions.length === 0) return;
       
@@ -128,11 +144,14 @@ export const QuizResultScreen: React.FC = () => {
         }
       }
       
-      setBookmarkedQuestions(bookmarkedSet);
+      // Only update state if the component is still mounted
+      if (isMounted.current) {
+        setBookmarkedQuestions(bookmarkedSet);
+      }
     };
 
     loadBookmarkedStatus();
-  }, [filteredQuestions]);
+  }, [filteredQuestions.length, filteredQuestions[0]?.id]); // Only depend on length and first ID as a proxy for changes
 
   const onHeaderLayout = (event: any) => {
     const { height } = event.nativeEvent.layout;
@@ -406,11 +425,16 @@ export const QuizResultScreen: React.FC = () => {
 
   // Filter questions based on the active filter
   useEffect(() => {
-    // Check both questionsData and filteredQuestions to handle both new quizzes and history
-    if (!questionsData && filteredQuestions.length === 0) return;
+    // Check if we have questions data to filter
+    if (!questionsData && (!fromHistory || filteredQuestions.length === 0)) return;
     
     let filtered;
-    const sourceQuestions = fromHistory ? filteredQuestions : questionsData;
+    // Use questionsData as the source for new quizzes, and the current filteredQuestions only for history view
+    const sourceQuestions = fromHistory ? 
+      (questionIds && questionIds.length > 0 ? filteredQuestions : []) : 
+      (questionsData || []);
+    
+    if (!sourceQuestions || sourceQuestions.length === 0) return;
     
     switch (activeFilter) {
       case 'correct':
@@ -449,13 +473,13 @@ export const QuizResultScreen: React.FC = () => {
       })
     ]).start();
     
-    // Only update if we have questions to show
+    // Only update if we have questions to show and they're different from current
     if (filtered && filtered.length > 0) {
       setFilteredQuestions(filtered);
     }
     
     // Removed scroll to top behavior to maintain scroll position when filtering
-  }, [activeFilter, questionsData, attempts, fromHistory, filteredQuestions]);
+  }, [activeFilter, questionsData, attempts, fromHistory, questionIds]);
   
 
   // Fade in the screen when it loads and show confetti for good scores
