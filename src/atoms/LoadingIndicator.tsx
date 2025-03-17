@@ -6,10 +6,12 @@ import { Typography } from './Typography';
 
 interface LoadingIndicatorProps {
   message?: string;
+  size?: 'small' | 'large' | number;
 }
 
 export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   message = 'Loading...',
+  size,
 }) => {
   const theme = useTheme<AppTheme>();
 
@@ -26,7 +28,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color={theme.colors.primary} />
+      <ActivityIndicator size={size || 'large'} color={theme.colors.primary} />
       <Typography variant="body1" style={styles.message}>
         {message}
       </Typography>

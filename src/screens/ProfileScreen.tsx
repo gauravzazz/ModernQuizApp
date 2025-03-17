@@ -13,7 +13,7 @@ import { ProfileTabs } from '../molecules/ProfileTabs';
 import { ProfileAwards } from '../molecules/ProfileAwards';
 
 import { getUserProfile, saveUserProfile } from '../services/profileService';
-import { UserProfile, UserAward } from '../types/profile';
+import { UserProfile } from '../types/profile';
 import { moderateScale, scale, scaledRadius, verticalScale } from '../utils/scaling';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

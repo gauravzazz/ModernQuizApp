@@ -35,10 +35,11 @@ export const SubjectDetailScreen: React.FC = () => {
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-      padding: 16,
+      paddingHorizontal: 16,
     },
     scrollContainer: {
       flexGrow: 1,
+      paddingTop: 16,
     },
     stickySearchContainer: {
       position: 'absolute',
@@ -57,7 +58,7 @@ export const SubjectDetailScreen: React.FC = () => {
   
   const scrollY = useRef(new Animated.Value(0)).current;
   const screenHeight = Dimensions.get('window').height;
-  const subjectCardHeight = screenHeight * 0.45; // Match the height in SubjectDescription
+  const subjectCardHeight = screenHeight * 0.5; // Increased height for better visibility
 
   // Load recent topics when the screen comes into focus
   useFocusEffect(

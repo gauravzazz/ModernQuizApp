@@ -67,15 +67,15 @@ export const SubjectDescription: React.FC<SubjectDescriptionProps> = ({
       borderWidth: moderateScale(1.5),
       borderColor: theme.colors.neuLight,
       overflow: 'hidden',
-      height: height || screenHeight * (isSmallScreen ? 0.35 : isMediumScreen ? 0.40 : 0.45),
+      height: height || screenHeight * (isSmallScreen ? 0.40 : isMediumScreen ? 0.45 : 0.50),
     },
     backgroundImage: {
       width: '100%',
       height: '100%',
     },
     overlay: {
-      backgroundColor: 'rgba(0, 0, 0, 0.4)',
-      padding: scaledSpacing(isSmallScreen ? 12 : 16),
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      padding: scaledSpacing(isSmallScreen ? 16 : 20),
       justifyContent: 'space-between',
       height: '100%',
     },

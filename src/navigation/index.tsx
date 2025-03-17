@@ -12,6 +12,7 @@ import { NotificationScreen } from '../screens/NotificationScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { CustomDrawerContent } from '../components/CustomDrawerContent';
 import { QuizHistoryScreen } from '../screens/QuizHistoryScreen';
+import { ProgressScreen } from '../screens/ProgressScreen';
 export type RootStackParamList = {
   Home: undefined;
   MainStack: undefined | {
@@ -88,6 +89,7 @@ const MainStack = () => {
     >
       <Stack.Screen name="SubjectDetail" component={SubjectDetailScreen} />
       <Stack.Screen name="Quiz" component={QuizScreen} />
+      <Stack.Screen name="Progress" component={ProgressScreen} />
       <Stack.Screen name="QuizResult" component={QuizResultScreen} />
     </Stack.Navigator>
   );
@@ -112,6 +114,7 @@ export const Navigation = () => {
         <Drawer.Screen name="MainStack" component={MainStack} />
         <Drawer.Screen name="Bookmarks" component={BookmarksScreen} />
         <Drawer.Screen name="QuizHistory" component={QuizHistoryScreen} />
+        <Drawer.Screen name="Progress" component={ProgressScreen} />
         <Drawer.Screen name="Profile" component={ProfileScreen} />
         <Drawer.Screen name="Settings" component={SettingsScreen} />
         <Drawer.Screen name="Notifications" component={NotificationScreen} />
