@@ -51,12 +51,13 @@ export const ProfileScreen: React.FC = () => {
       paddingTop: StatusBar.currentHeight || 0,
     },
     header: {
-      marginBottom: verticalScale(24),
+      marginBottom: verticalScale(8),
       flexDirection: 'row',
       alignItems: 'center',
       gap: scale(16),
       paddingHorizontal: scale(16),
-      paddingVertical: verticalScale(16),
+      paddingTop: verticalScale(16),
+      //paddingVertical: verticalScale(16),
     },
     content: {
       flex: 1,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, ScrollView, Alert } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { AppTheme } from '../theme';
@@ -8,6 +8,8 @@ import { Toggle } from '../atoms/Toggle';
 import { Button } from '../atoms/Button';
 import { NavigationButton } from '../atoms/NavigationButton';
 import { useThemeContext } from '../context/ThemeContext';
+import { StorageClearModal } from '../atoms/StorageClearModal';
+import { StorageCategory, clearStorageWithExceptions, getCategorizedStorageKeys } from '../services/storageService';
 
 interface SettingsSection {
   title: string;
@@ -23,72 +25,113 @@ interface Setting {
   onPress?: () => void;
 }
 
-const mockSettings: SettingsSection[] = [
-  {
-    title: 'Appearance',
-    settings: [
-      {
-        id: 'darkMode',
-        title: 'Dark Mode',
-        description: 'Enable dark mode for better viewing in low light',
-        type: 'toggle',
-        value: true,
-      },
-      {
-        id: 'animations',
-        title: 'Enable Animations',
-        description: 'Show smooth transitions and animations',
-        type: 'toggle',
-        value: true,
-      },
-    ],
-  },
-  {
-    title: 'Notifications',
-    settings: [
-      {
-        id: 'quizReminders',
-        title: 'Quiz Reminders',
-        description: 'Get notified about pending quizzes',
-        type: 'toggle',
-        value: true,
-      },
-      {
-        id: 'progressUpdates',
-        title: 'Progress Updates',
-        description: 'Receive weekly progress summaries',
-        type: 'toggle',
-        value: false,
-      },
-    ],
-  },
-  {
-    title: 'Account',
-    settings: [
-      {
-        id: 'syncData',
-        title: 'Sync Data',
-        description: 'Last synced: 2 hours ago',
-        type: 'button',
-      },
-      {
-        id: 'clearData',
-        title: 'Clear App Data',
-        description: 'Remove all saved data and reset preferences',
-        type: 'button',
-      },
-    ],
-  },
-];
-
 export const SettingsScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
   const { isDarkMode, toggleTheme } = useThemeContext();
   const navigation = useNavigation();
-  
-  // Create a local copy of settings that we can modify
+  const mockSettings: SettingsSection[] = [
+    {
+      title: 'Appearance',
+      settings: [
+        {
+          id: 'darkMode',
+          title: 'Dark Mode',
+          description: 'Enable dark mode for better viewing in low light',
+          type: 'toggle',
+          value: true,
+        },
+        {
+          id: 'animations',
+          title: 'Enable Animations',
+          description: 'Show smooth transitions and animations',
+          type: 'toggle',
+          value: true,
+        },
+      ],
+    },
+    {
+      title: 'Notifications',
+      settings: [
+        {
+          id: 'quizReminders',
+          title: 'Quiz Reminders',
+          description: 'Get notified about pending quizzes',
+          type: 'toggle',
+          value: true,
+        },
+        {
+          id: 'progressUpdates',
+          title: 'Progress Updates',
+          description: 'Receive weekly progress summaries',
+          type: 'toggle',
+          value: false,
+        },
+      ],
+    },
+    {
+      title: 'Account',
+      settings: [
+        {
+          id: 'syncData',
+          title: 'Sync Data',
+          description: 'Last synced: 2 hours ago',
+          type: 'button',
+        },
+        {
+          id: 'clearData',
+          title: 'Clear App Data',
+          description: 'Remove all saved data with option to preserve selected items',
+          type: 'button',
+        },
+      ],
+    },
+  ];
+  // State declarations
+  const [storageClearModalVisible, setStorageClearModalVisible] = useState(false);
   const [settings, setSettings] = useState(mockSettings);
 
+  // Handle storage clearing with exceptions
+  const handleClearStorage = async (exceptCategories: StorageCategory[]) => {
+  try {
+    // Get all storage keys categorized
+    const categorizedKeys = await getCategorizedStorageKeys();
+    
+    // Get all keys to preserve based on selected categories
+    const keysToPreserve: string[] = [];
+    
+    // Add keys from selected categories to preserve list
+    exceptCategories.forEach(category => {
+      const categoryKeys = categorizedKeys[category] || [];
+      categoryKeys.forEach(keyInfo => {
+        keysToPreserve.push(keyInfo.key);
+      });
+    });
+    
+    console.log('Preserving categories:', exceptCategories);
+    console.log('Preserving keys:', keysToPreserve);
+    
+    // Clear storage with exceptions
+    await clearStorageWithExceptions(keysToPreserve);
+    
+    // Show success message
+    Alert.alert(
+      'Storage Cleared',
+      'App storage has been cleared successfully while preserving selected data.',
+      [{ text: 'OK' }]
+    );
+  } catch (error) {
+    console.error('Error clearing storage:', error);
+    Alert.alert(
+      'Error',
+      'Failed to clear storage. Please try again.',
+      [{ text: 'OK' }]
+    );
+  }
+};
+
+
+
+  // Create styles
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -152,6 +195,10 @@ export const SettingsScreen: React.FC = () => {
 
   const handleButtonPress = (settingId: string) => {
     console.log(`Button pressed: ${settingId}`);
+    
+    if (settingId === 'clearData') {
+      setStorageClearModalVisible(true);
+    }
   };
 
   return (
@@ -212,6 +259,13 @@ export const SettingsScreen: React.FC = () => {
           </View>
         ))}
       </ScrollView>
+      
+      {/* Storage Clear Modal */}
+      <StorageClearModal
+        visible={storageClearModalVisible}
+        onClose={() => setStorageClearModalVisible(false)}
+        onClearStorage={handleClearStorage}
+      />
     </View>
   );
 };

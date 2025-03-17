@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, TouchableOpacity, Dimensions, Modal, TextInput, Animated, Alert, Platform, Image } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -147,29 +147,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     }
   };
 
-  // Save profile changes
-  const saveProfileChanges = () => {
-    if (onProfileUpdate) {
-      onProfileUpdate({
-        name: editedName,
-        avatar: tempAvatar,
-      });
-    }
-    setIsEditAvatarModalVisible(false);
-  };
-
-  // Handle name edit
-  const handleNameEdit = () => {
-    setIsEditNameModalVisible(true);
-  };
-
-  const saveNameEdit = () => {
-    if (onProfileUpdate && editedName.trim() !== '') {
-      onProfileUpdate({ name: editedName });
-    }
-    setIsEditNameModalVisible(false);
-  };
-
   const styles = StyleSheet.create({
     header: {
       paddingTop: verticalScale(24),
@@ -255,7 +232,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       opacity: 0.9,
       fontSize: moderateScale(14),
       marginTop: verticalScale(2),
-      
     },
     editButton: {
       position: 'absolute',
@@ -290,7 +266,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       borderWidth: 1,
       borderColor: 'rgba(255,255,255,0.3)',
     },
-    // Modal styles
     modalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.7)',
@@ -386,6 +361,36 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       letterSpacing: 0.5,
     },
   });
+
+  // Save profile changes
+  useEffect(() => {
+    setEditedName(name);
+  }, [name]);
+  
+  const saveProfileChanges = () => {
+    if (onProfileUpdate) {
+      onProfileUpdate({
+        avatar: tempAvatar,
+      });
+    }
+    setIsEditAvatarModalVisible(false);
+  };
+  
+  const saveNameEdit = () => {
+    if (editedName && editedName.trim() !== '' && onProfileUpdate) {
+      onProfileUpdate({ 
+        name: editedName.trim() 
+      });
+    }
+    setIsEditNameModalVisible(false);
+  };
+  
+  const handleNameEdit = () => {
+    setIsEditNameModalVisible(true);
+    animateModalIn();
+  };
+
+    
 
   return (
     <>
