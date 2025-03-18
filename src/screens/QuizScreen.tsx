@@ -9,6 +9,7 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation';
 import { fetchQuestions } from '../services/questionService';
+import { addRecentSubject } from '../utils/recentSubjectsStorage';
 import { QuizNavigation } from '../molecules/QuizNavigation';
 import { QuizHeader } from '../molecules/QuizHeader';
 import { OptionsGrid } from '../molecules/OptionsGrid';
@@ -275,35 +276,43 @@ export const QuizScreen: React.FC = () => {
     }
   }, [currentQuestionIndex, questionStartTime, quizQuestions.length]);
 
-  const handleQuizSubmit = useCallback(() => {
+  const handleQuizSubmit = useCallback(async () => {
     const totalTime = Date.now() - quizStartTime;
     
     // Use functional update to get latest state
-    setQuestionAttempts(prevAttempts => {
-      const attemptsWithCorrectOptions = prevAttempts.map(attempt => {
-        const question = quizQuestions.find(q => q.id === attempt.questionId);
-        return {
-          ...attempt,
-          correctOptionId: question?.correctOptionId || '',
-        };
-      });
-      
-      const navigationParams = {
-        attempts: attemptsWithCorrectOptions,
-        totalTime,
-        mode,
-        subjectId,
-        topicId,
-        topicTitle,
-        subjectTitle,
-        questionsData: quizQuestions,
+    const attemptsWithCorrectOptions = questionAttempts.map(attempt => {
+      const question = quizQuestions.find(q => q.id === attempt.questionId);
+      return {
+        ...attempt,
+        correctOptionId: question?.correctOptionId || '',
       };
-      
-      console.log('[DEBUG] Navigation params:', navigationParams);
-      
-      navigation.replace('QuizResult', navigationParams);
-      return prevAttempts; // Preserve state for potential re-renders
     });
+    
+    const navigationParams = {
+      attempts: attemptsWithCorrectOptions,
+      totalTime,
+      mode,
+      subjectId,
+      topicId,
+      topicTitle,
+      subjectTitle,
+      questionsData: quizQuestions,
+    };
+    
+    console.log('[DEBUG] Navigation params:', navigationParams);
+    
+    // Update recent subjects when quiz is completed
+    if (subjectId) {
+      try {
+        await addRecentSubject(subjectId);
+        console.log('[DEBUG] Added subject to recent:', subjectId);
+      } catch (error) {
+        console.error('[ERROR] Failed to add recent subject:', error);
+      }
+    }
+    
+    navigation.replace('QuizResult', navigationParams);
+    return questionAttempts; // Preserve state for potential re-renders
   }, [navigation, quizStartTime, mode, quizQuestions, subjectId, topicId, topicTitle, subjectTitle]);
 
 

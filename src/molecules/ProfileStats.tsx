@@ -5,14 +5,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
-import { moderateScale, scale, verticalScale } from '../utils/scaling';
+import { moderateScale, scale, scaledFontSize, verticalScale } from '../utils/scaling';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface ProfileStatsProps {
   stats: {
     totalQuizzes: number;
-    correctAnswers: number;
+
     totalTime: number;
     xp: number;
     awards: number;
@@ -118,7 +118,7 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
   const getStatIcon = (index: number) => {
     const icons = [
       'book-open-variant',  // Quizzes
-      'check-circle',       // Correct
+      
       'clock-outline',      // Hours
       'star',               // XP
       'trophy',             // Awards
@@ -127,10 +127,31 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
     return icons[index] || 'information-outline';
   };
   
+  // Format time value to display hours and minutes
+  const formatTimeValue = (hours: number): string => {
+    const totalMinutes = Math.round(hours * 60);
+    const displayHours = Math.floor(totalMinutes / 60);
+    const displayMinutes = totalMinutes % 60;
+    return `${displayHours}h ${displayMinutes}m`;
+  };
+
   // Get the interpolated value for animations
   const getAnimatedValue = (index: number, value: number) => {
     // Ensure value is a valid number to prevent NaN
     const safeValue = isNaN(value) || value === undefined || value === null ? 0 : value;
+    
+    // For time stats (index 2), we'll format the output
+    if (index === 2) {
+      return valueAnims[index].interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, safeValue],
+        extrapolate: 'clamp'
+      }).interpolate({
+        inputRange: [0, safeValue],
+        outputRange: [0, safeValue],
+        extrapolate: 'clamp'
+      });
+    }
     
     return valueAnims[index].interpolate({
       inputRange: [0, 1],
@@ -156,7 +177,7 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
   const getStatTextColor = (index: number) => {
     const colors = [
       theme.colors.primary,       // Quizzes
-      theme.colors.success,       // Correct
+         // Correct
       theme.colors.info || '#2196F3', // Hours
       theme.colors.warning || '#FF9800', // XP
       theme.colors.error || '#F44336', // Awards
@@ -197,8 +218,8 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
       justifyContent: 'space-between',
       alignItems: 'flex-start',
       marginBottom: verticalScale(isSmallScreen ? 10 : 20),
-      paddingHorizontal: scale(isSmallScreen ? 8 : 16),
-      gap: scale(isSmallScreen ? 4 : 8),
+      paddingHorizontal: scale(isSmallScreen ? 1 : 2),
+      gap: scale(isSmallScreen ? 1 : 4),
       zIndex: 2,
     },
     sectionTitle: {
@@ -220,9 +241,8 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
       paddingVertical: verticalScale(isSmallScreen ? 10 : 14),
       paddingHorizontal: scale(isSmallScreen ? 8 : 12),
       borderRadius: theme.roundness * 1.5,
-      // Adjust width to fit two items per row
-      width: isSmallScreen ? scale(130) : isMediumScreen ? scale(140) : scale(150),
-      minWidth: isSmallScreen ? scale(120) : scale(130),
+      // Calculate width to maintain two columns with proper spacing
+      width: (SCREEN_WIDTH - scale(isSmallScreen ? 48 : 64)) / 2 - scale(isSmallScreen ? 4 : 8),
       // Ensure the height is consistent
       height: isSmallScreen ? verticalScale(90) : verticalScale(100),
       shadowColor: theme.colors.neuDark,
@@ -233,7 +253,7 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
       borderWidth: moderateScale(1.5),
       borderColor: theme.colors.neuLight,
       marginBottom: verticalScale(12),
-      marginHorizontal: 0,
+      marginHorizontal: scale(4),
       position: 'relative',
       overflow: 'hidden',
     },
@@ -257,14 +277,10 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
       opacity: 0.9,
     },
     statValue: {
+      fontSize: scaledFontSize(isSmallScreen ? 14 : 16),
       fontWeight: 'bold',
-      color: theme.colors.primary,
-      fontSize: isSmallScreen ? moderateScale(22) : isMediumScreen ? moderateScale(26) : moderateScale(30),
-      marginBottom: verticalScale(isSmallScreen ? 4 : 6),
-      textShadowColor: theme.colors.neuDark,
-      textShadowOffset: { width: moderateScale(1), height: moderateScale(1) },
-      textShadowRadius: moderateScale(2),
-      letterSpacing: 0.5,
+      color: theme.colors.onSurface,
+      marginTop: verticalScale(4),
     },
     statLabel: {
       color: theme.colors.onSurfaceVariant,
@@ -280,14 +296,14 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
   // Array of stat values for easier mapping
   const statValues = [
     stats.totalQuizzes || 0,
-    stats.correctAnswers || 0,
+   
     stats.totalTime || 0,
     stats.xp || 0,
     stats.awards || 0
   ];
   
   // Array of stat labels
-  const statLabels = ['Quizzes', 'Correct', 'Hours', 'XP', 'Awards'];
+  const statLabels = ['Quizzes', 'Hours', 'XP', 'Awards'];
   
   return (
     <Animated.View 
