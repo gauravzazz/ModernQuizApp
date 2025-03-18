@@ -8,17 +8,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Navigation } from './src/navigation';
 import { NotificationProvider, useNotifications } from './src/context/NotificationContext';
 import { ThemeProvider, useThemeContext } from './src/context/ThemeContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { NotificationService } from './src/services/notificationService';
 import { SplashScreen } from './src/screens/SplashScreen';
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
+import { SignInScreen } from './src/screens/SignInScreen';
+import { SignUpScreen } from './src/screens/SignUpScreen';
 
 const AppContent = () => {
   const { theme } = useThemeContext();
   const { addNotification } = useNotifications();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
   const [isLoading, setIsLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [authScreen, setAuthScreen] = useState<'signin' | 'signup'>('signin');
 
   useEffect(() => {
     // Check if user has completed onboarding
@@ -83,6 +88,23 @@ const AppContent = () => {
   if (!hasCompletedOnboarding) {
     return <OnboardingScreen onComplete={handleOnboardingComplete} />;
   }
+  
+  // Handle authentication flow
+  if (!isAuthenticated && !authLoading) {
+    return (
+      <PaperProvider theme={theme}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <SafeAreaView style={styles.container}>
+            {authScreen === 'signin' ? (
+              <SignInScreen onSignUpPress={() => setAuthScreen('signup')} />
+            ) : (
+              <SignUpScreen onSignInPress={() => setAuthScreen('signin')} />
+            )}
+          </SafeAreaView>
+        </GestureHandlerRootView>
+      </PaperProvider>
+    );
+  }
 
   return (
     <PaperProvider theme={theme}>
@@ -99,7 +121,9 @@ export default function App() {
   return (
     <ThemeProvider>
       <NotificationProvider>
-        <AppContent />
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
       </NotificationProvider>
     </ThemeProvider>
   );

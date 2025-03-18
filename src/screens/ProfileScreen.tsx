@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, ScrollView, StatusBar, Dimensions } from 'react-native';
+import { StyleSheet, View, ScrollView, StatusBar, Dimensions, Alert } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../context/AuthContext';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
 import { ProgressBar } from '../atoms/ProgressBar';
@@ -23,10 +24,33 @@ export const ProfileScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const { signOut } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [refreshProfile, setRefreshProfile] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'stats' | 'awards'>('stats');
+  
+  const handleSignOut = async () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Sign Out', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+              // Navigation will be handled by the AuthNavigator in App.tsx
+            } catch (error) {
+              console.error('Error signing out:', error);
+            }
+          } 
+        },
+      ]
+    );
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -168,6 +192,15 @@ export const ProfileScreen: React.FC = () => {
             <ProgressBar progress={profile.stats.weeklyQuizzes / 10} />
           </View>
         </View>
+      </View>
+      
+      <View style={styles.progressSection}>
+        <Button 
+          label="Sign Out" 
+          variant="outline" 
+          onPress={handleSignOut} 
+          fullWidth 
+        />
       </View>
     </View>
   );

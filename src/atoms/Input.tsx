@@ -3,7 +3,7 @@ import { StyleSheet, TextInput, TextInputProps, View } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { AppTheme } from '../theme';
 import { Typography } from './Typography';
-import LinearGradient from 'react-native-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import { moderateScale, scaledSpacing, scaledFontSize, scaledRadius } from '../utils/scaling';
 
 export interface InputProps extends TextInputProps {
