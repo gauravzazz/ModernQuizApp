@@ -276,6 +276,37 @@ export const ProgressScreen: React.FC = () => {
       justifyContent: 'center',
       padding: scaledSpacing(24),
     },
+    noResultsContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: moderateScale(24),
+      paddingVertical: moderateScale(48),
+      backgroundColor: theme.colors.neuPrimary,
+      borderRadius: theme.roundness * 2,
+      shadowColor: theme.colors.neuDark,
+      shadowOffset: { width: 5, height: 5 },
+      shadowOpacity: 0.5,
+      shadowRadius: 10,
+      elevation: 8,
+      borderWidth: 1.5,
+      borderColor: theme.colors.neuLight,
+      margin: moderateScale(16),
+    },
+    noResultsEmoji: {
+      fontSize: 48,
+      marginBottom: moderateScale(16),
+      textShadowColor: theme.colors.neuDark,
+      textShadowOffset: { width: 2, height: 2 },
+      textShadowRadius: 4,
+    },
+    noResultsTitle: {
+      marginBottom: moderateScale(8),
+      textAlign: 'center',
+    },
+    noResultsText: {
+      textAlign: 'center',
+    },
   });
   
   if (loading) {
@@ -293,14 +324,27 @@ export const ProgressScreen: React.FC = () => {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Typography style={styles.title}>Your Progress</Typography>
-          <Typography style={styles.subtitle}>
-            Track your learning journey and performance over time
-          </Typography>
+          <NavigationButton 
+            variant="left" 
+            onPress={() => navigation.goBack()} 
+          />
+          <Typography variant="h4" weight="bold" style={styles.title}>Progress</Typography>
         </View>
         
-        <View style={styles.emptyState}>
-          <Typography>No quiz data available yet. Complete some quizzes to see your progress!</Typography>
+        <View style={styles.noResultsContainer}>
+          <Typography variant="h5" weight="bold" style={styles.noResultsEmoji}>
+            📊
+          </Typography>
+          <Typography variant="h6" weight="bold" style={styles.noResultsTitle}>
+            No Progress Data Yet
+          </Typography>
+          <Typography
+            variant="body1"
+            color="onSurfaceVariant"
+            style={styles.noResultsText}
+          >
+            Complete some quizzes to see your learning progress and analytics here.
+          </Typography>
         </View>
       </View>
     );
