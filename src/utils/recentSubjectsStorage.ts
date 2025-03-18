@@ -4,6 +4,18 @@ import { mockSubjects } from '../data/mockData';
 const RECENT_SUBJECTS_KEY = '@recent_subjects';
 const MAX_RECENT_SUBJECTS = 5;
 
+type Listener = () => void;
+const listeners = new Set<Listener>();
+
+export const subscribeToRecentSubjects = (listener: Listener) => {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+};
+
+const notifyListeners = () => {
+  listeners.forEach(listener => listener());
+};
+
 export const addRecentSubject = async (subjectId: string) => {
   console.log(`[RecentSubjects] Adding subject with ID: ${subjectId}`);
   try {
@@ -22,6 +34,7 @@ export const addRecentSubject = async (subjectId: string) => {
     
     await AsyncStorage.setItem(RECENT_SUBJECTS_KEY, JSON.stringify(limitedSubjects));
     console.log('[RecentSubjects] Successfully saved updated subjects list');
+    notifyListeners();
   } catch (error) {
     console.error('[RecentSubjects] Error adding recent subject:', error);
   }

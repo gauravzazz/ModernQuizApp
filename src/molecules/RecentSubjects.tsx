@@ -8,7 +8,7 @@ import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
 import { SubjectCard } from './SubjectCard';
 import { mockSubjects } from '../data/mockData';
-import { fetchRecentSubjects } from '../utils/recentSubjectsStorage';
+import { fetchRecentSubjects, subscribeToRecentSubjects } from '../utils/recentSubjectsStorage';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -32,6 +32,14 @@ export const RecentSubjects: React.FC<RecentSubjectsProps> = ({ searchQuery = ''
     };
 
     loadRecentSubjects();
+
+    const unsubscribe = subscribeToRecentSubjects(() => {
+      loadRecentSubjects();
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const styles = StyleSheet.create({

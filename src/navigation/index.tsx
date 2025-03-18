@@ -87,6 +87,7 @@ const MainStack = () => {
         animation: 'slide_from_right',
       }}
     >
+      <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="SubjectDetail" component={SubjectDetailScreen} />
       <Stack.Screen name="Quiz" component={QuizScreen} />
       <Stack.Screen name="Progress" component={ProgressScreen} />

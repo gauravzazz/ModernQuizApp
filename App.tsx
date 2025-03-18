@@ -90,22 +90,22 @@ const AppContent = () => {
   }
   
   // Handle authentication flow
-  if (!isAuthenticated && !authLoading) {
-    return (
-      <PaperProvider theme={theme}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <SafeAreaView style={styles.container}>
-            {authScreen === 'signin' ? (
-              <SignInScreen onSignUpPress={() => setAuthScreen('signup')} />
-            ) : (
-              <SignUpScreen onSignInPress={() => setAuthScreen('signin')} />
-            )}
-          </SafeAreaView>
-        </GestureHandlerRootView>
-      </PaperProvider>
-    );
-  }
-
+  // if (!isAuthenticated && !authLoading) {
+  //   return (
+  //     <PaperProvider theme={theme}>
+  //       <GestureHandlerRootView style={{ flex: 1 }}>
+  //         <SafeAreaView style={styles.container}>
+  //           {authScreen === 'signin' ? (
+  //             <SignInScreen onSignUpPress={() => setAuthScreen('signup')} />
+  //           ) : (
+  //             <SignUpScreen onSignInPress={() => setAuthScreen('signin')} />
+  //           )}
+  //         </SafeAreaView>
+  //       </GestureHandlerRootView>
+  //     </PaperProvider>
+  //   );
+  // }
+  if (authLoading) return null;
   return (
     <PaperProvider theme={theme}>
       <GestureHandlerRootView style={{ flex: 1 }}>
