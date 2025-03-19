@@ -28,8 +28,14 @@ export const QuizScoreCard: React.FC<QuizScoreCardProps> = ({
 }) => {
   const theme = useTheme<AppTheme>();
   
-  const minutes = Math.floor(totalTime / 60000);
-  const seconds = Math.floor((totalTime % 60000) / 1000);
+  // Ensure values are valid numbers to prevent NaN
+  const safeScore = isNaN(score) || score === undefined || score === null ? 0 : score;
+  const safeAccuracy = isNaN(accuracy) || accuracy === undefined || accuracy === null ? 0 : accuracy;
+  const safeAvgTime = isNaN(avgTimePerQuestion) || avgTimePerQuestion === undefined || avgTimePerQuestion === null ? 0 : avgTimePerQuestion;
+  
+  // Calculate time values with validation
+  const minutes = Math.floor((totalTime || 0) / 60000);
+  const seconds = Math.floor(((totalTime || 0) % 60000) / 1000);
 
   const styles = StyleSheet.create({
     resultCard: {
@@ -76,9 +82,9 @@ export const QuizScoreCard: React.FC<QuizScoreCardProps> = ({
   return (
     <View style={styles.resultCard}>
       <View style={styles.scoreContainer}>
-        <Typography style={styles.scoreText}>{score}%</Typography>
+        <Typography style={styles.scoreText}>{safeScore}%</Typography>
         <Typography style={styles.scoreLabel}>
-          {score >= 70 ? 'Great job!' : score >= 40 ? 'Good effort!' : 'Keep practicing!'}
+          {safeScore >= 70 ? 'Great job!' : safeScore >= 40 ? 'Good effort!' : 'Keep practicing!'}
         </Typography>
       </View>
 
@@ -107,7 +113,7 @@ export const QuizScoreCard: React.FC<QuizScoreCardProps> = ({
         <View style={styles.statItem}>
           <MaterialCommunityIcons name="target" size={24} color={theme.colors.primary} />
           <Typography variant="h6" style={{marginTop: 4}}>
-            {accuracy}%
+            {safeAccuracy}%
           </Typography>
           <Typography variant="caption">Accuracy</Typography>
         </View>
@@ -123,7 +129,7 @@ export const QuizScoreCard: React.FC<QuizScoreCardProps> = ({
         <View style={styles.statItem}>
           <MaterialCommunityIcons name="timer-outline" size={24} color={theme.colors.primary} />
           <Typography variant="h6" style={{marginTop: 4}}>
-            {avgTimePerQuestion.toFixed(1)}s
+            {safeAvgTime.toFixed(1)}s
           </Typography>
           <Typography variant="caption">Avg Time/Q</Typography>
         </View>

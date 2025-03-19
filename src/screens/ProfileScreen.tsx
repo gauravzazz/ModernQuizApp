@@ -13,7 +13,9 @@ import { ProfileStats } from '../molecules/ProfileStats';
 import { ProfileTabs } from '../molecules/ProfileTabs';
 import { ProfileAwards } from '../molecules/ProfileAwards';
 
-import { getUserProfile, saveUserProfile } from '../services/profileService';
+import { saveUserProfile } from '../services/profileService';
+import { useProfileData } from '../hooks/useProfileData';
+import { registerAnalyticsListener, unregisterAnalyticsListener } from '../services/analyticsService';
 import { UserProfile } from '../types/profile';
 import { moderateScale, scale, scaledRadius, verticalScale } from '../utils/scaling';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,9 +27,7 @@ export const ProfileScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { signOut } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [refreshProfile, setRefreshProfile] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const { profile, loading, error, refreshProfile } = useProfileData();
   const [activeTab, setActiveTab] = useState<'stats' | 'awards'>('stats');
   
   const handleSignOut = async () => {
@@ -52,20 +52,20 @@ export const ProfileScreen: React.FC = () => {
     );
   };
 
+  // Register for analytics updates to refresh profile when quiz data changes
   useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        setLoading(true);
-        const userProfile = await getUserProfile();
-        setProfile(userProfile);
-      } catch (error) {
-        console.error('Error loading profile:', error);
-      } finally {
-        setLoading(false);
-      }
+    // Create a listener function that will refresh profile data
+    const handleAnalyticsUpdate = () => {
+      refreshProfile();
     };
-
-    loadProfile();
+    
+    // Register the listener
+    registerAnalyticsListener(handleAnalyticsUpdate);
+    
+    // Clean up listener when component unmounts
+    return () => {
+      unregisterAnalyticsListener(handleAnalyticsUpdate);
+    };
   }, [refreshProfile]);
 
   const styles = StyleSheet.create({
@@ -235,7 +235,7 @@ export const ProfileScreen: React.FC = () => {
             };
             
             await saveUserProfile(updatedProfile);
-            setRefreshProfile(prev => prev + 1); // Trigger profile reload
+            refreshProfile(); // Trigger profile reload
           } catch (error) {
             console.error('Error updating profile:', error);
           }

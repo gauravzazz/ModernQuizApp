@@ -14,35 +14,31 @@ import { TopicPerformanceSection } from '../molecules/TopicPerformanceSection';
 import { TimePerformanceSection } from '../molecules/TimePerformanceSection';
 import { QuestionDifficultySection } from '../molecules/QuestionDifficultySection';
 import { moderateScale, scaledSpacing } from '../utils/scaling';
-import {
-  getQuizHistory,
-  getAllSubjectAnalytics,
-  getAllTopicAnalytics,
-  getQuizAnalytics,
-  SubjectAnalytics,
-  TopicAnalytics,
-  ProcessedQuizResult
-} from '../services/quizResultService';
+import { registerAnalyticsListener, unregisterAnalyticsListener } from '../services/analyticsService';
+import { useProgressData } from '../hooks/useProgressData';
 
 export const ProgressScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
   const { width: screenWidth } = Dimensions.get('window');
   const navigation = useNavigation();
   
-  // State for time range filtering
-  const [timeRange, setTimeRange] = useState<TimeRange>('week');
-  
-  // State for analytics data
-  const [quizHistory, setQuizHistory] = useState<ProcessedQuizResult[]>([]);
-  const [subjects, setSubjects] = useState<SubjectAnalytics[]>([]);
-  const [topics, setTopics] = useState<TopicAnalytics[]>([]);
-  const [totalQuizzes, setTotalQuizzes] = useState(0);
-  const [accuracy, setAccuracy] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [averageScore, setAverageScore] = useState(0);
-  const [timeData, setTimeData] = useState<Array<{ date: string; score: number }>>([]);
-  const [difficultyData, setDifficultyData] = useState({ easy: 0, medium: 0, hard: 0 });
-  const [loading, setLoading] = useState(true);
+  // Use the custom hook for progress data
+  const {
+    timeRange,
+    quizHistory,
+    subjects,
+    topics,
+    totalQuizzes,
+    accuracy,
+    streak,
+    averageScore,
+    timeData,
+    difficultyData,
+    loading,
+    error,
+    handleTimeRangeChange,
+    refreshProgress
+  } = useProgressData('week');
   
   // State for collapsible sections
   const [overviewExpanded, setOverviewExpanded] = useState(true);
@@ -121,126 +117,21 @@ export const ProgressScreen: React.FC = () => {
     }).start();
   };
   
-  // Handle time range change
-  const handleTimeRangeChange = (range: TimeRange) => {
-    setTimeRange(range);
-  };
-  
-  // Filter data based on selected time range
-  const filterDataByTimeRange = (data: any[], dateField: string = 'lastAttempted') => {
-    const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    
-    if (timeRange === 'week') {
-      return data.filter(item => new Date(item[dateField]) >= weekAgo);
-    } else if (timeRange === 'month') {
-      return data.filter(item => new Date(item[dateField]) >= monthAgo);
-    }
-    
-    return data;
-  };
-  
-  // Load analytics data
+  // Register for analytics updates to refresh progress data when quiz data changes
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        // Fetch quiz history
-        const history = await getQuizHistory();
-        const filteredHistory = filterDataByTimeRange(history, 'timestamp');
-        setQuizHistory(filteredHistory);
-        
-        // Fetch subject analytics
-        const allSubjects = await getAllSubjectAnalytics();
-        const filteredSubjects = filterDataByTimeRange(allSubjects);
-        setSubjects(filteredSubjects);
-        
-        // Fetch topic analytics
-        const allTopics = await getAllTopicAnalytics();
-        const filteredTopics = filterDataByTimeRange(allTopics);
-        setTopics(filteredTopics);
-        
-        // Fetch overall quiz analytics
-        const analytics = await getQuizAnalytics();
-        setTotalQuizzes(filteredHistory.length);
-        
-        // Calculate accuracy
-        if (filteredHistory.length > 0) {
-          const totalCorrect = filteredHistory.reduce((sum, quiz) => sum + quiz.correctAnswers, 0);
-          const totalQuestions = filteredHistory.reduce((sum, quiz) => sum + quiz.totalQuestions, 0);
-          const calculatedAccuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
-          setAccuracy(calculatedAccuracy);
-          
-          // Calculate average score
-          const totalScore = filteredHistory.reduce((sum, quiz) => sum + quiz.scorePercentage, 0);
-          const calculatedAvgScore = Math.round(totalScore / filteredHistory.length);
-          setAverageScore(calculatedAvgScore);
-        }
-        
-        // Mock streak data (in a real app, this would come from user profile)
-        setStreak(5);
-        
-        // Prepare time performance data
-        const timePerformanceData = prepareTimePerformanceData(filteredHistory);
-        setTimeData(timePerformanceData);
-        
-        // Prepare difficulty distribution data
-        const difficultyDistribution = prepareDifficultyData(filteredHistory);
-        setDifficultyData(difficultyDistribution);
-      } catch (error) {
-        console.error('Error loading analytics data:', error);
-      } finally {
-        setLoading(false);
-      }
+    // Create a listener function that will refresh progress data
+    const handleAnalyticsUpdate = () => {
+      refreshProgress();
     };
     
-    loadData();
-  }, [timeRange]);
-  
-  // Prepare time performance data
-  const prepareTimePerformanceData = (history: ProcessedQuizResult[]) => {
-    // Group quizzes by date and calculate average score for each date
-    const dateMap = new Map<string, { totalScore: number; count: number }>();
+    // Register the listener
+    registerAnalyticsListener(handleAnalyticsUpdate);
     
-    history.forEach(quiz => {
-      const date = new Date(quiz.timestamp).toISOString().split('T')[0];
-      if (!dateMap.has(date)) {
-        dateMap.set(date, { totalScore: 0, count: 0 });
-      }
-      const dateData = dateMap.get(date)!;
-      dateData.totalScore += quiz.scorePercentage;
-      dateData.count += 1;
-    });
-    
-    // Convert map to array and sort by date
-    const result = Array.from(dateMap.entries()).map(([date, data]) => ({
-      date,
-      score: Math.round(data.totalScore / data.count)
-    }));
-    
-    return result.sort((a, b) => a.date.localeCompare(b.date));
-  };
-  
-  // Prepare difficulty distribution data
-  const prepareDifficultyData = (history: ProcessedQuizResult[]) => {
-    // Count questions by difficulty based on score
-    let easy = 0;
-    let medium = 0;
-    let hard = 0;
-    
-    history.forEach(quiz => {
-      if (quiz.scorePercentage >= 80) {
-        easy += 1;
-      } else if (quiz.scorePercentage >= 50) {
-        medium += 1;
-      } else {
-        hard += 1;
-      }
-    });
-    
-    return { easy, medium, hard };
-  };
+    // Clean up listener when component unmounts
+    return () => {
+      unregisterAnalyticsListener(handleAnalyticsUpdate);
+    };
+  }, [refreshProgress]);
   
   const styles = StyleSheet.create({
     container: {

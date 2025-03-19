@@ -71,14 +71,19 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
   const strokeWidth = screenWidth < 360 ? 1.5 : 2;
   const fontSize = screenWidth < 360 ? 10 : 12;
   
-  // Prepare data for time chart with responsive settings
+  // Validate timePerQuestion array to prevent NaN values
+  const safeTimePerQuestion = Array.isArray(timePerQuestion) ? 
+    timePerQuestion.map(time => isNaN(time) || time === undefined || time === null ? 0 : time) : 
+    [];
+  
+  // Prepare data for time chart with responsive settings and safe values
   const timeChartData = {
-    labels: timePerQuestion.length > 8 && screenWidth < 400 
-      ? timePerQuestion.map((_, index) => index % 2 === 0 ? `Q${index + 1}` : '') // Show every other label on small screens
-      : timePerQuestion.map((_, index) => `Q${index + 1}`),
+    labels: safeTimePerQuestion.length > 8 && screenWidth < 400 
+      ? safeTimePerQuestion.map((_, index) => index % 2 === 0 ? `Q${index + 1}` : '') // Show every other label on small screens
+      : safeTimePerQuestion.map((_, index) => `Q${index + 1}`),
     datasets: [
       {
-        data: timePerQuestion,
+        data: safeTimePerQuestion,
         color: () => theme.colors.primary,
         strokeWidth
       }
@@ -86,11 +91,16 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
     legend: ['Time (seconds)']
   };
 
-  // Prepare data for pie chart
+  // Ensure values are valid numbers to prevent NaN
+  const safeCorrectAnswers = isNaN(correctAnswers) || correctAnswers === undefined || correctAnswers === null ? 0 : correctAnswers;
+  const safeIncorrectAnswers = isNaN(incorrectAnswers) || incorrectAnswers === undefined || incorrectAnswers === null ? 0 : incorrectAnswers;
+  const safeSkippedAnswers = isNaN(skippedAnswers) || skippedAnswers === undefined || skippedAnswers === null ? 0 : skippedAnswers;
+  
+  // Prepare data for pie chart with safe values
   const pieChartData = [
     {
       name: 'Correct',
-      population: correctAnswers,
+      population: safeCorrectAnswers,
       color: theme.colors.success,
       legendFontColor: theme.colors.onSurface,
       legendFontSize: fontSize,
@@ -98,7 +108,7 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
     },
     {
       name: 'Incorrect',
-      population: incorrectAnswers,
+      population: safeIncorrectAnswers,
       color: theme.colors.error,
       legendFontColor: theme.colors.onSurface,
       legendFontSize: fontSize,
@@ -106,7 +116,7 @@ export const QuizResultCharts: React.FC<QuizResultChartsProps> = ({
     },
     {
       name: 'Skipped',
-      population: skippedAnswers,
+      population: safeSkippedAnswers,
       color: theme.colors.warning,
       legendFontColor: theme.colors.onSurface,
       legendFontSize: fontSize,

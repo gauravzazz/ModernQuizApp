@@ -29,63 +29,7 @@ export const SettingsScreen: React.FC = () => {
   const theme = useTheme<AppTheme>();
   const { isDarkMode, toggleTheme } = useThemeContext();
   const navigation = useNavigation();
-  const mockSettings: SettingsSection[] = [
-    {
-      title: 'Appearance',
-      settings: [
-        {
-          id: 'darkMode',
-          title: 'Dark Mode',
-          description: 'Enable dark mode for better viewing in low light',
-          type: 'toggle',
-          value: true,
-        },
-        {
-          id: 'animations',
-          title: 'Enable Animations',
-          description: 'Show smooth transitions and animations',
-          type: 'toggle',
-          value: true,
-        },
-      ],
-    },
-    {
-      title: 'Notifications',
-      settings: [
-        {
-          id: 'quizReminders',
-          title: 'Quiz Reminders',
-          description: 'Get notified about pending quizzes',
-          type: 'toggle',
-          value: true,
-        },
-        {
-          id: 'progressUpdates',
-          title: 'Progress Updates',
-          description: 'Receive weekly progress summaries',
-          type: 'toggle',
-          value: false,
-        },
-      ],
-    },
-    {
-      title: 'Account',
-      settings: [
-        {
-          id: 'syncData',
-          title: 'Sync Data',
-          description: 'Last synced: 2 hours ago',
-          type: 'button',
-        },
-        {
-          id: 'clearData',
-          title: 'Clear App Data',
-          description: 'Remove all saved data with option to preserve selected items',
-          type: 'button',
-        },
-      ],
-    },
-  ];
+  
   // State declarations
   const [storageClearModalVisible, setStorageClearModalVisible] = useState(false);
   const [settings, setSettings] = useState(mockSettings);
@@ -129,7 +73,63 @@ export const SettingsScreen: React.FC = () => {
   }
 };
 
-
+const mockSettings: SettingsSection[] = [
+  {
+    title: 'Appearance',
+    settings: [
+      {
+        id: 'darkMode',
+        title: 'Dark Mode',
+        description: 'Enable dark mode for better viewing in low light',
+        type: 'toggle',
+        value: true,
+      },
+      {
+        id: 'animations',
+        title: 'Enable Animations',
+        description: 'Show smooth transitions and animations',
+        type: 'toggle',
+        value: true,
+      },
+    ],
+  },
+  {
+    title: 'Notifications',
+    settings: [
+      {
+        id: 'quizReminders',
+        title: 'Quiz Reminders',
+        description: 'Get notified about pending quizzes',
+        type: 'toggle',
+        value: true,
+      },
+      {
+        id: 'progressUpdates',
+        title: 'Progress Updates',
+        description: 'Receive weekly progress summaries',
+        type: 'toggle',
+        value: false,
+      },
+    ],
+  },
+  {
+    title: 'Account',
+    settings: [
+      {
+        id: 'syncData',
+        title: 'Sync Data',
+        description: 'Last synced: 2 hours ago',
+        type: 'button',
+      },
+      {
+        id: 'clearData',
+        title: 'Clear App Data',
+        description: 'Remove all saved data with option to preserve selected items',
+        type: 'button',
+      },
+    ],
+  },
+];
 
   // Create styles
   const styles = StyleSheet.create({

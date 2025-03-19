@@ -140,14 +140,10 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
     // Ensure value is a valid number to prevent NaN
     const safeValue = isNaN(value) || value === undefined || value === null ? 0 : value;
     
-    // For time stats (index 2), we'll format the output
-    if (index === 2) {
+    // For time stats (index 1), we'll format the output
+    if (index === 1) {
       return valueAnims[index].interpolate({
         inputRange: [0, 1],
-        outputRange: [0, safeValue],
-        extrapolate: 'clamp'
-      }).interpolate({
-        inputRange: [0, safeValue],
         outputRange: [0, safeValue],
         extrapolate: 'clamp'
       });
@@ -355,11 +351,17 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
                   color: getStatTextColor(index)
                 }]}
               >
-                {valueAnims[index].interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [`0`, `${Math.floor(value)}`],
-                  extrapolate: 'clamp'
-                })}
+                {index === 1 
+                  ? formatTimeValue(parseFloat(valueAnims[index].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, value || 0],
+                      extrapolate: 'clamp'
+                    }).toString()))
+                  : valueAnims[index].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [`0`, `${Math.floor(value)}`],
+                      extrapolate: 'clamp'
+                    })}
               </Animated.Text>
               <Typography 
                 style={[styles.statLabel, {

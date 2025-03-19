@@ -379,19 +379,30 @@ export const QuizResultScreen: React.FC = () => {
     (attempt) => attempt.isSkipped || attempt.selectedOptionId === null
   ).length;
 
-  const score = Math.round((correctAnswers / attempts.length) * 100);
-  const accuracy = correctAnswers > 0 ? Math.round((correctAnswers / (correctAnswers + incorrectAnswers)) * 100) : 0;
-  const minutes = Math.floor(totalTime / 60000);
-  const seconds = Math.floor((totalTime % 60000) / 1000);
+  // Handle edge case where there are no attempts
+  const hasAttempts = Array.isArray(attempts) && attempts.length > 0;
   
-  // Create a map of time spent per question
-  const timePerQuestion = attempts.reduce((acc, attempt) => {
-    acc[attempt.questionId] = attempt.timeSpent;
+  // Calculate score with validation to prevent NaN
+  const score = hasAttempts ? Math.round((correctAnswers / attempts.length) * 100) : 0;
+  
+  // Calculate accuracy with validation to prevent NaN
+  const totalAnswered = correctAnswers + incorrectAnswers;
+  const accuracy = totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
+  
+  // Calculate time values
+  const minutes = Math.floor((totalTime || 0) / 60000);
+  const seconds = Math.floor(((totalTime || 0) % 60000) / 1000);
+  
+  // Create a map of time spent per question with validation
+  const timePerQuestion = hasAttempts ? attempts.reduce((acc, attempt) => {
+    acc[attempt.questionId] = attempt.timeSpent || 0; // Ensure timeSpent is a number
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, number>) : {};
   
-  // Calculate average time per question in seconds
-  const avgTimePerQuestion = Object.values(timePerQuestion).reduce((sum, time) => sum + time, 0) / attempts.length / 1000;
+  // Calculate average time per question in seconds with validation to prevent NaN
+  const avgTimePerQuestion = hasAttempts ? 
+    Object.values(timePerQuestion).reduce((sum, time) => sum + (time || 0), 0) / attempts.length / 1000 : 
+    0;
   
   // Prepare data for time chart
   const timeChartData = {
@@ -569,7 +580,7 @@ export const QuizResultScreen: React.FC = () => {
           correctAnswers={correctAnswers}
           incorrectAnswers={incorrectAnswers}
           skippedAnswers={skippedAnswers}
-          timePerQuestion={attempts.map(attempt => attempt.timeSpent / 1000)}
+          timePerQuestion={attempts.map(attempt => (attempt.timeSpent || 0) / 1000)}
           screenWidth={screenWidth}
         />
         
