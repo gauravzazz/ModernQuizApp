@@ -118,7 +118,6 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
   const getStatIcon = (index: number) => {
     const icons = [
       'book-open-variant',  // Quizzes
-      
       'clock-outline',      // Hours
       'star',               // XP
       'trophy',             // Awards
@@ -129,9 +128,17 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
   
   // Format time value to display hours and minutes
   const formatTimeValue = (hours: number): string => {
+    // Check if hours is a valid number
+    if (isNaN(hours) || hours === undefined || hours === null) {
+      console.log('[TIME_DEBUG] Invalid hours value in formatTimeValue:', hours);
+      return '0h 0m'; // Return default value for invalid input
+    }
+    
+    console.log('[TIME_DEBUG] Valid hours value in formatTimeValue:', hours);
     const totalMinutes = Math.round(hours * 60);
     const displayHours = Math.floor(totalMinutes / 60);
     const displayMinutes = totalMinutes % 60;
+    console.log('[TIME_DEBUG] Calculated display values:', { totalMinutes, displayHours, displayMinutes });
     return `${displayHours}h ${displayMinutes}m`;
   };
 
@@ -352,14 +359,14 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({ stats }) => {
                 }]}
               >
                 {index === 1 
-                  ? formatTimeValue(parseFloat(valueAnims[index].interpolate({
+                  ? valueAnims[index].interpolate({
                       inputRange: [0, 1],
-                      outputRange: [0, value || 0],
+                      outputRange: ['0h 0m', formatTimeValue(value || 0)],
                       extrapolate: 'clamp'
-                    }).toString()))
+                    })
                   : valueAnims[index].interpolate({
                       inputRange: [0, 1],
-                      outputRange: [`0`, `${Math.floor(value)}`],
+                      outputRange: [`0`, `${Math.floor(value || 0)}`],
                       extrapolate: 'clamp'
                     })}
               </Animated.Text>

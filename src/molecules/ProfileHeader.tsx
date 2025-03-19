@@ -451,17 +451,6 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </Typography>
           </View>
         </View>
-
-        {onEditPress && (
-          <TouchableOpacity style={styles.editButton} activeOpacity={0.8} onPress={onEditPress}>
-            <MaterialCommunityIcons 
-              name="account-edit" 
-              size={moderateScale(20)} 
-              color="#FFFFFF" 
-            />
-          </TouchableOpacity>
-        )}
-
         <View style={styles.levelBadge}>
           <MaterialCommunityIcons 
             name="star" 

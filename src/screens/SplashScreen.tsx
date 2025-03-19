@@ -72,7 +72,7 @@ export const SplashScreen = ({ onLoadingComplete }: SplashScreenProps) => {
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
     >
-      <View style={[styles.content, { backgroundColor: theme.colors.neuPrimary }]}>
+      <View style={[styles.content, ]}>
         <Animated.View
           style={[
             styles.logoContainer,

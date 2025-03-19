@@ -150,8 +150,13 @@ export const processAndSaveQuizResult = async (
     totalTime
   );
   
-  // Update user profile stats
-  await updateUserStats(correctAnswers, attempts.length, totalTime / 60, mode);
+  // Add logging to debug time calculation
+  console.log('[TIME_DEBUG] Total time in ms before conversion:', totalTime);
+  console.log('[TIME_DEBUG] Total time in minutes:', totalTime / 60000);
+  console.log('[TIME_DEBUG] Total time passed to updateUserStats (min):', totalTime / 60000);
+  
+  // Update user profile stats - Fix: Convert ms to minutes properly
+  await updateUserStats(correctAnswers, attempts.length, totalTime / 60000, mode);
   
   return processedResult;
 };

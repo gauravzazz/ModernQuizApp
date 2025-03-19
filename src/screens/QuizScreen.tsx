@@ -278,6 +278,12 @@ export const QuizScreen: React.FC = () => {
   const handleQuizSubmit = useCallback(() => {
     const totalTime = Date.now() - quizStartTime;
     
+    // Add logging to debug time calculation
+    console.log('[TIME_DEBUG] Quiz start time:', quizStartTime);
+    console.log('[TIME_DEBUG] Current time:', Date.now());
+    console.log('[TIME_DEBUG] Total quiz time (ms):', totalTime);
+    console.log('[TIME_DEBUG] Total quiz time (min):', totalTime / 60000);
+    
     // Use functional update to get latest state
     setQuestionAttempts(prevAttempts => {
       const attemptsWithCorrectOptions = prevAttempts.map(attempt => {

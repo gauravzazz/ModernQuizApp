@@ -673,11 +673,17 @@ export const updateUserStats = async (
   const profile = await getUserProfile();
   const stats = profile.stats;
   
+  // Add logging to debug time calculation
+  console.log('[TIME_DEBUG] Time received in updateUserStats (min):', timeSpentInMinutes);
+  console.log('[TIME_DEBUG] Current totalTime in profile (hours):', stats.totalTime);
+  console.log('[TIME_DEBUG] Time to add (hours):', timeSpentInMinutes / 60);
+  
   // Update basic stats
   stats.totalQuizzes += 1;
   stats.correctAnswers += correctAnswers;
   stats.totalTime += timeSpentInMinutes / 60; // Convert to hours
   
+  console.log('[TIME_DEBUG] New totalTime in profile (hours):', stats.totalTime);
   // Calculate accuracy
   const quizAccuracy = (correctAnswers / totalQuestions) * 100;
   

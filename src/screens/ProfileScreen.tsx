@@ -12,11 +12,9 @@ import { ProfileHeader } from '../molecules/ProfileHeader';
 import { ProfileStats } from '../molecules/ProfileStats';
 import { ProfileTabs } from '../molecules/ProfileTabs';
 import { ProfileAwards } from '../molecules/ProfileAwards';
-
 import { saveUserProfile } from '../services/profileService';
 import { useProfileData } from '../hooks/useProfileData';
 import { registerAnalyticsListener, unregisterAnalyticsListener } from '../services/analyticsService';
-import { UserProfile } from '../types/profile';
 import { moderateScale, scale, scaledRadius, verticalScale } from '../utils/scaling';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -147,7 +145,7 @@ export const ProfileScreen: React.FC = () => {
         <Typography>Could not load profile data</Typography>
         <Button 
           label="Try Again" 
-          onPress={() => setLoading(true)} 
+          onPress={refreshProfile} 
           style={{ marginTop: verticalScale(16) }}
         />
       </View>
@@ -246,7 +244,7 @@ export const ProfileScreen: React.FC = () => {
         <ProfileStats
           stats={{
             totalQuizzes: profile.stats.totalQuizzes,
-            correctAnswers: profile.stats.correctAnswers,
+          
             totalTime: profile.stats.totalTime,
             xp: profile.stats.xp,
             awards: profile.awards.filter(a => a.unlocked).length
