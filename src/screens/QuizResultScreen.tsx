@@ -16,9 +16,11 @@ import { addBookmark, removeBookmark, isQuestionBookmarked } from '../services/b
 import { UserAward } from '../types/profile';
 import { scaledFontSize, scaledSpacing, } from '../utils/scaling';
 import { AchievementModal } from '../molecules/AchievementModal';
+import { QuizCompletionModal } from '../molecules/QuizCompletionModal';
 import { Confetti } from '../atoms/ConfettiCannon';
 import { createPieChartData } from '../constants/quizConstants';
 import { processAndSaveQuizResult, ProcessedQuizResult } from '../services/quizResultService';
+import { processQuizAnalytics } from '../services/analyticsService';
 
 
 type QuizResultScreenRouteProp = RouteProp<RootStackParamList, 'QuizResult'>;
@@ -47,6 +49,17 @@ export const QuizResultScreen: React.FC = () => {
   const [loadingMessage, setLoadingMessage] = useState<string>('Processing quiz results...');
   const [processedResult, setProcessedResult] = useState<ProcessedQuizResult | null>(null);
 
+  // State for quiz completion modal
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [xpData, setXpData] = useState<{
+    oldXP: number;
+    newXP: number;
+    xpGained: number;
+    oldLevel: number;
+    newLevel: number;
+    leveledUp: boolean;
+  }>({ oldXP: 0, newXP: 0, xpGained: 0, oldLevel: 1, newLevel: 1, leveledUp: false });
+  
   // Process and save quiz results when the screen loads (only if not from history)
   // Or fetch questions by IDs when viewing from history
   useEffect(() => {
@@ -56,7 +69,11 @@ export const QuizResultScreen: React.FC = () => {
         setLoadingMessage('Processing quiz results...');
         
         if (!fromHistory) {
-          const result = await processAndSaveQuizResult(
+          // Step 1: Process analytics data using the central analytics service
+          setLoadingMessage('Calculating quiz analytics...');
+          const difficulty = 'medium'; // Default difficulty, could be passed from quiz params
+          
+          const analyticsResult = await processQuizAnalytics(
             attempts,
             totalTime,
             mode,
@@ -64,9 +81,19 @@ export const QuizResultScreen: React.FC = () => {
             topicId,
             topicTitle || '',
             subjectTitle || '',
-            questionsData || []
+            questionsData || [],
+            difficulty
           );
-          setProcessedResult(result);
+          
+          // Step 2: Store the processed results and analytics data
+          setProcessedResult(analyticsResult.processedResult);
+          setXpData(analyticsResult.xpData);
+          setUnlockedAwards(analyticsResult.unlockedAwards);
+          
+          // Step 3: Show completion modal if there are awards or level up
+          if (analyticsResult.unlockedAwards.length > 0 || analyticsResult.xpData.leveledUp) {
+            setShowCompletionModal(true);
+          }
         }
         
         setFilteredQuestions(questionsData || []);
@@ -500,7 +527,25 @@ export const QuizResultScreen: React.FC = () => {
 
   // Import the AchievementModal component at the top of the file
   // import { AchievementModal } from '../molecules/AchievementModal';
+
   
+
+  // Handle closing the completion modal
+  const handleCompletionModalClose = () => {
+    console.log('[QuizResultScreen] Closing completion modal, awards:', unlockedAwards.length);
+    setShowCompletionModal(false);
+    // Show award modal after completion modal closes if there are unlocked awards
+    if (unlockedAwards.length > 0) {
+      setShowAwardModal(true);
+    }
+  };
+  
+  // Add a debug log when the modal should be shown
+  useEffect(() => {
+    if (showCompletionModal) {
+      console.log('[QuizResultScreen] Showing completion modal with XP data:', xpData);
+    }
+  }, [showCompletionModal]);
 
   if (isProcessing) {
     return (
@@ -537,6 +582,21 @@ export const QuizResultScreen: React.FC = () => {
           fadeOut={true}
         />
       )}
+      
+      {/* Quiz Completion Modal - shows XP, level up, and awards summary */}
+      <QuizCompletionModal
+        visible={showCompletionModal}
+        onClose={handleCompletionModalClose}
+        xpData={xpData}
+        score={{
+          points: correctAnswers,
+          total: attempts.length,
+          percentage: score
+        }}
+      />
+
+      
+      {/* Achievement Modal - shows detailed award information */}
       <AchievementModal
         visible={showAwardModal}
         onClose={() => setShowAwardModal(false)}

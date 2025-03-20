@@ -1,24 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, Modal, Animated, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, Modal, Dimensions, Animated, TouchableOpacity, Platform } from 'react-native';
 import { useTheme } from 'react-native-paper';
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppTheme } from '../theme';
 import { Typography } from '../atoms/Typography';
-import { Button } from '../atoms/Button';
 import { Confetti } from '../atoms/ConfettiCannon';
-import { UserAward } from '../types/profile';
 import { moderateScale, scale, verticalScale, scaledSpacing, scaledRadius, scaledFontSize } from '../utils/scaling';
 
 interface QuizCompletionModalProps {
   visible: boolean;
   onClose: () => void;
-  onViewFullResults: () => void;
-  score: {
-    correctAnswers: number;
-    totalQuestions: number;
-    percentage: number;
-  };
   xpData: {
     oldXP: number;
     newXP: number;
@@ -27,16 +20,18 @@ interface QuizCompletionModalProps {
     newLevel: number;
     leveledUp: boolean;
   };
-  unlockedAwards: UserAward[];
+  score?: {
+    points: number;
+    total: number;
+    percentage: number;
+  };
 }
 
 export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
   visible,
   onClose,
-  onViewFullResults,
-  score,
   xpData,
-  unlockedAwards,
+  score,
 }) => {
   const theme = useTheme<AppTheme>();
   const { width: screenWidth } = Dimensions.get('window');
@@ -48,15 +43,18 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
   // Animation values
   const modalScaleAnim = useRef(new Animated.Value(0.8)).current;
   const modalOpacityAnim = useRef(new Animated.Value(0)).current;
-  const scoreAnim = useRef(new Animated.Value(0)).current;
-  const xpAnim = useRef(new Animated.Value(0)).current;
-  const xpNumberAnim = useRef(new Animated.Value(xpData.oldXP)).current;
-  const levelAnim = useRef(new Animated.Value(0)).current;
-  const levelNumberAnim = useRef(new Animated.Value(xpData.oldLevel)).current;
-  const awardAnim = useRef(new Animated.Value(0)).current;
+  const xpBarAnim = useRef(new Animated.Value(0)).current;
+  const xpNumberAnim = useRef(new Animated.Value(0)).current;
+  const levelUpAnim = useRef(new Animated.Value(0)).current;
   
-  // State for confetti
-  const [showConfetti, setShowConfetti] = useState(false);
+  // Sparkle animation control
+  const [showSparkles, setShowSparkles] = useState(false);
+  const sparkleOrigins = useRef<Array<{x: number, y: number}>>([]);
+  
+  // Calculate XP progress percentages
+  const levelXpRequired = 100; // XP required per level (from xpService.ts)
+  const oldLevelProgress = (xpData.oldXP % levelXpRequired) / levelXpRequired;
+  const newLevelProgress = (xpData.newXP % levelXpRequired) / levelXpRequired;
   
   // Run animations when modal becomes visible
   useEffect(() => {
@@ -64,12 +62,21 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
       // Reset animation values
       modalScaleAnim.setValue(0.8);
       modalOpacityAnim.setValue(0);
-      scoreAnim.setValue(0);
-      xpAnim.setValue(0);
-      xpNumberAnim.setValue(xpData.oldXP);
-      levelAnim.setValue(0);
-      levelNumberAnim.setValue(xpData.oldLevel);
-      awardAnim.setValue(0);
+      xpBarAnim.setValue(0);
+      xpNumberAnim.setValue(0);
+      levelUpAnim.setValue(0);
+      setShowSparkles(false);
+      
+      // Generate random sparkle origins along the XP bar
+      const numSparkles = 5;
+      const newSparkleOrigins = [];
+      for (let i = 0; i < numSparkles; i++) {
+        // Position sparkles along the progress bar
+        const xPos = 50 + (i * 40); // Distribute horizontally
+        const yPos = 0; // At the top of the progress bar
+        newSparkleOrigins.push({ x: xPos, y: yPos });
+      }
+      sparkleOrigins.current = newSparkleOrigins;
       
       // Animate modal entrance
       Animated.parallel([
@@ -86,90 +93,94 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
         })
       ]).start();
       
-      // Sequence of animations
+      // Animate XP bar after modal appears
       Animated.sequence([
-        // 1. Show score
-        Animated.timing(scoreAnim, {
+        Animated.delay(400),
+        Animated.timing(xpBarAnim, {
           toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        
-        // 2. Show XP section
-        Animated.timing(xpAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        
-        // 3. Animate XP increase
-        Animated.timing(xpNumberAnim, {
-          toValue: xpData.newXP,
-          duration: 1500,
+          duration: 1000,
           useNativeDriver: false,
-        }),
-        
-        // 4. Show level up if applicable
-        Animated.timing(levelAnim, {
-          toValue: xpData.leveledUp ? 1 : 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        
-        // 5. Animate level number if leveled up
-        Animated.timing(levelNumberAnim, {
-          toValue: xpData.newLevel,
-          duration: xpData.leveledUp ? 800 : 0,
-          useNativeDriver: false,
-        }),
-        
-        // 6. Show awards if any
-        Animated.timing(awardAnim, {
-          toValue: unlockedAwards.length > 0 ? 1 : 0,
-          duration: 500,
-          useNativeDriver: true,
         })
       ]).start(() => {
-        // Show confetti after all animations complete
-        if (xpData.leveledUp || unlockedAwards.length > 0) {
-          setShowConfetti(true);
-        }
+        // Trigger sparkles when XP bar animation completes
+        setShowSparkles(true);
+        
+        // Hide sparkles after a delay
+        setTimeout(() => {
+          setShowSparkles(false);
+        }, 2000);
       });
-    } else {
-      setShowConfetti(false);
+      
+      // Animate XP number counting up
+      Animated.sequence([
+        Animated.delay(400),
+        Animated.timing(xpNumberAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: false,
+        })
+      ]).start();
+      
+      // Animate level up notification if applicable
+      if (xpData.leveledUp) {
+        Animated.sequence([
+          Animated.delay(1500),
+          Animated.spring(levelUpAnim, {
+            toValue: 1,
+            friction: 5,
+            tension: 40,
+            useNativeDriver: true,
+          })
+        ]).start();
+      }
+      
+      // No awards animation needed anymore
     }
-  }, [visible, xpData, unlockedAwards.length]);
-  
-  // Format XP number for display
-  const formattedXP = xpNumberAnim.interpolate({
-    inputRange: [xpData.oldXP, xpData.newXP],
-    outputRange: [xpData.oldXP.toString(), xpData.newXP.toString()],
-    extrapolate: 'clamp'
-  });
-  
-  // Format level number for display
-  const formattedLevel = levelNumberAnim.interpolate({
-    inputRange: [xpData.oldLevel, xpData.newLevel],
-    outputRange: [xpData.oldLevel.toString(), xpData.newLevel.toString()],
-    extrapolate: 'clamp'
-  });
+  }, [visible, xpData.leveledUp]);
   
   // Calculate dimensions based on screen size
   const modalWidth = isSmallScreen ? '95%' : isMediumScreen ? '90%' : '85%';
   const maxModalWidth = isSmallScreen ? 320 : isMediumScreen ? 400 : 450;
   const titleFontSize = isSmallScreen ? scaledFontSize(20) : scaledFontSize(24);
-  const scoreFontSize = isSmallScreen ? scaledFontSize(36) : scaledFontSize(48);
-  const xpFontSize = isSmallScreen ? scaledFontSize(28) : scaledFontSize(32);
-  const levelFontSize = isSmallScreen ? scaledFontSize(24) : scaledFontSize(28);
+  const subtitleFontSize = isSmallScreen ? scaledFontSize(16) : scaledFontSize(18);
   const modalPadding = scaledSpacing(isSmallScreen ? 20 : 28);
+  
+  // Interpolate XP bar width for partial progress
+  const xpBarWidth = xpBarAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [`${oldLevelProgress * 100}%`, `${newLevelProgress * 100}%`],
+  });
+  
+  // Interpolate old XP bar width (always visible)
+  const oldXpBarWidth = `${oldLevelProgress * 100}%`;
+  
+  // Interpolate XP number
+  const displayedXP = xpNumberAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [xpData.oldXP, xpData.newXP],
+  });
   
   const styles = StyleSheet.create({
     modalOverlay: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: 'rgba(0,0,0,0.7)',
       padding: scaledSpacing(16),
+    },
+    blurOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+    },
+    fallbackOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+      backgroundColor: 'rgba(0,0,0,0.7)',
     },
     modalContent: {
       backgroundColor: theme.colors.neuPrimary,
@@ -195,6 +206,25 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
       bottom: 0,
       opacity: 0.08,
     },
+    closeButton: {
+      position: 'absolute',
+      top: scaledSpacing(12),
+      right: scaledSpacing(12),
+      width: moderateScale(32),
+      height: moderateScale(32),
+      borderRadius: moderateScale(16),
+      backgroundColor: theme.colors.neuPrimary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: theme.colors.neuDark,
+      shadowOffset: { width: moderateScale(2), height: moderateScale(2) },
+      shadowOpacity: 0.6,
+      shadowRadius: moderateScale(4),
+      elevation: moderateScale(4),
+      borderWidth: moderateScale(1),
+      borderColor: theme.colors.neuLight,
+      zIndex: 10,
+    },
     titleContainer: {
       marginBottom: scaledSpacing(24),
       alignItems: 'center',
@@ -209,323 +239,291 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
       textShadowRadius: moderateScale(1),
       letterSpacing: 0.5,
     },
-    scoreContainer: {
-      alignItems: 'center',
-      marginBottom: scaledSpacing(24),
-      width: '100%',
-    },
-    scoreValue: {
-      fontSize: scoreFontSize,
-      fontWeight: 'bold',
-      color: getScoreColor(score.percentage),
-      marginBottom: scaledSpacing(8),
-      textShadowColor: 'rgba(0,0,0,0.2)',
-      textShadowOffset: { width: moderateScale(1), height: moderateScale(1) },
-      textShadowRadius: moderateScale(3),
-    },
-    scoreLabel: {
-      fontSize: scaledFontSize(16),
+    subtitle: {
+      textAlign: 'center',
+      fontSize: subtitleFontSize,
+      marginTop: scaledSpacing(8),
       color: theme.colors.onSurfaceVariant,
-      marginBottom: scaledSpacing(4),
+      opacity: 0.9,
     },
     xpContainer: {
-      alignItems: 'center',
-      marginBottom: scaledSpacing(24),
       width: '100%',
-      backgroundColor: 'rgba(0,0,0,0.05)',
-      borderRadius: scaledRadius(theme.roundness),
-      padding: scaledSpacing(16),
-    },
-    xpRow: {
-      flexDirection: 'row',
+      marginBottom: scaledSpacing(24),
       alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: scaledSpacing(8),
     },
-    xpIcon: {
-      marginRight: scaledSpacing(8),
-      color: theme.colors.primary,
-      textShadowColor: 'rgba(0,0,0,0.2)',
-      textShadowOffset: { width: moderateScale(1), height: moderateScale(1) },
-      textShadowRadius: moderateScale(3),
+    xpLabel: {
+      fontSize: scaledFontSize(16),
+      marginBottom: scaledSpacing(8),
+      color: theme.colors.onSurface,
     },
     xpValue: {
-      fontSize: xpFontSize,
+      fontSize: scaledFontSize(24),
       fontWeight: 'bold',
       color: theme.colors.primary,
-      textShadowColor: 'rgba(0,0,0,0.2)',
-      textShadowOffset: { width: moderateScale(1), height: moderateScale(1) },
-      textShadowRadius: moderateScale(3),
+      marginBottom: scaledSpacing(16),
     },
-    xpGained: {
-      fontSize: scaledFontSize(16),
-      color: theme.colors.success,
-      fontWeight: 'bold',
-    },
-    levelContainer: {
-      alignItems: 'center',
-      marginBottom: scaledSpacing(24),
+    xpBarContainer: {
       width: '100%',
+      height: moderateScale(20),
+      backgroundColor: theme.colors.background,
+      borderRadius: scaledRadius(theme.roundness),
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: theme.colors.neuLight,
+      position: 'relative',
     },
-    levelRow: {
-      flexDirection: 'row',
+    xpBar: {
+      height: '100%',
+      borderRadius: scaledRadius(theme.roundness),
+      position: 'absolute',
+      left: 0,
+      top: 0,
+    },
+    newXpBar: {
+      zIndex: 2,
+    },
+    sparkleContainer: {
+      position: 'absolute',
+      top: -moderateScale(30),
+      height: moderateScale(60),
+      width: moderateScale(30),
+      zIndex: 10,
+      pointerEvents: 'none',
+    },
+    levelUpContainer: {
+      marginTop: scaledSpacing(24),
+      marginBottom: scaledSpacing(24),
+      padding: scaledSpacing(16),
+      backgroundColor: theme.colors.background,
+      borderRadius: scaledRadius(theme.roundness),
+      width: '100%',
       alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: scaledSpacing(8),
-    },
-    levelIcon: {
-      marginRight: scaledSpacing(8),
-      color: theme.colors.success,
-      textShadowColor: 'rgba(0,0,0,0.2)',
-      textShadowOffset: { width: moderateScale(1), height: moderateScale(1) },
-      textShadowRadius: moderateScale(3),
-    },
-    levelValue: {
-      fontSize: levelFontSize,
-      fontWeight: 'bold',
-      color: theme.colors.success,
-      textShadowColor: 'rgba(0,0,0,0.2)',
-      textShadowOffset: { width: moderateScale(1), height: moderateScale(1) },
-      textShadowRadius: moderateScale(3),
+      borderWidth: 1,
+      borderColor: theme.colors.primary,
     },
     levelUpText: {
       fontSize: scaledFontSize(18),
       fontWeight: 'bold',
-      color: theme.colors.success,
-      marginBottom: scaledSpacing(8),
-    },
-    awardsContainer: {
-      alignItems: 'center',
-      marginBottom: scaledSpacing(24),
-      width: '100%',
-    },
-    awardsTitle: {
-      fontSize: scaledFontSize(18),
-      fontWeight: 'bold',
       color: theme.colors.primary,
-      marginBottom: scaledSpacing(16),
       textAlign: 'center',
     },
-    awardRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0,0,0,0.05)',
-      borderRadius: scaledRadius(theme.roundness),
-      padding: scaledSpacing(12),
-      marginBottom: scaledSpacing(8),
-      width: '100%',
-    },
-    awardIcon: {
-      fontSize: scaledFontSize(24),
-      marginRight: scaledSpacing(12),
-    },
-    awardTextContainer: {
-      flex: 1,
-    },
-    awardName: {
-      fontSize: scaledFontSize(16),
+    levelUpValue: {
+      fontSize: scaledFontSize(32),
       fontWeight: 'bold',
       color: theme.colors.primary,
-      marginBottom: scaledSpacing(2),
-    },
-    awardDescription: {
-      fontSize: scaledFontSize(12),
-      color: theme.colors.onSurfaceVariant,
-    },
-    buttonsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      width: '100%',
       marginTop: scaledSpacing(8),
     },
+    // Awards styles removed
+    scoreContainer: {
+      width: '100%',
+      marginTop: scaledSpacing(16),
+      marginBottom: scaledSpacing(16),
+      padding: scaledSpacing(20),
+      backgroundColor: theme.colors.background,
+      borderRadius: scaledRadius(theme.roundness),
+      alignItems: 'center',
+      borderWidth: 1.5,
+      borderColor: theme.colors.primary,
+      shadowColor: theme.colors.neuDark,
+      shadowOffset: { width: moderateScale(3), height: moderateScale(3) },
+      shadowOpacity: 0.5,
+      shadowRadius: moderateScale(6),
+      elevation: moderateScale(6),
+    },
+    scoreTitle: {
+      fontSize: scaledFontSize(20),
+      fontWeight: 'bold',
+      color: theme.colors.onSurface,
+      marginBottom: scaledSpacing(12),
+    },
+    scoreValue: {
+      fontSize: scaledFontSize(38),
+      fontWeight: 'bold',
+      color: theme.colors.primary,
+      marginBottom: scaledSpacing(8),
+      textShadowColor: theme.colors.neuDark,
+      textShadowOffset: { width: moderateScale(0.5), height: moderateScale(0.5) },
+      textShadowRadius: moderateScale(1),
+    },
+    scorePercentage: {
+      fontSize: scaledFontSize(18),
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '600',
+    },
+    buttonContainer: {
+      marginTop: scaledSpacing(24),
+      width: '100%',
+    },
     button: {
-      flex: 1,
-      marginHorizontal: scaledSpacing(4),
+      paddingVertical: verticalScale(12),
+      paddingHorizontal: scale(24),
+      borderRadius: scaledRadius(theme.roundness),
+      backgroundColor: theme.colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: theme.colors.neuDark,
+      shadowOffset: { width: moderateScale(3), height: moderateScale(3) },
+      shadowOpacity: 0.4,
+      shadowRadius: moderateScale(6),
+      elevation: moderateScale(6),
+    },
+    buttonText: {
+      color: theme.colors.onPrimary,
+      fontSize: scaledFontSize(16),
+      fontWeight: 'bold',
     },
   });
-
-  // Helper function to get color based on score percentage
-  function getScoreColor(percentage: number): string {
-    if (percentage >= 90) return theme.colors.success;
-    if (percentage >= 70) return theme.colors.primary;
-    if (percentage >= 50) return theme.colors.warning || '#FF9800';
-    return theme.colors.error;
-  }
 
   return (
     <Modal
       visible={visible}
-      transparent={true}
-      animationType="none"
+      transparent
+      animationType="fade"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
       <View style={styles.modalOverlay}>
-        {showConfetti && (
-          <Confetti
-            count={100}
-            origin={{ x: screenWidth / 2, y: 0 }}
-            fallSpeed={2000}
-            fadeOut={true}
+        {Platform.OS === 'ios' ? (
+          <BlurView
+            tint="dark"
+            intensity={20}
+            style={styles.blurOverlay}
           />
+        ) : (
+          <View style={styles.fallbackOverlay} />
         )}
         
-        <Animated.View 
+        <Animated.View
           style={[
             styles.modalContent,
             {
               transform: [{ scale: modalScaleAnim }],
-              opacity: modalOpacityAnim
-            }
+              opacity: modalOpacityAnim,
+            },
           ]}
         >
+          {/* Background pattern */}
           <LinearGradient
-            colors={['#6a11cb', '#2575fc']}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 1}}
+            colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0)']} 
             style={styles.modalBackground}
           />
           
+          {/* Close button */}
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <MaterialCommunityIcons name="close" size={18} color={theme.colors.onSurface} />
+          </TouchableOpacity>
+          
+          {/* Title section */}
           <View style={styles.titleContainer}>
-            <Typography variant="h5" weight="bold" style={styles.title}>
-              Quiz Completed!
-            </Typography>
+            <Typography variant="h2" style={styles.title}>Quiz Completed!</Typography>
           </View>
           
-          {/* Score Section */}
-          <Animated.View 
-            style={[styles.scoreContainer, {
-              opacity: scoreAnim,
-              transform: [{
-                translateY: scoreAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [20, 0]
-                })
-              }]
-            }]}
-          >
-            <Typography style={styles.scoreLabel}>
-              Your Score
-            </Typography>
-            <Typography style={styles.scoreValue}>
-              {score.percentage.toFixed(0)}%
-            </Typography>
-            <Typography style={styles.scoreLabel}>
-              {score.correctAnswers} / {score.totalQuestions} correct answers
-            </Typography>
-          </Animated.View>
-          
-          {/* XP Section */}
-          <Animated.View 
-            style={[styles.xpContainer, {
-              opacity: xpAnim,
-              transform: [{
-                translateY: xpAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [20, 0]
-                })
-              }]
-            }]}
-          >
-            <View style={styles.xpRow}>
-              <MaterialCommunityIcons 
-                name="star" 
-                size={moderateScale(28)} 
-                style={styles.xpIcon} 
-              />
-              <Animated.Text style={styles.xpValue}>
-                {formattedXP}
-              </Animated.Text>
-              <Typography style={styles.xpGained}>
-                {' '}+{xpData.xpGained}
+          {/* Score section - Moved to top */}
+          {score && (
+            <Animated.View 
+              style={[styles.scoreContainer, {
+                transform: [{ scale: modalScaleAnim }],
+                opacity: modalOpacityAnim,
+                marginTop: 0,
+                marginBottom: scaledSpacing(24)
+              }]}
+            >
+              <Typography variant="h3" style={styles.scoreTitle}>Your Score</Typography>
+              <Typography variant="h1" style={styles.scoreValue}>
+                {score.points}/{score.total}
               </Typography>
-            </View>
-            <Typography style={styles.scoreLabel}>
-              Experience Points
-            </Typography>
-          </Animated.View>
+              <Typography variant="body1" style={styles.scorePercentage}>
+                {score.percentage}% Correct
+              </Typography>
+            </Animated.View>
+          )}
           
-          {/* Level Up Section */}
+          {/* XP section */}
+          <View style={styles.xpContainer}>
+            <Typography variant="body1" style={styles.xpLabel}>Experience Points</Typography>
+            <Animated.Text style={styles.xpValue}>
+              {displayedXP.interpolate({
+                inputRange: [0, 1],
+                outputRange: [xpData.oldXP.toString(), xpData.newXP.toString()]
+              })}
+              <Typography variant="body2" style={{ color: theme.colors.success }}> (+{xpData.xpGained})</Typography>
+            </Animated.Text>
+            
+            <View style={styles.xpBarContainer}>
+              {/* Old XP progress (always visible) */}
+              <View style={[styles.xpBar, { width: oldXpBarWidth }]}>
+                <LinearGradient
+                  colors={[theme.colors.neuLight, theme.colors.neuPrimary]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ flex: 1 }}
+                />
+              </View>
+              
+              {/* New XP progress (animates from old to new) */}
+              <Animated.View 
+                style={[
+                  styles.xpBar, 
+                  styles.newXpBar, 
+                  { width: xpBarWidth }
+                ]}
+              >
+                <LinearGradient
+                  colors={[theme.colors.primary, theme.colors.secondary]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ flex: 1 }}
+                />
+              </Animated.View>
+              
+              {/* Sparkle effects */}
+              {showSparkles && sparkleOrigins.current.map((origin, index) => (
+                <View key={index} style={[styles.sparkleContainer, { left: `${origin.x}%` }]}>
+                  <Confetti
+                    count={15}
+                    origin={{ x: 0, y: 0 }}
+                    fallSpeed={1500}
+                    explosionSpeed={200}
+                    colors={[theme.colors.primary, theme.colors.secondary, '#FFC107', '#FFFFFF']}
+                    fadeOut={true}
+                  />
+                </View>
+              ))}
+            </View>
+          </View>
+          
+          {/* Level up notification */}
           {xpData.leveledUp && (
             <Animated.View 
-              style={[styles.levelContainer, {
-                opacity: levelAnim,
-                transform: [{
-                  scale: levelAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.8, 1]
-                  })
-                }]
+              style={[styles.levelUpContainer, {
+                transform: [{ scale: levelUpAnim }],
+                opacity: levelUpAnim
               }]}
             >
-              <Typography style={styles.levelUpText}>
-                🎉 Level Up! 🎉
+              <MaterialCommunityIcons 
+                name="star-circle" 
+                size={moderateScale(40)} 
+                color={theme.colors.primary} 
+              />
+              <Typography variant="h3" style={styles.levelUpText}>Level Up!</Typography>
+              <Typography variant="h1" style={styles.levelUpValue}>
+                {xpData.newLevel}
               </Typography>
-              <View style={styles.levelRow}>
-                <MaterialCommunityIcons 
-                  name="trophy" 
-                  size={moderateScale(24)} 
-                  style={styles.levelIcon} 
-                />
-                <Typography style={styles.levelValue}>
-                  Level {formattedLevel}
-                </Typography>
-              </View>
             </Animated.View>
           )}
           
-          {/* Awards Section */}
-          {unlockedAwards.length > 0 && (
-            <Animated.View 
-              style={[styles.awardsContainer, {
-                opacity: awardAnim,
-                transform: [{
-                  translateY: awardAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0]
-                  })
-                }]
-              }]}
-            >
-              <Typography style={styles.awardsTitle}>
-                {unlockedAwards.length === 1 ? 'Achievement Unlocked!' : 'Achievements Unlocked!'}
-              </Typography>
-              
-              {unlockedAwards.map((award, index) => (
-                <Animated.View 
-                  key={award.id}
-                  style={[styles.awardRow, {
-                    opacity: awardAnim,
-                    transform: [{
-                      translateX: awardAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [50, 0]
-                      })
-                    }]
-                  }]}
-                >
-                  <Typography style={styles.awardIcon}>{award.icon}</Typography>
-                  <View style={styles.awardTextContainer}>
-                    <Typography style={styles.awardName}>{award.name}</Typography>
-                    <Typography style={styles.awardDescription}>{award.description}</Typography>
-                  </View>
-                </Animated.View>
-              ))}
-            </Animated.View>
-          )}
+          {/* Awards section removed */}
           
-          {/* Buttons */}
-          <View style={styles.buttonsContainer}>
-            <Button
-              label="Close"
+          {/* Score section moved to top */}
+          
+          {/* Continue button */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity 
+              style={styles.button}
               onPress={onClose}
-              variant="secondary"
-              style={styles.button}
-            />
-            <Button
-              label="View Full Results"
-              onPress={onViewFullResults}
-              style={styles.button}
-            />
+            >
+              <Typography variant="button" style={styles.buttonText}>Continue</Typography>
+            </TouchableOpacity>
           </View>
         </Animated.View>
       </View>
