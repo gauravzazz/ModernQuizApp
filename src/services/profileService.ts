@@ -681,7 +681,8 @@ export const updateUserStats = async (
   // Update basic stats
   stats.totalQuizzes += 1;
   stats.correctAnswers += correctAnswers;
-  stats.totalTime += timeSpentInMinutes / 60; // Convert to hours
+  // Convert minutes to hours by dividing by 60 before adding to totalTime (which is stored in hours)
+  stats.totalTime += timeSpentInMinutes / 60; // Convert minutes to hours
   
   console.log('[TIME_DEBUG] New totalTime in profile (hours):', stats.totalTime);
   // Calculate accuracy
@@ -712,11 +713,10 @@ export const updateUserStats = async (
   // Update weekly quizzes
   stats.weeklyQuizzes += 1;
   
-  // Update XP (10 XP per correct answer)
-  stats.xp += correctAnswers * 10;
+  // NOTE: XP calculation has been moved to analyticsService.ts and xpService.ts
+  // to avoid duplicate calculations. Do not add XP calculation here.
   
-  // Check for level up (every 100 XP)
-  profile.level = Math.floor(stats.xp / 100) + 1;
+  // Level calculation is now handled in synchronizeAnalytics() in analyticsService.ts
   
   // Update streak (simplified - in a real app, you'd check the date)
   // This is just for demonstration

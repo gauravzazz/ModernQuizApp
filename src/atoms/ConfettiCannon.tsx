@@ -25,7 +25,7 @@ export const Confetti: React.FC<ConfettiProps> = ({
   fallSpeed = 3000,
   explosionSpeed = 350,
   colors,
-  duration,
+  duration = 2000, // Default duration to ensure animation completes properly
 }) => {
   const theme = useTheme<AppTheme>();
   const confettiRef = useRef<ConfettiCannon>(null);
@@ -36,16 +36,17 @@ export const Confetti: React.FC<ConfettiProps> = ({
     theme.colors.secondary,
     theme.colors.success,
     theme.colors.warning,
-    theme.colors.error,
     '#FFC107', // amber
     '#FF9800', // orange
-    '#9C27B0', // purple
+    '#FFFFFF', // white for better visibility
+    '#00E5FF', // cyan
+    '#FFEB3B', // yellow
   ];
 
   // Calculate default origin if not provided
   const defaultOrigin = origin || {
-    x: -10, // Slightly off-screen to the left
-    y: 0,   // Top of the screen
+    x: 0,  // Center horizontally
+    y: 0,  // Top of the screen
   };
 
   // Start the animation when the component mounts if autoStart is true

@@ -27,6 +27,7 @@ export interface UserProfile {
   email: string;
   avatar?: string;
   level: number;
+  levelProgress?: number; // Percentage progress within current level (0-100)
   stats: UserStats;
   awards: UserAward[];
   createdAt: Date;

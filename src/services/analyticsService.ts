@@ -105,9 +105,10 @@ export const processQuizAnalytics = async (
       (attempt) => attempt.selectedOptionId === attempt.correctOptionId
     ).length;
     const totalQuestions = attempts.length;
-    const timeSpentInSeconds = totalTime / 1000;
+    const timeSpentInSeconds = totalTime / 1000; // Convert milliseconds to seconds
 
-    // Step 2: Update user XP and level
+    // Step 2: Update user XP and level - this is the ONLY place where XP should be calculated
+    // to avoid duplicate calculations
     const xpData = await updateUserXP(
       correctAnswers,
       totalQuestions,

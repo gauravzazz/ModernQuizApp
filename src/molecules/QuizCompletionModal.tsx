@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, Modal, Dimensions, Animated, TouchableOpacity, Platform } from 'react-native';
+import { StyleSheet, View, Modal, Dimensions, Animated, Easing, TouchableOpacity, Platform } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -49,7 +49,8 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
   
   // Sparkle animation control
   const [showSparkles, setShowSparkles] = useState(false);
-  const sparkleOrigins = useRef<Array<{x: number, y: number}>>([]);
+  const sparkleOrigins = useRef<Array<{x: number, y: number, delay: number}>>([]);
+  const sparkleAnimations = useRef<Animated.Value[]>([]).current;
   
   // Calculate XP progress percentages
   const levelXpRequired = 100; // XP required per level (from xpService.ts)
@@ -67,14 +68,26 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
       levelUpAnim.setValue(0);
       setShowSparkles(false);
       
-      // Generate random sparkle origins along the XP bar
-      const numSparkles = 5;
+      // Generate sparkle origins along the gained XP section
+      const numSparkles = 8; // Increased number of sparkles
       const newSparkleOrigins = [];
+      const gainStart = oldLevelProgress * 100;
+      const gainWidth = (newLevelProgress - oldLevelProgress) * 100;
+      
+      // Reset sparkle animations
+      sparkleAnimations.length = 0;
+      
       for (let i = 0; i < numSparkles; i++) {
-        // Position sparkles along the progress bar
-        const xPos = 50 + (i * 40); // Distribute horizontally
-        const yPos = 0; // At the top of the progress bar
-        newSparkleOrigins.push({ x: xPos, y: yPos });
+        // Position sparkles along the gained XP section with slight randomness
+        const xPos = gainStart + (gainWidth * (i / (numSparkles - 1 || 1)));
+        // Add slight vertical variation
+        const yPos = Math.random() * 10 - 5; // Random position between -5 and 5
+        // Add staggered delay for each sparkle
+        const delay = i * 100; // Staggered delay in ms
+        newSparkleOrigins.push({ x: xPos, y: yPos, delay });
+        
+        // Create animation value for each sparkle
+        sparkleAnimations.push(new Animated.Value(0));
       }
       sparkleOrigins.current = newSparkleOrigins;
       
@@ -98,17 +111,35 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
         Animated.delay(400),
         Animated.timing(xpBarAnim, {
           toValue: 1,
-          duration: 1000,
+          duration: 1500, // Slightly longer duration for smoother animation
           useNativeDriver: false,
+          easing: Easing.out(Easing.cubic), // Add easing for more natural animation
         })
       ]).start(() => {
         // Trigger sparkles when XP bar animation completes
         setShowSparkles(true);
         
+        // Animate each sparkle with staggered timing
+        sparkleAnimations.forEach((anim, index) => {
+          const delay = sparkleOrigins.current[index]?.delay || 0;
+          
+          Animated.sequence([
+            Animated.delay(delay),
+            Animated.spring(anim, {
+              toValue: 1,
+              friction: 6,
+              tension: 40,
+              useNativeDriver: true,
+            })
+          ]).start();
+        });
+        
         // Hide sparkles after a delay
         setTimeout(() => {
           setShowSparkles(false);
-        }, 2000);
+          // Reset sparkle animations
+          sparkleAnimations.forEach(anim => anim.setValue(0));
+        }, 3000); // Longer display time
       });
       
       // Animate XP number counting up
@@ -139,17 +170,20 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
   }, [visible, xpData.leveledUp]);
   
   // Calculate dimensions based on screen size
-  const modalWidth = isSmallScreen ? '95%' : isMediumScreen ? '90%' : '85%';
+  const modalWidth = isSmallScreen ? '95%' : isMediumScreen ? '98%' : '85%';
   const maxModalWidth = isSmallScreen ? 320 : isMediumScreen ? 400 : 450;
-  const titleFontSize = isSmallScreen ? scaledFontSize(20) : scaledFontSize(24);
-  const subtitleFontSize = isSmallScreen ? scaledFontSize(16) : scaledFontSize(18);
-  const modalPadding = scaledSpacing(isSmallScreen ? 20 : 28);
+  const titleFontSize = isSmallScreen ? scaledFontSize(10) : scaledFontSize(14);
+  const subtitleFontSize = isSmallScreen ? scaledFontSize(8) : scaledFontSize(10);
+  const modalPadding = scaledSpacing(isSmallScreen ? 10 : 18);
   
   // Interpolate XP bar width for partial progress
   const xpBarWidth = xpBarAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [`${oldLevelProgress * 100}%`, `${newLevelProgress * 100}%`],
   });
+  
+  // Calculate the gained XP width as a percentage
+  const gainedXpWidth = `${(newLevelProgress - oldLevelProgress) * 100}%`;
   
   // Interpolate old XP bar width (always visible)
   const oldXpBarWidth = `${oldLevelProgress * 100}%`;
@@ -265,12 +299,17 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
     xpBarContainer: {
       width: '100%',
       height: moderateScale(20),
-      backgroundColor: theme.colors.background,
       borderRadius: scaledRadius(theme.roundness),
       overflow: 'hidden',
       borderWidth: 1,
       borderColor: theme.colors.neuLight,
       position: 'relative',
+    },
+    xpBarBackground: {
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      backgroundColor: theme.colors.background,
     },
     xpBar: {
       height: '100%',
@@ -282,6 +321,15 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
     newXpBar: {
       zIndex: 2,
     },
+    xpGainedIndicator: {
+      height: '100%',
+      position: 'absolute',
+      top: 0,
+      zIndex: 3,
+      borderLeftWidth: 2,
+      borderRightWidth: 2,
+      borderColor: theme.colors.background,
+    },
     sparkleContainer: {
       position: 'absolute',
       top: -moderateScale(30),
@@ -289,33 +337,36 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
       width: moderateScale(30),
       zIndex: 10,
       pointerEvents: 'none',
+      alignItems: 'center',
+      justifyContent: 'center',
+      // transform moved to individual sparkle views for animation
     },
     levelUpContainer: {
-      marginTop: scaledSpacing(24),
-      marginBottom: scaledSpacing(24),
-      padding: scaledSpacing(16),
+      marginTop: scaledSpacing(2),
+      marginBottom: scaledSpacing(2),
+      padding: scaledSpacing(10),
       backgroundColor: theme.colors.background,
       borderRadius: scaledRadius(theme.roundness),
-      width: '100%',
+      width: '50%',
       alignItems: 'center',
       borderWidth: 1,
       borderColor: theme.colors.primary,
     },
     levelUpText: {
-      fontSize: scaledFontSize(18),
+      fontSize: scaledFontSize(10),
       fontWeight: 'bold',
       color: theme.colors.primary,
       textAlign: 'center',
     },
     levelUpValue: {
-      fontSize: scaledFontSize(32),
+      fontSize: scaledFontSize(12),
       fontWeight: 'bold',
       color: theme.colors.primary,
       marginTop: scaledSpacing(8),
     },
     // Awards styles removed
     scoreContainer: {
-      width: '100%',
+      width: '90%',
       marginTop: scaledSpacing(16),
       marginBottom: scaledSpacing(16),
       padding: scaledSpacing(20),
@@ -331,13 +382,13 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
       elevation: moderateScale(6),
     },
     scoreTitle: {
-      fontSize: scaledFontSize(20),
+      fontSize: scaledFontSize(16),
       fontWeight: 'bold',
       color: theme.colors.onSurface,
       marginBottom: scaledSpacing(12),
     },
     scoreValue: {
-      fontSize: scaledFontSize(38),
+      fontSize: scaledFontSize(28),
       fontWeight: 'bold',
       color: theme.colors.primary,
       marginBottom: scaledSpacing(8),
@@ -346,7 +397,7 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
       textShadowRadius: moderateScale(1),
     },
     scorePercentage: {
-      fontSize: scaledFontSize(18),
+      fontSize: scaledFontSize(10),
       color: theme.colors.onSurfaceVariant,
       fontWeight: '600',
     },
@@ -386,7 +437,7 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
         {Platform.OS === 'ios' ? (
           <BlurView
             tint="dark"
-            intensity={20}
+            intensity={90}
             style={styles.blurOverlay}
           />
         ) : (
@@ -441,15 +492,20 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
           {/* XP section */}
           <View style={styles.xpContainer}>
             <Typography variant="body1" style={styles.xpLabel}>Experience Points</Typography>
-            <Animated.Text style={styles.xpValue}>
-              {displayedXP.interpolate({
-                inputRange: [0, 1],
-                outputRange: [xpData.oldXP.toString(), xpData.newXP.toString()]
-              })}
-              <Typography variant="body2" style={{ color: theme.colors.success }}> (+{xpData.xpGained})</Typography>
-            </Animated.Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+              <Animated.Text style={styles.xpValue}>
+                {displayedXP.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [xpData.oldXP.toString(), xpData.newXP.toString()]
+                })}
+              </Animated.Text>
+              <Typography variant="body2" style={{ color: theme.colors.success, marginLeft: 4 }}> (+{xpData.xpGained})</Typography>
+            </View>
             
             <View style={styles.xpBarContainer}>
+              {/* Background of XP bar */}
+              <View style={styles.xpBarBackground} />
+              
               {/* Old XP progress (always visible) */}
               <View style={[styles.xpBar, { width: oldXpBarWidth }]}>
                 <LinearGradient
@@ -476,19 +532,91 @@ export const QuizCompletionModal: React.FC<QuizCompletionModalProps> = ({
                 />
               </Animated.View>
               
+              {/* XP gained indicator */}
+              <Animated.View 
+                style={[
+                  styles.xpGainedIndicator,
+                  {
+                    left: xpBarAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [`${oldLevelProgress * 100}%`, `${oldLevelProgress * 100}%`]
+                    }),
+                    width: xpBarAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', `${(newLevelProgress - oldLevelProgress) * 100}%`]
+                    }),
+                    opacity: xpBarAnim
+                  }
+                ]}
+              >
+                <LinearGradient
+                  colors={[theme.colors.secondary, theme.colors.primary]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ flex: 1 }}
+                />
+              </Animated.View>
+              
               {/* Sparkle effects */}
               {showSparkles && sparkleOrigins.current.map((origin, index) => (
-                <View key={index} style={[styles.sparkleContainer, { left: `${origin.x}%` }]}>
+                <Animated.View 
+                  key={index} 
+                  style={[
+                    styles.sparkleContainer, 
+                    { 
+                      left: `${origin.x}%`,
+                      top: origin.y,
+                      transform: [
+                        { translateX: -moderateScale(15) },
+                        { scale: sparkleAnimations[index] || new Animated.Value(0) },
+                        { translateY: sparkleAnimations[index]?.interpolate({
+                          inputRange: [0, 0.5, 1],
+                          outputRange: [0, -10, 0]
+                        }) || 0 }
+                      ],
+                      opacity: sparkleAnimations[index] || new Animated.Value(0)
+                    }
+                  ]}
+                >
                   <Confetti
-                    count={15}
+                    count={15} // More particles
                     origin={{ x: 0, y: 0 }}
-                    fallSpeed={1500}
-                    explosionSpeed={200}
-                    colors={[theme.colors.primary, theme.colors.secondary, '#FFC107', '#FFFFFF']}
+                    fallSpeed={1200}
+                    explosionSpeed={450}
+                    colors={[theme.colors.primary, theme.colors.secondary, '#FFC107', '#FFFFFF', '#FF5722']}
                     fadeOut={true}
                   />
-                </View>
+                </Animated.View>
               ))}
+              
+              {/* XP gain indicator text */}
+              {xpData.xpGained > 0 && (
+                <Animated.View 
+                  style={{
+                    position: 'absolute',
+                    top: -moderateScale(20),
+                    left: `${(oldLevelProgress * 100) + ((newLevelProgress - oldLevelProgress) * 50) - 10}%`,
+                    opacity: xpBarAnim,
+                    transform: [{ scale: xpBarAnim.interpolate({
+                      inputRange: [0, 0.5, 1],
+                      outputRange: [0.5, 1.2, 1]
+                    }) }]
+                  }}
+                >
+                  <Typography 
+                    variant="caption" 
+                    style={{
+                      color: theme.colors.secondary,
+                      fontWeight: 'bold',
+                      textShadowColor: 'rgba(0,0,0,0.3)',
+                      textShadowOffset: { width: 1, height: 1 },
+                      textShadowRadius: 2
+                    }}
+                  >
+                    +{xpData.xpGained} XP
+                  </Typography>
+                </Animated.View>
+              )}
             </View>
           </View>
           
